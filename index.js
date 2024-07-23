@@ -97,7 +97,7 @@ function webhookHandler(req, res) {
 }
 
 // Start the server and listen for incoming requests.
-app.post('/indiamart/webhooks', webhookHandler);
+app.post('/indiamart', webhookHandler);
 
 
 
