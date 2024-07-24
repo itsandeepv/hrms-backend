@@ -50,13 +50,14 @@ class ReceivedData {
 
 // Define the structure for the response to be sent back.
 class Response {
-  constructor(code, status) {
+  constructor(code, status ,res) {
     this.code = code;
     this.status = status;
+    this.response = res;
   }
 
   toJSON() {
-    return { code: this.code, status: this.status };
+    return { code: this.code, status: this.status,response :this.response };
   }
 }
 
@@ -97,7 +98,7 @@ function webhookHandler(req, res) {
 }
 
 // Start the server and listen for incoming requests.
-app.post('/indiamart', webhookHandler);
+app.post('/indiamart/6dE9K5uZguEf6n5Pj2JNjErINrlrr95_', webhookHandler);
 
 
 
