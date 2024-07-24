@@ -72,38 +72,28 @@ function webhookHandler(req, res) {
 
   // Parse the JSON data.
   const receivedData = new ReceivedData(data);
-  console.log("Lead data:", receivedData);
-  if (receivedData.code === 200 && receivedData.response.LEAD_DATA) {
-    const leadData = receivedData.response.LEAD_DATA;
-
-    // Process the lead data here
-    // ...
-
-    res.status(200).json({ message: 'Lead data received successfully' });
-  } else {
-    res.status(400).json({ error: 'Invalid lead data' });
-  }
+ 
   // Log the received data for debugging purposes.
   console.log("Received data:", receivedData);
 
   // Determine the response based on the received data.
-  // let response;
-  // switch (receivedData.code) {
-  //   case 200:
-  //     response = new Response(200, "Success",receivedData);
-  //     break;
-  //   case 400:
-  //     response = new Response(400, "Missing parameters");
-  //     break;
-  //   case 500:
-  //     response = new Response(500, "Error in connecting to the URL");
-  //     break;
-  //   default:
-  //     response = new Response(500, "Unknown error");
-  //     break;
-  // }
-  // // Set the response header and write the JSON response.
-  // res.status(response.code).json(response);
+  let response;
+  switch (receivedData.code) {
+    case 200:
+      response = new Response(200, "Success",receivedData);
+      break;
+    case 400:
+      response = new Response(400, "Missing parameters");
+      break;
+    case 500:
+      response = new Response(500, "Error in connecting to the URL");
+      break;
+    default:
+      response = new Response(500, "Unknown error");
+      break;
+  }
+  // Set the response header and write the JSON response.
+  res.status(response.code).json(response);
 }
 
 // Start the server and listen for incoming requests.
