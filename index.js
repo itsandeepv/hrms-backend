@@ -80,7 +80,7 @@ function webhookHandler(req, res) {
   let response;
   switch (receivedData.code) {
     case 200:
-      response = new Response(200, "Success");
+      response = new Response(200, "Success",receivedData);
       break;
     case 400:
       response = new Response(400, "Missing parameters");
