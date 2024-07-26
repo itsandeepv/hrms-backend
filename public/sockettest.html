@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat now</title>
+</head>
+<body>
+    <h5>Update of database</h5>
+    <div id="updates"></div>
+
+    
+</body>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+    const socket = io();
+    socket.on('connection');
+    
+    socket.on('dbUpdate', (data) => {
+        const updatesDiv = document.getElementById('updates');
+        const newUpdate = document.createElement('div');
+        newUpdate.textContent = `Database change: ${JSON.stringify(data)}`;
+        updatesDiv.appendChild(newUpdate);
+      });
+   
+</script>
+
+</html>

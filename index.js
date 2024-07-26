@@ -1,111 +1,120 @@
+// require("dotenv").config();
+// const express = require("express");
+// const app = express();
+// const cors = require("cors");
+// const mongoose = require("mongoose");
+// var bodyParser = require("body-parser");
+// const morgen = require("morgan");
+// const { authrouter } = require("./routes/authroutes");
+// // connection();
+// app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({ extended: true }));
+// // middlewares
+// app.use(express.json());
+// app.use(cors());
+// app.use(morgen("dev"));
+// app.use(express.urlencoded({ extended: true }));
+
+// const moongose_Url2 = "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/";
+
+// //auth route start here
+// app.use("/api", authrouter);
+
+// mongoose
+//   .connect(moongose_Url2, {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+//   })
+//   .then((result) => {
+//     // Successfully connected
+//     console.log("Your DataBase is Conneted succesfully ");
+//   })
+//   .catch((err) => {
+//     // Catch any potential error
+//     console.log(
+//       "Unable to connect to MongoDB. Error: Please Check Your EnterNet Connections " +
+//         err
+//     );
+//   });
+
+
+// const port = 5001;
+// app.listen(port, () => {
+//   console.log("server connect succesfully on host : " + port);
+// });
+
 require("dotenv").config();
 const express = require("express");
-const app = express();
+const http = require("http");
 const cors = require("cors");
 const mongoose = require("mongoose");
-var bodyParser = require("body-parser");
-const morgen = require("morgan");
+const bodyParser = require("body-parser");
+const morgan = require("morgan");
+const { Server } = require("socket.io");
 const { authrouter } = require("./routes/authroutes");
-// connection();
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+// Middlewares
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-// middlewares
 app.use(express.json());
 app.use(cors());
-app.use(morgen("dev"));
+app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
-const moongose_Url2 = "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/";
+const mongooseUrl = "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/";
 
-//auth route start here
+// Auth route start here
 app.use("/api", authrouter);
 
-mongoose
-  .connect(moongose_Url2, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+
+
+// testing socket 
+
+
+app.get("/test", (req, res) => {
+  res.sendFile(__dirname + "/public/sockettest.html")
+})
+
+// Connect to MongoDB
+mongoose.connect(mongooseUrl, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
   .then((result) => {
-    // Successfully connected
-    console.log("Your DataBase is Conneted succesfully ");
+    console.log("Your DataBase is Connected successfully");
   })
   .catch((err) => {
-    // Catch any potential error
-    console.log(
-      "Unable to connect to MongoDB. Error: Please Check Your EnterNet Connections " +
-        err
-    );
+    console.log("Unable to connect to MongoDB. Error: " + err);
   });
 
+// Listen for MongoDB changes using Change Streams
+const db = mongoose.connection;
+db.once("open", () => {
+  console.log("MongoDB database connection established successfully");
+  const collection = db.collection("users");
 
+  const changeStream = collection.watch();
+  // console.log(collection);
+  changeStream.on("change", (change) => {
+    console.log("Change detected:", change);
+    io.emit("dbUpdate", change); // Broadcast change to all connected clients
+  });
+});
 
-  // Define the structure for the received data.
-class ReceivedData {
-  constructor(data) {
-    this.code = data.CODE;
-    this.status = data.STATUS;
-    this.response = data.RESPONSE;
-  }
-}
+// WebSocket connection
+io.on("connection", (socket) => {
+  console.log("A user connected");
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
+});
 
-// Define the structure for the response to be sent back.
-class Response {
-  constructor(code, status ,res) {
-    this.code = code;
-    this.status = status;
-    this.response = res;
-  }
-
-  toJSON() {
-    return { code: this.code, status: this.status,response :this.response };
-  }
-}
-
-// Function to handle the webhook requests.
-function webhookHandler(req, res) {
-  const data = req.body;
-
-  if (!data) {
-    res.status(400).json({ error: 'Invalid JSON data' });
-    return;
-  }
-
-  // Parse the JSON data.
-  const receivedData = new ReceivedData(data);
- 
-  // Log the received data for debugging purposes.
-  console.log("Received data:", receivedData);
-
-  // Determine the response based on the received data.
-  let response;
-  switch (receivedData.code) {
-    case 200:
-      response = new Response(200, "Success",receivedData);
-      break;
-    case 400:
-      response = new Response(400, "Missing parameters");
-      break;
-    case 500:
-      response = new Response(500, "Error in connecting to the URL");
-      break;
-    default:
-      response = new Response(500, "Unknown error");
-      break;
-  }
-  // Set the response header and write the JSON response.
-  res.status(response.code).json(response);
-}
-
-// Start the server and listen for incoming requests.
-app.post('/indiamart6dE9K5uZguEf6n5Pj2JNjErINrlrr95_', webhookHandler);
-
-
-
-
-
-
-
+// Start the server and listen for incoming requests
 const port = 5001;
-app.listen(port, () => {
-  console.log("server connect succesfully on host : " + port);
+server.listen(port, () => {
+  console.log("Server connected successfully on host: " + port);
 });
