@@ -52,6 +52,7 @@ const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const { Server } = require("socket.io");
 const { authrouter } = require("./routes/authroutes");
+const { leadsrouter } = require("./routes/allroutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -65,12 +66,15 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
-const mongooseUrl = "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/";
+const mongooseUrl = "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase";
 
 // Auth route start here
 app.use("/api", authrouter);
 
 
+
+// leads route
+app.use("/api", leadsrouter);
 
 // testing socket 
 
@@ -95,8 +99,7 @@ mongoose.connect(mongooseUrl, {
 const db = mongoose.connection;
 db.once("open", () => {
   console.log("MongoDB database connection established successfully");
-  const collection = db.collection("users");
-
+  const collection = db.collection("leads");
   const changeStream = collection.watch();
   // console.log(collection);
   changeStream.on("change", (change) => {

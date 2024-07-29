@@ -109,8 +109,6 @@ const loginAdmin = async (req, res, next) => {
                     message: "Usertype is not valid",
                 });
             }
-            console.log(user);
-
             if (user) {
                 bcrypt.compare(password, user.password, function (error, result) {
                     if (error) {

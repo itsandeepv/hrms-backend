@@ -3,28 +3,18 @@ const mongoose = require("mongoose")
 const NewUserSchema = new mongoose.Schema({
     fullName: {
         type: String
-    }
-
-    , email: {
-        type: String
-    }
-    , password: {
-        type: String
-    }
-    , mobileNumber: {
-        type: Number
     },
-    profilePic: {
-        type: String
-    },
-    address: {
-        type: String
-    },
-
+    indiaMartKey: { type: String },
+    tradeIndaiKey: { type: String },
+    email: { type: String },
+    password: { type: String },
+    mobileNumber: { type: Number },
+    profilePic: { type: String },
+    address: { type: String },
     userType: {
         type: String,
         lowercase: true,
-        default: "user"
+       default: "user"
     },
     role: {
         type: String,
