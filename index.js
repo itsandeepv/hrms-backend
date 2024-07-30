@@ -53,20 +53,25 @@ const morgan = require("morgan");
 const { Server } = require("socket.io");
 const { authrouter } = require("./routes/authroutes");
 const { leadsrouter } = require("./routes/allroutes");
+const { createNote } = require("./utils/createNotefication");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, { cors: { origin: "*" } });
 
 // Middlewares
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: '*', // Allow only this origin to access the server
+  methods: ['GET', 'POST'], // Allow these HTTP methods
+  allowedHeaders: ['Content-Type'] // Allow these headers
+}));
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
-const mongooseUrl = "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase";
+const mongooseUrl = process.env.DATABASE_URL || "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase";
 
 // Auth route start here
 app.use("/api", authrouter);
@@ -102,9 +107,21 @@ db.once("open", () => {
   const collection = db.collection("leads");
   const changeStream = collection.watch();
   // console.log(collection);
-  changeStream.on("change", (change) => {
-    console.log("Change detected:", change);
-    io.emit("dbUpdate", change); // Broadcast change to all connected clients
+  changeStream.on("change", (changedata) => {
+    // console.log("Change detected:", changedata);
+    let {fullDocument} = changedata
+    if(changedata.operationType == "insert"){
+      let noteficationDetails = {
+        title:"You received  new lead ",
+        isRead:false,
+        userId :fullDocument.userId || "",
+        indiaMartKey :fullDocument.indiaMartKey||"",
+        tradeIndaiKey :fullDocument.tradeIndaiKey||"",
+        message:fullDocument.queryMessage||""
+      }
+      createNote(noteficationDetails)
+    }
+    io.emit("dbUpdate", changedata); // Broadcast change to all connected clients
   });
 });
 

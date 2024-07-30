@@ -39,6 +39,8 @@ const LeadsSchema = new mongoose.Schema({
     sender:{type:String,default:"Client"},
     viewStatus:{type:String},
     productId:{type:String},
+    statusBar:{type:Array},
+    isPositiveLead:{type:Boolean ,default:true},
     leadStatus:{
         type:Array
     }

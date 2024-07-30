@@ -1,27 +1,29 @@
 const NewLeads = require("../models/leadsModel");
+const LeadsUpdates = require("../models/leadsUpdateModel");
 
 
-const createNewLead = async (req, res, next) => {
+const createleadsUpdate = async (req, res, next) => {
     let reqData = req.body
+    let {leadId} = req.params
+
     try {
-        let newLead = new NewLeads({ ...reqData, userId: req.user?._id })
-        // console.log("newLead" ,reqData ,req.user ,newLead);
-        let createdLead = await newLead.save()
+        let newLeadupdate = new LeadsUpdates({ ...reqData,leadId:leadId, userId: req.user?._id })
+        let createdLeadUp = await newLeadupdate.save()
         res.status(200).json({
             status: true,
-            message: "Lead created succuss",
-            createdLead
+            message: "Lead updates submitted",
+            createdLeadUp
         })
 
     } catch (error) {
-        console.log(error);
         res.status(500).json({
             status: false,
-            message: "Lead not created",
+            message: "Lead update not created",
             error: error
         })
     }
 }
+
 const getAllLead = async (req, res, next) => {
     try {
         // console.log(req.user?._id);
@@ -97,4 +99,4 @@ const deleteLead = async (req, res, next) => {
 
 
 
-module.exports = { createNewLead, getAllLead, getSingleLead ,deleteLead }
+module.exports = { createleadsUpdate, getAllLead, getSingleLead ,deleteLead }
