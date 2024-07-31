@@ -57,14 +57,14 @@ const { createNote } = require("./utils/createNotefication");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, { cors: { origin: "http://localhost:3000" } });
 
 // Middlewares
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors({
-  origin: '*', // Allow only this origin to access the server
+  origin: 'http://localhost:3000', // Allow only this origin to access the server
   methods: ['GET', 'POST'], // Allow these HTTP methods
   allowedHeaders: ['Content-Type'] // Allow these headers
 }));

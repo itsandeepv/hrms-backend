@@ -1,19 +1,33 @@
+const NewLeadStatus = require("../models/addleadStatus");
 const NewLeads = require("../models/leadsModel");
 const LeadsUpdates = require("../models/leadsUpdateModel");
+const NewStatus = require("../models/statusModel");
 
 
 const createleadsUpdate = async (req, res, next) => {
     let reqData = req.body
-    let {leadId} = req.params
-
+    let { leadId } = req.params
     try {
-        let newLeadupdate = new LeadsUpdates({ ...reqData,leadId:leadId, userId: req.user?._id })
+        let newLeadupdate = new LeadsUpdates({ ...reqData, leadId: leadId, userId: req.user?._id })
         let createdLeadUp = await newLeadupdate.save()
-        res.status(200).json({
-            status: true,
-            message: "Lead updates submitted",
-            createdLeadUp
-        })
+        let checkValid = await NewLeads.findById(leadId)
+        if (checkValid) {
+            await NewLeads.findByIdAndUpdate(leadId,
+                {
+                    $push: { followupDates: createdLeadUp },
+                },
+                { new: true })
+            res.status(200).json({
+                status: true,
+                message: "Lead updates submitted",
+                createdLeadUp
+            })
+        } else {
+            res.status(500).json({
+                status: false,
+                message: "Lead  not found",
+            })
+        }
 
     } catch (error) {
         res.status(500).json({
@@ -24,14 +38,14 @@ const createleadsUpdate = async (req, res, next) => {
     }
 }
 
-const getAllLead = async (req, res, next) => {
+const getLeadhistory = async (req, res, next) => {
     try {
         // console.log(req.user?._id);
-        let leads = await NewLeads.find({ userId: req.user?._id })
+        let leadupdatehistory = await LeadsUpdates.find({ userId: req.user?._id })
         res.status(200).json({
             status: true,
-            message: " All Leads data",
-            leads
+            message: "leads history",
+            leadupdatehistory
         })
 
     } catch (error) {
@@ -43,23 +57,31 @@ const getAllLead = async (req, res, next) => {
         })
     }
 }
-const getSingleLead = async (req, res, next) => {
+
+const updateLeadStatus = async (req, res, next) => {
     try {
-        let { id } = req.params
-        let lead = await NewLeads.findById(id)
-        if (lead) {
+        let reqData = req.body
+        let newLeadStatus = new NewStatus({ ...reqData, userId: req.user?._id })
+        let leadStatusupdated = await newLeadStatus.save()
+        // console.log(leadStatusupdated ,reqData.leadId);
+        let checkValid = await NewLeads.findById(reqData.leadId)
+        if (checkValid) {
+            await NewLeads.findByIdAndUpdate(reqData.leadId,
+                {
+                    $push: { leadStatus: leadStatusupdated },
+                },
+                { new: true })
             res.status(200).json({
                 status: true,
-                message: "Lead data",
-                lead
+                message: "Lead status updated succuss",
+                leadStatusupdated
             })
         } else {
             res.status(404).json({
                 status: false,
-                message: "Lead not fount related to this id"
+                message: "Lead id not found",
             })
         }
-
     } catch (error) {
         // console.log(error);
         res.status(500).json({
@@ -69,24 +91,16 @@ const getSingleLead = async (req, res, next) => {
         })
     }
 }
-const deleteLead = async (req, res, next) => {
+
+const getLeadStatus = async (req, res, next) => {
     try {
-        let { id } = req.params
-        let lead = await NewLeads.findById(id)
-        // console.log(lead ,id);
-        if (lead) {
-            await NewLeads.findByIdAndDelete(id)
-            res.status(200).json({
-                status: true,
-                message: "Lead deleted succuss",
-            })
-        } else {
-            res.status(404).json({
-                status: false,
-                message: "Lead not fount related to this id"
-            })
-        }
-
+        let { leadId } = req.params
+        let leadStatus = await NewStatus.find({ userId: req.user?._id, leadId: leadId })
+        res.status(200).json({
+            status: true,
+            message: "leads status",
+            leadStatus
+        })
     } catch (error) {
         // console.log(error);
         res.status(500).json({
@@ -98,5 +112,96 @@ const deleteLead = async (req, res, next) => {
 }
 
 
+// for admin new lead type or create new status 
 
-module.exports = { createleadsUpdate, getAllLead, getSingleLead ,deleteLead }
+
+const addNewleadStatus = async (req, res, next) => {
+    try {
+        let reqData = await req.body
+        if (req.user.role == "admin") {
+            let isExist = await NewLeadStatus.findOne({
+                userId: req.user?._id,
+                leadType: reqData.leadType
+                , leadStatusName: reqData.leadStatusName
+            })
+            if (isExist) {
+                res.status(400).json({
+                    status: false,
+                    message: "Status already exist",
+                    savedData
+                })
+            } else {
+                let details = new NewLeadStatus({ ...reqData, userId: req.user?._id })
+                let savedData = await details.save()
+                res.status(200).json({
+                    status: true,
+                    message: "New status created success",
+                    savedData
+                })
+            }
+        } else {
+            res.status(500).json({
+                status: false,
+                message: "Only admin/company can create new status"
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: "Lead type not created",
+            error
+        })
+    }
+}
+
+const updateStatusType = async (req, res, next) => {
+    let findDetails = await NewLeadStatus.findById(req.params.id)
+    if (findDetails) {
+        await NewLeadStatus.findByIdAndUpdate(req.params.id, {
+            ...req.body
+        }, { new: true })
+        res.status(200).json({
+            status: true,
+            message: " Status type updated success",
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: "id not found",
+        })
+    }
+
+}
+const getAllStatus = async (req, res, next) => {
+    let data = await NewLeadStatus.find()
+    // if(req.user?.role == "admin"){}
+    res.status(200).json({
+        status: true,
+        message: "All Status types",
+        data
+    })
+}
+
+const deleteStatus = async (req, res, next) => {
+    let data = await NewLeadStatus.findByIdAndDelete(req.params.id)
+    // if(req.user?.role == "admin"){}
+    if (data) {
+        res.status(200).json({
+            status: true,
+            message: "Status deleted succus",
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: "Status id not found",
+        })
+
+    }
+}
+
+
+module.exports = {
+    createleadsUpdate, getLeadhistory, getAllStatus,
+    updateLeadStatus, getLeadStatus, addNewleadStatus,
+    deleteStatus, updateStatusType
+}

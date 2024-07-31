@@ -1,4 +1,5 @@
 const mongoose = require("mongoose")
+const Schema = mongoose.Schema;
 
 const LeadsSchema = new mongoose.Schema({
     uniqeQueryId:{type:String},
@@ -39,10 +40,12 @@ const LeadsSchema = new mongoose.Schema({
     sender:{type:String,default:"Client"},
     viewStatus:{type:String},
     productId:{type:String},
-    statusBar:{type:Array},
+    statusBar:{type:Array,},
+    followupDates:[],
     isPositiveLead:{type:Boolean ,default:true},
-    leadStatus:{
-        type:Array
+    leadStatus:[],
+    leadsUpdates:{
+        type:Schema.Types.ObjectId ,ref:"LeadsUpdates"
     }
 
 }, { timestamps: true })
