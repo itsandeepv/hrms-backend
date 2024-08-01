@@ -8,7 +8,8 @@
 <body>
     <h5>Update of database</h5>
     <div id="updates"></div>
-
+    <h1>Follow-Up Notifications</h1>
+    <ul id="notifications"></ul>
     
 </body>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -22,6 +23,28 @@
         newUpdate.textContent = `Database change: ${JSON.stringify(data)}`;
         updatesDiv.appendChild(newUpdate);
       });
+     
+
+    socket.on('triggerUserDetails', () => {
+      // Simulate sending user details to the server
+      socket.emit('userDetails',{
+        "fullName": "Sandeep",
+        "indiaMartKey": "6dE9K5WQiuQe6H5Pim9BjErINrlrr95_",
+        "tradeIndaiKey": "tradeIndaiKey",
+        "userType": "user",
+        "_id": "66a77fec5f8e7634012668a5",
+        "email": "itsandeepverma@gmail.com"
+    });
+    });
+
+    socket.on('followUpNotification', (data) => {
+        console.log(data);
+      const notificationList = document.getElementById('notifications');
+      const listItem = document.createElement('li');
+      listItem.textContent = data.message;
+      notificationList.appendChild(listItem);
+    });
+   
    
 </script>
 

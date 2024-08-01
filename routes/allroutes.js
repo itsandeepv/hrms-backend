@@ -1,4 +1,4 @@
-const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead } = require("../controllars/leadscontrollar");
+const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary } = require("../controllars/leadscontrollar");
 const { createleadsUpdate, getLeadhistory, updateLeadStatus, getLeadStatus, addNewleadStatus, getAllStatus, deleteStatus, updateStatusType } = require("../controllars/leadsUpdatescontrollar");
 const { deleteNotification, getNotification } = require("../controllars/notificationcontrollar");
 const { ValidateUser } = require("../middlewares/authMiddleware");
@@ -36,5 +36,6 @@ leadsrouter.put("/update-status/:id" ,ValidateUser,updateStatusType)
 
 // home page api routes
 leadsrouter.get("/get-lead-by-count" ,ValidateUser,dashboardleadCount)
+leadsrouter.get("/search" ,ValidateUser,searchQuary)
 
 module.exports = {leadsrouter};

@@ -14,6 +14,8 @@ const createleadsUpdate = async (req, res, next) => {
         if (checkValid) {
             await NewLeads.findByIdAndUpdate(leadId,
                 {
+                    nextFollowUpDate:createdLeadUp.nextFollowUp,
+                    isLeadComplete:createdLeadUp.isDealComplete,
                     $push: { followupDates: createdLeadUp },
                 },
                 { new: true })
@@ -63,14 +65,21 @@ const updateLeadStatus = async (req, res, next) => {
         let reqData = req.body
         let newLeadStatus = new NewStatus({ ...reqData, userId: req.user?._id })
         let leadStatusupdated = await newLeadStatus.save()
-        // console.log(leadStatusupdated ,reqData.leadId);
+        // console.log(leadStatusupdated, "isPositive:");
         let checkValid = await NewLeads.findById(reqData.leadId)
+
         if (checkValid) {
-            await NewLeads.findByIdAndUpdate(reqData.leadId,
-                {
-                    $push: { leadStatus: leadStatusupdated },
-                },
-                { new: true })
+            const statusExists = checkValid.leadStatus.some(status => 
+                status.statusName == leadStatusupdated.statusName  // Replace statusField with the unique field to identify leadStatus
+            );
+            if(!statusExists){
+                await NewLeads.findByIdAndUpdate(reqData.leadId,
+                    {
+                        isPositiveLead: leadStatusupdated.isPositive,
+                        $push: { leadStatus: leadStatusupdated },
+                    },
+                    { new: true })
+            }
             res.status(200).json({
                 status: true,
                 message: "Lead status updated succuss",

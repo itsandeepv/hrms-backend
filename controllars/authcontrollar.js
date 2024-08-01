@@ -76,6 +76,8 @@ const loginUser = async (req, res, next) => {
                             token: token,
                             user: {
                                 fullName:user.fullName,
+                                indiaMartKey:user.indiaMartKey,
+                                tradeIndaiKey:user.tradeIndaiKey,
                                 userType:user.userType,
                                 _id:user._id,
                                 email:user.email,

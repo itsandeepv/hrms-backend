@@ -6,5 +6,12 @@ const createNote = async (data) => {
     // console.log(createdata);
 }
 
+const isToday = (date) => {
+    const today = new Date();
+    date = new Date(date);
+    return date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
+  };
 
-module.exports = { createNote }
+module.exports = { createNote ,isToday }

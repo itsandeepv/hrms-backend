@@ -1,47 +1,3 @@
-// require("dotenv").config();
-// const express = require("express");
-// const app = express();
-// const cors = require("cors");
-// const mongoose = require("mongoose");
-// var bodyParser = require("body-parser");
-// const morgen = require("morgan");
-// const { authrouter } = require("./routes/authroutes");
-// // connection();
-// app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({ extended: true }));
-// // middlewares
-// app.use(express.json());
-// app.use(cors());
-// app.use(morgen("dev"));
-// app.use(express.urlencoded({ extended: true }));
-
-// const moongose_Url2 = "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/";
-
-// //auth route start here
-// app.use("/api", authrouter);
-
-// mongoose
-//   .connect(moongose_Url2, {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-//   })
-//   .then((result) => {
-//     // Successfully connected
-//     console.log("Your DataBase is Conneted succesfully ");
-//   })
-//   .catch((err) => {
-//     // Catch any potential error
-//     console.log(
-//       "Unable to connect to MongoDB. Error: Please Check Your EnterNet Connections " +
-//         err
-//     );
-//   });
-
-
-// const port = 5001;
-// app.listen(port, () => {
-//   console.log("server connect succesfully on host : " + port);
-// });
 
 require("dotenv").config();
 const express = require("express");
@@ -51,9 +7,11 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const { Server } = require("socket.io");
+const cron = require('node-cron');
 const { authrouter } = require("./routes/authroutes");
 const { leadsrouter } = require("./routes/allroutes");
-const { createNote } = require("./utils/createNotefication");
+const { createNote, isToday } = require("./utils/createNotefication");
+const NewLeads = require("./models/leadsModel");
 
 const app = express();
 const server = http.createServer(app);
@@ -75,9 +33,6 @@ const mongooseUrl = process.env.DATABASE_URL || "mongodb+srv://sandeepverma:hrms
 
 // Auth route start here
 app.use("/api", authrouter);
-
-
-
 // leads route
 app.use("/api", leadsrouter);
 
@@ -109,32 +64,64 @@ db.once("open", () => {
   // console.log(collection);
   changeStream.on("change", (changedata) => {
     // console.log("Change detected:", changedata);
-    let {fullDocument} = changedata
-    if(changedata.operationType == "insert"){
+    let { fullDocument } = changedata
+    if (changedata.operationType == "insert") {
       let noteficationDetails = {
-        title:"You received  new lead ",
-        isRead:false,
-        userId :fullDocument.userId || "",
-        indiaMartKey :fullDocument.indiaMartKey||"",
-        tradeIndaiKey :fullDocument.tradeIndaiKey||"",
-        message:fullDocument.queryMessage||""
+        title: "You received  new lead ",
+        isRead: false,
+        userId: fullDocument.userId || "",
+        indiaMartKey: fullDocument.indiaMartKey || "",
+        tradeIndaiKey: fullDocument.tradeIndaiKey || "",
+        message: fullDocument.queryMessage || ""
       }
       createNote(noteficationDetails)
+      io.emit("dbUpdate", changedata); // Broadcast change to all connected clients
     }
-    io.emit("dbUpdate", changedata); // Broadcast change to all connected clients
   });
 });
 
 // WebSocket connection
 io.on("connection", (socket) => {
-  console.log("A user connected");
+  console.log("A user connected",socket.id);
+  socket.on("userDetails", async (data) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to the start of the day
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1); // Set to the start of the next day
+
+    try {
+      // Fetch leads based on user details and follow-up date
+      const leads = await NewLeads.find({
+        $or: [
+          { indiaMartKey: data.indiaMartKey },
+          { userId: data._id }
+        ]
+      });
+      const filteredLeads = leads.filter(lead => isToday(lead.nextFollowUpDate));
+
+      // console.log("Filtered leads", filteredLeads);
+      // Emit notifications for the filtered leads
+      filteredLeads.forEach(lead => {
+        socket.emit('followUpNotification', {
+          message: 'This is a reminder for your follow-up scheduled for today with ' + lead.senderName,
+          lead
+        });
+      });
+    } catch (err) {
+      console.error('Error fetching leads: ', err);
+    }
+  });
+  
+  io.emit('triggerUserDetails');
+  // cron.schedule('0 11 * * *', sendFollowUpNotification);
+
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });
 });
 
 // Start the server and listen for incoming requests
-const port = 5001;
+const port = process.env.PORT || 5001;
 server.listen(port, () => {
   console.log("Server connected successfully on host: " + port);
 });

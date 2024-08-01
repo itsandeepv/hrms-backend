@@ -39,14 +39,15 @@ const LeadsSchema = new mongoose.Schema({
     inquiryType:{type:String,default:"Buyer"},
     sender:{type:String,default:"Client"},
     viewStatus:{type:String},
+    isLeadComplete:{type:Boolean},
+    nextFollowUpDate:{type:String},
     productId:{type:String},
+    leadSource:{type:String},
     statusBar:{type:Array,},
     followupDates:[],
     isPositiveLead:{type:Boolean ,default:true},
     leadStatus:[],
-    leadsUpdates:{
-        type:Schema.Types.ObjectId ,ref:"LeadsUpdates"
-    }
+    leadsUpdates:{type:Schema.Types.ObjectId ,ref:"LeadsUpdates"}
 
 }, { timestamps: true })
 
