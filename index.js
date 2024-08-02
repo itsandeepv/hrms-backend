@@ -15,18 +15,22 @@ const NewLeads = require("./models/leadsModel");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "http://localhost:3000" } });
+const io = new Server(server, { cors: { origin: "*" } });
 
 // Middlewares
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  next();
+});
 app.use(cors({
-  origin: 'http://localhost:3000', // Allow only this origin to access the server
-  methods: ['GET', 'POST'], // Allow these HTTP methods
-  allowedHeaders: ['Content-Type'] // Allow these headers
+  allowedHeaders: ['Authorization', 'Content-Type'],
+  origin: '*',
 }));
-app.use(morgan("dev"));
+// app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
 const mongooseUrl = process.env.DATABASE_URL || "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase";
@@ -98,8 +102,6 @@ io.on("connection", (socket) => {
         ]
       });
       const filteredLeads = leads.filter(lead => isToday(lead.nextFollowUpDate));
-
-      // console.log("Filtered leads", filteredLeads);
       // Emit notifications for the filtered leads
       filteredLeads.forEach(lead => {
         socket.emit('followUpNotification', {

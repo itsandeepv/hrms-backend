@@ -14,4 +14,16 @@ const isToday = (date) => {
       date.getFullYear() === today.getFullYear();
   };
 
-module.exports = { createNote ,isToday }
+  const isBeforeToday = (dateString) => {
+    const today = new Date();
+    // Remove the time part of today's date for an accurate comparison
+    today.setHours(0, 0, 0, 0);
+    // Create a Date object from the given date string
+    const date = new Date(dateString);
+    date.setHours(0, 0, 0, 0);
+  
+    return date < today;
+  };
+  
+
+module.exports = { createNote ,isToday ,isBeforeToday }

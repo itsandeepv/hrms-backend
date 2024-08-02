@@ -1,5 +1,5 @@
 const NewLeads = require("../models/leadsModel");
-const { isToday } = require("../utils/createNotefication");
+const { isToday, isBeforeToday } = require("../utils/createNotefication");
 
 
 const createNewLead = async (req, res, next) => {
@@ -95,32 +95,32 @@ const getAllLead = async (req, res, next) => {
     }
 }
 
-const searchQuary = async (req,res ) => {
+const searchQuary = async (req, res) => {
     let leads = await NewLeads.find();
     let { searchValue } = req.query
 
     let userLeads = leads.filter((ld) => {
         return ld.indiaMartKey == req.user?.indiaMartKey || ld.userId == req.user?._id
     })
-    
-    let filteredLead = userLeads.filter((ld)=>{
+
+    let filteredLead = userLeads.filter((ld) => {
         // console.log(searchValue.toLowerCase() ,
         // ld.senderName?.toLowerCase()
         // ,ld?.senderState?.toLowerCase(),ld?.leadSource?.toLowerCase() ,);
-        return ld.senderCompany?.toLowerCase().includes(searchValue.toLowerCase()) 
-        || ld?.leadSource?.toLowerCase().includes(searchValue.toLowerCase())
-        || ld?.senderState?.toLowerCase().includes(searchValue.toLowerCase())
-        || ld?.senderName?.toLowerCase().includes(searchValue.toLowerCase())
-        || ld?.senderEmail?.toLowerCase().includes(searchValue.toLowerCase())
-        || ld?.senderPhone?.toLowerCase().includes(searchValue.toLowerCase())
-        || ld?.uniqeQueryId?.toLowerCase().includes(searchValue.toLowerCase())
-        || ld?.queryProductName?.toLowerCase().includes(searchValue.toLowerCase())
+        return ld.senderCompany?.toLowerCase().includes(searchValue.toLowerCase())
+            || ld?.leadSource?.toLowerCase().includes(searchValue.toLowerCase())
+            || ld?.senderState?.toLowerCase().includes(searchValue.toLowerCase())
+            || ld?.senderName?.toLowerCase().includes(searchValue.toLowerCase())
+            || ld?.senderEmail?.toLowerCase().includes(searchValue.toLowerCase())
+            || ld?.senderPhone?.toLowerCase().includes(searchValue.toLowerCase())
+            || ld?.uniqeQueryId?.toLowerCase().includes(searchValue.toLowerCase())
+            || ld?.queryProductName?.toLowerCase().includes(searchValue.toLowerCase())
     })
     // console.log(userLeads ,filteredLead);
     res.status(200).json({
-        status:true,
-        message:"Query result",
-        data:filteredLead
+        status: true,
+        message: "Query result",
+        data: filteredLead
     })
 
 
@@ -188,7 +188,13 @@ const dashboardleadCount = async (req, res, next) => {
     // console.log("allLead" ,allLead);
     let postiveLead = userAllLeads.filter((ld) => ld.isPositiveLead == true)
     let nagetiveLead = userAllLeads.filter((ld) => ld.isPositiveLead == false)
-    let todayFollowUp = userAllLeads.filter(lead => isToday(lead.nextFollowUpDate));
+    let todayFollowUp = userAllLeads.filter(lead => {
+        return isToday(lead.nextFollowUpDate) == true
+    });
+    let pendingFollowUp = userAllLeads.filter(lead => {
+        return isBeforeToday(lead.nextFollowUpDate) == true
+    });
+
 
     res.status(200).json({
         status: true,
@@ -198,8 +204,72 @@ const dashboardleadCount = async (req, res, next) => {
             postiveLead: postiveLead.length,
             nagetiveLead: nagetiveLead.length,
             todayFollowUp: todayFollowUp.length,
+            pendingFollowUp: pendingFollowUp.length,
         }
     })
+}
+
+
+const getLeadsByStatus = async (req, res) => {
+    let { status } = req.params
+    let allLeads = await NewLeads.find()
+    let userLeads = allLeads.filter((ld) => {
+        return ld.indiaMartKey == req.user?.indiaMartKey || ld.userId == req.user?._id
+    })
+    if (status == "positive") {
+        let data = userLeads.filter((ld) => ld.isPositiveLead == true)
+        let formatRes = data.map((item) => {
+            let { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
+            return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
+        })
+        res.status(200).json({
+            status: true,
+            message: "Positive Leads",
+            data: formatRes
+        })
+    }
+    if (status == "nagative") {
+        let data = userLeads.filter((ld) => ld.isPositiveLead == false)
+        let formatRes = data.map((item) => {
+            let { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
+            return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
+        })
+        res.status(200).json({
+            status: true,
+            message: "negative Leads",
+            data: formatRes
+        })
+    }
+    if (status == "pendingfollow") {
+        let data = userLeads.filter((ld) => isBeforeToday(ld.nextFollowUpDate) == true)
+        let formatRes = data.map((item) => {
+            let { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
+            return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
+        })
+        res.status(200).json({
+            status: true,
+            message: "pendingfollow Leads",
+            data: formatRes
+        })
+    }
+    if (status == "tadayfollow") {
+        let data = userLeads.filter((ld) => isToday(ld.nextFollowUpDate) == true)
+        let formatRes = data.map((item) => {
+            let { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
+            return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
+        })
+        res.status(200).json({
+            status: true,
+            message: "tadayfollow Leads",
+            data: formatRes
+        })
+    }
+    res.status(200).json({
+        status: true,
+        message: " Leads not found related to query",
+    })
+
+
 }
 
 
@@ -209,5 +279,6 @@ module.exports = {
     deleteLead,
     dashboardleadCount,
     editLead,
-    searchQuary
+    searchQuary,
+    getLeadsByStatus
 }
