@@ -76,9 +76,12 @@ db.once("open", () => {
         userId: fullDocument.userId || "",
         indiaMartKey: fullDocument.indiaMartKey || "",
         tradeIndaiKey: fullDocument.tradeIndaiKey || "",
-        message: fullDocument.queryMessage || ""
+        message: fullDocument.queryMessage || "",
+        leadId: fullDocument._id || "",
+        leadSource: fullDocument.leadSource || "",
       }
-      createNote(noteficationDetails)
+      //   // createNote(noteficationDetails)
+      
       io.emit("dbUpdate", changedata); // Broadcast change to all connected clients
     }
   });
@@ -92,7 +95,6 @@ io.on("connection", (socket) => {
     today.setHours(0, 0, 0, 0); // Set to the start of the day
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1); // Set to the start of the next day
-
     try {
       // Fetch leads based on user details and follow-up date
       const leads = await NewLeads.find({

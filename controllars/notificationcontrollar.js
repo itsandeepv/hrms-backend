@@ -31,18 +31,16 @@ const deleteNotification = async (req, res, next) => {
 }
 const getNotification = async (req, res, next) => {
     try {
-        console.log(req.user);
+        // console.log(req.user);
         let allData = await NewNotification.find()
         let filterdata = allData.filter((item)=>{
-            return item.userId == req.user.id ||item.indiaMartKey == req.user.indiaMartKey ||item.tradeIndaiKey == req.user.tradeIndaiKey 
+            return item.userId == req.user?._id ||item.indiaMartKey == req.user.indiaMartKey ||item.tradeIndaiKey == req.user.tradeIndaiKey 
         })
         res.status(200).json({
             status: true,
             message: "notefication fetch",
             data:filterdata
         })
-
-
     } catch (error) {
         res.status(500).json({
             status: false,

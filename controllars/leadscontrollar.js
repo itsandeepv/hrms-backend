@@ -104,11 +104,8 @@ const searchQuary = async (req, res) => {
     })
 
     let filteredLead = userLeads.filter((ld) => {
-        // console.log(searchValue.toLowerCase() ,
-        // ld.senderName?.toLowerCase()
-        // ,ld?.senderState?.toLowerCase(),ld?.leadSource?.toLowerCase() ,);
         return ld.senderCompany?.toLowerCase().includes(searchValue.toLowerCase())
-            || ld?.leadSource?.toLowerCase().includes(searchValue.toLowerCase())
+            // || ld?.leadSource?.toLowerCase().includes(searchValue.toLowerCase())
             || ld?.senderState?.toLowerCase().includes(searchValue.toLowerCase())
             || ld?.senderName?.toLowerCase().includes(searchValue.toLowerCase())
             || ld?.senderEmail?.toLowerCase().includes(searchValue.toLowerCase())
@@ -116,7 +113,7 @@ const searchQuary = async (req, res) => {
             || ld?.uniqeQueryId?.toLowerCase().includes(searchValue.toLowerCase())
             || ld?.queryProductName?.toLowerCase().includes(searchValue.toLowerCase())
     })
-    // console.log(userLeads ,filteredLead);
+
     res.status(200).json({
         status: true,
         message: "Query result",
@@ -216,60 +213,62 @@ const getLeadsByStatus = async (req, res) => {
     let userLeads = allLeads.filter((ld) => {
         return ld.indiaMartKey == req.user?.indiaMartKey || ld.userId == req.user?._id
     })
-    if (status == "positive") {
-        let data = userLeads.filter((ld) => ld.isPositiveLead == true)
-        let formatRes = data.map((item) => {
-            let { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
-            return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
-        })
-        res.status(200).json({
-            status: true,
-            message: "Positive Leads",
-            data: formatRes
+    try {
+        if (status == "positive") {
+            let data = userLeads.filter((ld) => ld.isPositiveLead == true)
+            let formatRes = data.map((item) => {
+                // console.log(item.senderMobileNumber ,"<<<<<senderMobileNumber");
+                let { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
+                return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
+            })
+            res.status(200).json({
+                status: true,
+                message: "Positive Leads",
+                data: formatRes
+            })
+        }
+        if (status == "negative") {
+            let data = userLeads.filter((ld) => ld.isPositiveLead == false)
+            let formatRes = data.map((item) => {
+                let { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
+                return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
+            })
+            res.status(200).json({
+                status: true,
+                message: "Negative Leads",
+                data: formatRes
+            })
+        }
+        if (status == "pendingfollow") {
+            let data = userLeads.filter((ld) => isBeforeToday(ld.nextFollowUpDate) == true)
+            let formatRes = data.map((item) => {
+                let { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
+                return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
+            })
+            res.status(200).json({
+                status: true,
+                message: "Pending followUp Leads",
+                data: formatRes
+            })
+        }
+        if (status == "todayfollow") {
+            let data = userLeads.filter((ld) => isToday(ld.nextFollowUpDate) == true)
+            let formatRes = data.map((item) => {
+                let { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
+                return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
+            })
+            res.status(200).json({
+                status: true,
+                message: "Today followup Leads",
+                data: formatRes
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            status: false,error,
+            message: " Leads not found related to query",
         })
     }
-    if (status == "nagative") {
-        let data = userLeads.filter((ld) => ld.isPositiveLead == false)
-        let formatRes = data.map((item) => {
-            let { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
-            return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
-        })
-        res.status(200).json({
-            status: true,
-            message: "negative Leads",
-            data: formatRes
-        })
-    }
-    if (status == "pendingfollow") {
-        let data = userLeads.filter((ld) => isBeforeToday(ld.nextFollowUpDate) == true)
-        let formatRes = data.map((item) => {
-            let { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
-            return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
-        })
-        res.status(200).json({
-            status: true,
-            message: "pendingfollow Leads",
-            data: formatRes
-        })
-    }
-    if (status == "tadayfollow") {
-        let data = userLeads.filter((ld) => isToday(ld.nextFollowUpDate) == true)
-        let formatRes = data.map((item) => {
-            let { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
-            return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
-        })
-        res.status(200).json({
-            status: true,
-            message: "tadayfollow Leads",
-            data: formatRes
-        })
-    }
-    res.status(200).json({
-        status: true,
-        message: " Leads not found related to query",
-    })
-
-
 }
 
 

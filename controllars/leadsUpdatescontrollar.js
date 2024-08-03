@@ -182,7 +182,7 @@ const updateStatusType = async (req, res, next) => {
 
 }
 const getAllStatus = async (req, res, next) => {
-    let data = await NewLeadStatus.find()
+    let data = await NewLeadStatus.find({userId:req.user?._id})
     // if(req.user?.role == "admin"){}
     res.status(200).json({
         status: true,
