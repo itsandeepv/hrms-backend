@@ -14,7 +14,7 @@ const createleadsUpdate = async (req, res, next) => {
         if (checkValid) {
             await NewLeads.findByIdAndUpdate(leadId,
                 {
-                    nextFollowUpDate:createdLeadUp.nextFollowUp,
+                    nextFollowUpDate:reqData.nextFollowUp,
                     isLeadComplete:createdLeadUp.isDealComplete,
                     $push: { followupDates: createdLeadUp },
                 },
