@@ -80,7 +80,7 @@ db.once("open", () => {
         leadId: fullDocument._id || "",
         leadSource: fullDocument.leadSource || "",
       }
-      //   // createNote(noteficationDetails)
+       // createNote(noteficationDetails)
       
       io.emit("dbUpdate", changedata); // Broadcast change to all connected clients
     }
@@ -104,6 +104,8 @@ io.on("connection", (socket) => {
         ]
       });
       const filteredLeads = leads.filter(lead => isToday(lead.nextFollowUpDate));
+      console.log(filteredLeads);
+      
       // Emit notifications for the filtered leads
       filteredLeads.forEach(lead => {
         socket.emit('followUpNotification', {
@@ -117,7 +119,6 @@ io.on("connection", (socket) => {
   });
   
   io.emit('triggerUserDetails');
-  // cron.schedule('0 11 * * *', sendFollowUpNotification);
 
   socket.on("disconnect", () => {
     console.log("User disconnected");

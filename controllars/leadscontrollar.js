@@ -57,13 +57,32 @@ const getAllLead = async (req, res, next) => {
     try {
         // Get page and limit from query parameters
         let { page, limit, leadSource } = req.query
-        // const isPositiveLead = req.query.isPositiveLead == 'true'; // Convert to boolean if needed
-
+        let startfromdate = req.query.startfromdate
+        let endfromdate = req.query.endfromdate
+        let leadStatus = req.query.leadStatus
+        // console.log(endfromdate ,new Date(startfromdate) , "<<<<<<<<<<sdf");
+        const isPositiveLead = req.query.isPositive; // Convert to boolean if needed
         const skip = ((page || 1) - 1) * (limit || 10);
         const query = {};
         if (leadSource) { query.leadSource = leadSource; }
-        // if (isPositiveLead != undefined) { query.isPositiveLead = isPositiveLead; }
+        if (isPositiveLead) { query.isPositiveLead = isPositiveLead; }
+        if (startfromdate && endfromdate) {
+            query.createdAt = { $gte: new Date(startfromdate), $lte: new Date(endfromdate) };
+        }
+        if (startfromdate) {
+            query.createdAt = { $gte: new Date(startfromdate) };
+        }
+        if (endfromdate) {
+            query.createdAt = { $lte: new Date(endfromdate) };
+        }
+        if (leadStatus) {
+            // Convert leadStatus to an array if it's a string
+            const leadStatusArray = Array.isArray(leadStatus) ? leadStatus : [leadStatus];
+            query['leadStatus.statusName'] = { $in: leadStatusArray };
+        }
 
+        console.log(query);
+        
         let leads = await NewLeads.find(query).skip(skip).limit(limit || 10);
         let userAllLeads = leads.filter((ld) => {
             return ld.indiaMartKey == req.user?.indiaMartKey || ld.userId == req.user?._id
