@@ -80,7 +80,7 @@ db.once("open", () => {
         leadId: fullDocument._id || "",
         leadSource: fullDocument.leadSource || "",
       }
-       // createNote(noteficationDetails)
+       createNote(noteficationDetails)
       
       io.emit("dbUpdate", changedata); // Broadcast change to all connected clients
     }

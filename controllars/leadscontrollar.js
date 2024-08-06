@@ -80,9 +80,7 @@ const getAllLead = async (req, res, next) => {
             const leadStatusArray = Array.isArray(leadStatus) ? leadStatus : [leadStatus];
             query['leadStatus.statusName'] = { $in: leadStatusArray };
         }
-
-        console.log(query);
-        
+        // console.log(query);
         let leads = await NewLeads.find(query).skip(skip).limit(limit || 10);
         let userAllLeads = leads.filter((ld) => {
             return ld.indiaMartKey == req.user?.indiaMartKey || ld.userId == req.user?._id
@@ -291,12 +289,52 @@ const getLeadsByStatus = async (req, res) => {
 }
 
 
+
+const getChartDetails = async(req, res) => {
+    try {
+        let allLeads = await NewLeads.find();
+        
+        // Filter leads for the current user
+        let userLeads = allLeads.filter((ld) => {
+            return ld.indiaMartKey === req.user?.indiaMartKey || ld.userId === req.user?._id;
+        });
+        
+        // Group leads by month
+        // console.log(userLeads , "<<<SdfcreatedAt");
+        let monthlyLeadCount = userLeads.reduce((acc, lead) => {
+            if(lead?.createdAt){
+                let createdAt = new Date(lead?.createdAt);
+                // console.log(createdAt , "<<<SdfcreatedAt" ,lead);
+                if (!isNaN(createdAt.getTime())) {
+                    let month = createdAt.toISOString().slice(0, 7); // YYYY-MM format
+                    if (!acc[month]) {
+                        acc[month] = 0;
+                    }
+                    acc[month]++;
+                }
+            }
+            return acc;
+        }, {});
+        
+        res.status(200).json({
+            success: true,
+            data: monthlyLeadCount
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
 module.exports = {
     createNewLead, getAllLead,
     getSingleLead,
     deleteLead,
     dashboardleadCount,
     editLead,
-    searchQuary,
+    searchQuary,getChartDetails,
     getLeadsByStatus
 }

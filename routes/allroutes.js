@@ -1,4 +1,4 @@
-const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus } = require("../controllars/leadscontrollar");
+const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus, getChartDetails } = require("../controllars/leadscontrollar");
 const { createleadsUpdate, getLeadhistory, updateLeadStatus, getLeadStatus, addNewleadStatus, getAllStatus, deleteStatus, updateStatusType } = require("../controllars/leadsUpdatescontrollar");
 const { deleteNotification, getNotification } = require("../controllars/notificationcontrollar");
 const { ValidateUser } = require("../middlewares/authMiddleware");
@@ -38,5 +38,6 @@ leadsrouter.put("/update-status/:id" ,ValidateUser,updateStatusType)
 leadsrouter.get("/get-lead-by-count" ,ValidateUser,dashboardleadCount)
 leadsrouter.get("/search" ,ValidateUser,searchQuary)
 leadsrouter.get("/home-leads/:status" ,ValidateUser,getLeadsByStatus)
+leadsrouter.get("/chart" ,ValidateUser,getChartDetails)
 
 module.exports = {leadsrouter};
