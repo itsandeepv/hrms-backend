@@ -10,7 +10,7 @@ const { Server } = require("socket.io");
 const cron = require('node-cron');
 const { authrouter } = require("./routes/authroutes");
 const { leadsrouter } = require("./routes/allroutes");
-const { createNote, isToday } = require("./utils/createNotefication");
+const { createNote, isToday, publicUrl } = require("./utils/createNotefication");
 const NewLeads = require("./models/leadsModel");
 
 const app = express();
@@ -59,6 +59,7 @@ mongoose.connect(mongooseUrl, {
     console.log("Unable to connect to MongoDB. Error: " + err);
   });
 
+let isMessSave = true
 // Listen for MongoDB changes using Change Streams
 const db = mongoose.connection;
 db.once("open", () => {
@@ -70,7 +71,7 @@ db.once("open", () => {
     // console.log("Change detected:", changedata);
     let { fullDocument } = changedata
     if (changedata.operationType == "insert") {
-      let noteficationDetails = {
+      let notificationDetails = {
         title: "You received  new lead ",
         isRead: false,
         userId: fullDocument.userId || "",
@@ -80,7 +81,23 @@ db.once("open", () => {
         leadId: fullDocument._id || "",
         leadSource: fullDocument.leadSource || "",
       }
-       createNote(noteficationDetails)
+      const requestOptions = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(notificationDetails)
+    };
+      if(isMessSave){
+        fetch(`${publicUrl}/new-notification`, requestOptions).then((res)=>res.json()).then((data)=>{
+          console.log(data ,notificationDetails);
+          isMessSave = false
+        }).catch((er)=>{
+          console.log(er);
+        })
+      }
+
+      //  createNote(noteficationDetails)
       
       io.emit("dbUpdate", changedata); // Broadcast change to all connected clients
     }
@@ -104,8 +121,7 @@ io.on("connection", (socket) => {
         ]
       });
       const filteredLeads = leads.filter(lead => isToday(lead.nextFollowUpDate));
-      console.log(filteredLeads);
-      
+      // console.log(filteredLeads);
       // Emit notifications for the filtered leads
       filteredLeads.forEach(lead => {
         socket.emit('followUpNotification', {

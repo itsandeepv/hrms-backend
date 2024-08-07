@@ -1,6 +1,7 @@
 const NewLeadStatus = require("../models/addleadStatus");
 const NewLeads = require("../models/leadsModel");
 const LeadsUpdates = require("../models/leadsUpdateModel");
+const NewNotification = require("../models/notification");
 const NewStatus = require("../models/statusModel");
 
 
@@ -209,8 +210,27 @@ const deleteStatus = async (req, res, next) => {
 }
 
 
+const createNotification = async (req,res) => {
+    try {        
+        let createNote = await NewNotification(req.body)
+        let createdata = await createNote.save()
+        res.status(200).json({
+            status: true,
+            message: "Message saved",
+            createdata
+        })
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: error,
+        })
+    }
+    // console.log(createdata);
+    
+}
+
 module.exports = {
     createleadsUpdate, getLeadhistory, getAllStatus,
     updateLeadStatus, getLeadStatus, addNewleadStatus,
-    deleteStatus, updateStatusType
+    deleteStatus, updateStatusType,createNotification
 }

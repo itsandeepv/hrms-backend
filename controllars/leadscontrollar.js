@@ -5,8 +5,8 @@ const { isToday, isBeforeToday } = require("../utils/createNotefication");
 const createNewLead = async (req, res, next) => {
     let reqData = req.body
     try {
-        let newLead = new NewLeads({ ...reqData, userId: req.user?._id })
-        // console.log("newLead" ,reqData ,req.user ,newLead);
+        let newLead = new NewLeads({ ...reqData, userId: req.user?._id, queryTime: new Date(reqData.queryTime) })
+        // console.log("newLead" ,new Date(reqData.queryTime) );
         let createdLead = await newLead.save()
         res.status(200).json({
             status: true,
@@ -282,7 +282,7 @@ const getLeadsByStatus = async (req, res) => {
         }
     } catch (error) {
         res.status(500).json({
-            status: false,error,
+            status: false, error,
             message: " Leads not found related to query",
         })
     }
@@ -290,35 +290,48 @@ const getLeadsByStatus = async (req, res) => {
 
 
 
-const getChartDetails = async(req, res) => {
+const getChartDetails = async (req, res) => {
     try {
         let allLeads = await NewLeads.find();
-        
-        // Filter leads for the current user
         let userLeads = allLeads.filter((ld) => {
             return ld.indiaMartKey === req.user?.indiaMartKey || ld.userId === req.user?._id;
         });
-        
-        // Group leads by month
-        // console.log(userLeads , "<<<SdfcreatedAt");
-        let monthlyLeadCount = userLeads.reduce((acc, lead) => {
-            if(lead?.createdAt){
-                let createdAt = new Date(lead?.createdAt);
-                // console.log(createdAt , "<<<SdfcreatedAt" ,lead);
-                if (!isNaN(createdAt.getTime())) {
-                    let month = createdAt.toISOString().slice(0, 7); // YYYY-MM format
-                    if (!acc[month]) {
-                        acc[month] = 0;
-                    }
-                    acc[month]++;
+
+        // Group filtered leads by month
+        const userLeadIds = userLeads.map(lead => lead._id); // Get IDs of filtered leads
+        const data = await NewLeads.aggregate([
+            {
+                $match: { _id: { $in: userLeadIds } } // Filter by the IDs of user-specific leads
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: '$createdAt' },
+                        month: { $month: '$createdAt' }
+                    },
+                    count: { $sum: 1 }
                 }
+            },
+            {
+                $sort: { '_id.year': 1, '_id.month': 1 }
             }
-            return acc;
-        }, {});
-        
+        ]);
+
+        const currentYear = new Date().getFullYear();
+        const allMonths = Array.from({ length: 12 }, (_, i) => ({
+            _id: { year: currentYear, month: i + 1 },
+            count: 0
+        }));
+
+        // Merge aggregated data with all months
+        const mergedData = allMonths.map(month => {
+            const found = data.find(d => d._id.year === month._id.year && d._id.month === month._id.month);
+            return found ? found : month;
+        });
+
         res.status(200).json({
             success: true,
-            data: monthlyLeadCount
+            data: mergedData
         });
     } catch (error) {
         res.status(500).json({
@@ -335,6 +348,6 @@ module.exports = {
     deleteLead,
     dashboardleadCount,
     editLead,
-    searchQuary,getChartDetails,
+    searchQuary, getChartDetails,
     getLeadsByStatus
 }

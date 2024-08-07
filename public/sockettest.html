@@ -16,7 +16,6 @@
 <script>
     const socket = io();
     socket.on('connection');
-    
     socket.on('dbUpdate', (data) => {
         const updatesDiv = document.getElementById('updates');
         const newUpdate = document.createElement('div');

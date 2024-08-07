@@ -46,6 +46,7 @@ const LeadsSchema = new mongoose.Schema({
     statusBar:{type:Array,},
     followupDates:[],
     isPositiveLead:{type:Boolean ,default:true},
+    createdAt:{type:Date ,default:Date.now()},
     leadStatus:[],
     leadsUpdates:{type:Schema.Types.ObjectId ,ref:"LeadsUpdates"}
 
