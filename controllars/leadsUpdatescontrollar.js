@@ -44,7 +44,7 @@ const createleadsUpdate = async (req, res, next) => {
 const getLeadhistory = async (req, res, next) => {
     try {
         // console.log(req.user?._id);
-        let leadupdatehistory = await LeadsUpdates.find({ userId: req.user?._id })
+        let leadupdatehistory = await LeadsUpdates.find({ userId: req.user?._id }).sort({ createdAt: -1 })
         res.status(200).json({
             status: true,
             message: "leads history",

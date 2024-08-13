@@ -5,8 +5,8 @@ const createNote = async (data) => {
     let createdata = await createNote.save()
     // console.log(createdata);
 }
-const publicUrl = "http://hrmss.gocoolcare.com/api"
-// const publicUrl = "http://localhost:5001/api"
+// const publicUrl = "http://hrms.gocoolcare.com/api"
+const publicUrl = "http://localhost:5001/api"
 
 const isToday = (date) => {
     const today = new Date();

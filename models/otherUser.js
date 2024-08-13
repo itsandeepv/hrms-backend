@@ -1,8 +1,11 @@
 const mongoose = require("mongoose")
 
-const NewUserSchema = new mongoose.Schema({
+const UserSchema = new mongoose.Schema({
     fullName: {type: String},
     adminId: {type: String},
+    parent_id: {type: String},
+    indiaMartKey: { type: String },
+    tradeIndaiKey: { type: String },
     email: { type: String },
     password: { type: String },
     mobileNumber: { type: Number },
@@ -15,6 +18,8 @@ const NewUserSchema = new mongoose.Schema({
         lowercase: true,
        default: "sub-user"
     },
+    leadsAssign:[],
+    isActive:{type:Boolean,default:false},
     role: {
         type: String,
         lowercase: true,
@@ -25,5 +30,5 @@ const NewUserSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 
-const NewUser = mongoose.model("User", NewUserSchema)
-module.exports = NewUser
+const OtherUser = mongoose.model("OtherUser", UserSchema)
+module.exports = OtherUser

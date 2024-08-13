@@ -2,6 +2,7 @@ const mongoose = require("mongoose")
 
 const NewUserSchema = new mongoose.Schema({
     fullName: {type: String},
+    parent_id: {type: String},
     indiaMartKey: { type: String },
     tradeIndaiKey: { type: String },
     email: { type: String },
@@ -9,7 +10,9 @@ const NewUserSchema = new mongoose.Schema({
     mobileNumber: { type: Number },
     profilePic: { type: String },
     address: { type: String },
+    IndiaMartCrmUrl: { type: String ,default:"example.com" },
     otherUser:[],
+    isActive:{type:Boolean,default:"false"},
     companyName:{type: String},
     companyLogo:{type: String},
     userType: {
@@ -20,7 +23,8 @@ const NewUserSchema = new mongoose.Schema({
     role: {
         type: String,
         lowercase: true,
-        default: "user"
+        default: "user",
+        enum:["company" ,"admin" ,"superadmin" ,"employee" ,"hr" ,"manager"]
     },
     moduleAccuss:[]
 

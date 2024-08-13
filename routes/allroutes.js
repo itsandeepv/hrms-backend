@@ -1,4 +1,4 @@
-const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus, getChartDetails } = require("../controllars/leadscontrollar");
+const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus, getChartDetails, bulkLeadInset } = require("../controllars/leadscontrollar");
 const { createleadsUpdate, getLeadhistory, updateLeadStatus, getLeadStatus, addNewleadStatus, getAllStatus, deleteStatus, updateStatusType, createNotification } = require("../controllars/leadsUpdatescontrollar");
 const { deleteNotification, getNotification } = require("../controllars/notificationcontrollar");
 const { ValidateUser } = require("../middlewares/authMiddleware");
@@ -9,6 +9,7 @@ const leadsrouter = require("express").Router()
 // new  user register routes
 leadsrouter.post("/create-lead",ValidateUser ,createNewLead)
 leadsrouter.get("/all-leads",ValidateUser ,getAllLead)
+leadsrouter.post("/leads/bulk-insert",ValidateUser ,bulkLeadInset)
 leadsrouter.get("/lead/:id" ,ValidateUser,getSingleLead)
 leadsrouter.delete("/delete-lead/:id" ,ValidateUser,deleteLead)
 leadsrouter.put("/update-lead/:id" ,ValidateUser,editLead)
