@@ -8,6 +8,7 @@ const LeadsUpdatesSchema = new mongoose.Schema({
     queryRemark:{type:String,default:"Buyer"},
     userId:{type:String},
     leadId:{type:String},
+    nextFollowUpTime:{type:String},
     lead: { type: Schema.Types.ObjectId, ref: 'Leads', required: true },
     updatedAt: { type: Date, default: Date.now }  
 }, { timestamps: true })

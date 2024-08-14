@@ -25,8 +25,8 @@ const LeadsSchema = new mongoose.Schema({
     senderUid:{type:String},
     senderEmail:{type:String},
     senderEmailAlt:{type:String},
-    senderMobileNumber:{type:Number},
-    senderMobileNumberAlt:{type:Number},//sender_other_mobiles == senderMobileNumberAlt
+    senderMobileNumber:{type:String},
+    senderMobileNumberAlt:{type:String},//sender_other_mobiles == senderMobileNumberAlt
     senderCity:{type:String},
     senderCountry:{type:String},
     senderAddress:{type:String},
