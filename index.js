@@ -5,7 +5,6 @@ const http = require("http");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-const morgan = require("morgan");
 const { Server } = require("socket.io");
 const cron = require('node-cron');
 const { authrouter } = require("./routes/authroutes");
@@ -16,6 +15,7 @@ const NewLeads = require("./models/leadsModel");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
+mongoose.set('autoIndex', false);
 
 // Middlewares
 app.use(bodyParser.json());

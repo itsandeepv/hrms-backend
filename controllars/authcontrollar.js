@@ -496,6 +496,36 @@ const delete_user = async (req, res) => {
 
 
 // update user settings 
+const getSettings = async (req, res, next) => {
+    let { indiaMartKey, IndiaMartCrmUrl } = req.body
+    let user = req.user
+    try {
+        const findUser = await NewUser.findById(user?._id);
+        const userdata = await OtherUser.findById(user?._id);
+        // console.log(findUser);
+        if (findUser || userdata) {
+            res.status(200).json({
+                status: true,
+                message: "User Details !",
+                data :findUser || user
+            });
+
+        } else {
+            res.status(404).json({
+                status: false,
+                message: "User not found !",
+            });
+        }
+
+
+    } catch (error) {
+        res.status(500).json({
+            error: error,
+            status: false
+        });
+    }
+}
+
 
 const editSettings = async (req, res, next) => {
     let { indiaMartKey, IndiaMartCrmUrl } = req.body
@@ -550,5 +580,6 @@ module.exports = {
     editSettings,
     deleteCompanyUser,
     editCompanyUser,
-    updatePassword
+    updatePassword,
+    getSettings
 };

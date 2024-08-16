@@ -7,7 +7,7 @@ const createNewLead = async (req, res, next) => {
     try {
         let newLead = new NewLeads({
             ...reqData, userId: req.user?._id
-            , indiaMartKey: req.user?.indiaMartKey
+            // , indiaMartKey: req.user?.indiaMartKey
             , tradeIndaiKey: req.user?.tradeIndaiKey
             , queryTime: new Date(reqData.queryTime)
         })
@@ -38,7 +38,7 @@ const bulkLeadInset = async (req, res) => {
             return {
                 ...item,
                 userId: user?._id,
-                indiaMartKey: user?.indiaMartKey,
+                // indiaMartKey: user?.indiaMartKey,
                 tradeIndaiKey: user?.tradeIndaiKey,
 
             }
@@ -101,7 +101,7 @@ const getAllLead = async (req, res, next) => {
         let leadStatus = req.query.leadStatus
         const isPositiveLead = req.query.isPositive; // Convert to boolean if needed
         const followUpOf = req.query.followUpOf; // Convert to boolean if needed
-        // console.log("<<<<<<<<<<sdf" ,isPositiveLead);
+
         const skip = ((page ) - 1) * (limit);
         const query = {};
         if (leadSource) { query.leadSource = leadSource; }
@@ -120,14 +120,14 @@ const getAllLead = async (req, res, next) => {
             const leadStatusArray = Array.isArray(leadStatus) ? leadStatus : [leadStatus];
             query['leadStatus.statusName'] = { $in: leadStatusArray };
         }
-        // console.log(req.user , "asdaskjreq.user");
-        // / Get today's date in "YYYY-MM-DD" format
-        // const today = new Date().toISOString().split('T')[0];
-        // // Filter for leads with today's follow-ups
-        // query.nextFollowUpDate = { $lte: today };
 
         let leads = await NewLeads.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
 
+        // console.log(req.user , "<<<<<<<");
+        // req.user?.role == "admin" ? leads.filter((ld) => {
+        //     return   ld.userId == req.user?._id ||ld.indiaMartKey == req.user?.indiaMartKey 
+        // }) :
+        
         let userAllLeads = leads.filter((ld) => {
             return ld.indiaMartKey == req.user?.indiaMartKey || ld.userId == req.user?._id
         })
