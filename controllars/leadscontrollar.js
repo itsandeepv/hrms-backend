@@ -102,7 +102,7 @@ const getAllLead = async (req, res, next) => {
         const isPositiveLead = req.query.isPositive; // Convert to boolean if needed
         const followUpOf = req.query.followUpOf; // Convert to boolean if needed
 
-        const skip = ((page ) - 1) * (limit);
+        const skip = ((page) - 1) * (limit);
         const query = {};
         if (leadSource) { query.leadSource = leadSource; }
         if (isPositiveLead) { query.isPositiveLead = isPositiveLead; }
@@ -120,14 +120,13 @@ const getAllLead = async (req, res, next) => {
             const leadStatusArray = Array.isArray(leadStatus) ? leadStatus : [leadStatus];
             query['leadStatus.statusName'] = { $in: leadStatusArray };
         }
+        // query['createdAt'] = { $sort: { "createdAt": -1 } };
+        // $sort: { "date_recorded": -1 }
 
-        let leads = await NewLeads.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
+        console.log(query, "ADFASDF");
 
-        // console.log(req.user , "<<<<<<<");
-        // req.user?.role == "admin" ? leads.filter((ld) => {
-        //     return   ld.userId == req.user?._id ||ld.indiaMartKey == req.user?.indiaMartKey 
-        // }) :
-        
+        let leads = await NewLeads.find(query).sort({ queryTime: -1, createdAt: -1, }).skip(skip).limit(limit);
+
         let userAllLeads = leads.filter((ld) => {
             return ld.indiaMartKey == req.user?.indiaMartKey || ld.userId == req.user?._id
         })
@@ -137,22 +136,31 @@ const getAllLead = async (req, res, next) => {
         let pendingFollowUp = userAllLeads.filter(lead => {
             return isBeforeToday(lead.nextFollowUpDate) == true
         });
-        // console.log("SDFASFAS", pendingFollowUp);
 
-        // Get the total count of user leads
-        const totalLeads = await NewLeads.countDocuments({
+        // User-specific query
+        const userQuery = {
             $or: [
                 { indiaMartKey: req.user?.indiaMartKey },
                 { userId: req.user?._id }
             ]
-        });
+        };
+        // Combine user-specific query with existing filter criteria
+        const combinedQuery = { ...query, ...userQuery };
+
+        // Get the total count of documents that match the combined filter criteria
+       
+        const totalLeads = await NewLeads.countDocuments(combinedQuery);
+        let todayFollowUpcount = Math.ceil(todayFollowUp.length /(limit || 10))
+        let pendingFollowUpcount = Math.ceil(pendingFollowUp.length /(limit || 10))
+        console.log("todayFollowUpcount" ,pendingFollowUpcount, todayFollowUpcount);
+        
         res.status(200).json({
             status: true,
             message: "All Leads data",
             userAllLeads: followUpOf == "pending" ? pendingFollowUp : followUpOf == "today" ? todayFollowUp : userAllLeads,
             page,
             limit: limit || 10,
-            totalPages: Math.ceil(totalLeads / (limit || 10)),
+            totalPages: followUpOf == "pending" ? pendingFollowUpcount : followUpOf == "today" ? todayFollowUpcount : Math.ceil(totalLeads / (limit || 10)),
             totalLeads,
         })
     } catch (error) {

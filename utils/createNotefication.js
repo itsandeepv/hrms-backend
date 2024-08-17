@@ -26,7 +26,7 @@ const isToday = (date) => {
     const date = new Date(dateString);
     date.setHours(0, 0, 0, 0);
   
-    return date < today;
+    return date <= today;
   };
   
 

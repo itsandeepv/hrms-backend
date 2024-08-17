@@ -138,6 +138,40 @@ const getCompanyUser = async (req, res) => {
         });
     }
 }
+const getAllCompany = async (req, res) => {
+    try {
+        let user = req.user
+        const allowUser = ["superadmin"]
+        
+        if (allowUser.includes(user?.role)) {
+            const data = await NewUser.find()
+            // console.log("user", user);
+            let formatedData = data?.map((item)=>{
+                let details = {
+                    ...item.toObject(),
+                    password:""
+                }
+                return details
+            }).filter((d)=>d.role != "superadmin")
+            res.status(200).json({
+                status: true,
+                message: "Company data",
+                data :formatedData ,
+                
+                // :{companyName :data?.companyName }
+            })
+        } else {
+            res.status(500).json({
+                status: false,
+                message: "Authorization Error"
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            message: "Something went Wrong ?", error
+        });
+    }
+}
 
 const deleteCompanyUser = async (req, res) => {
     try {
@@ -581,5 +615,6 @@ module.exports = {
     deleteCompanyUser,
     editCompanyUser,
     updatePassword,
-    getSettings
+    getSettings,
+    getAllCompany
 };

@@ -32,7 +32,7 @@ const deleteNotification = async (req, res, next) => {
 const getNotification = async (req, res, next) => {
     try {
         // console.log(req.user);
-        let allData = await NewNotification.find()
+        let allData = await NewNotification.find().sort({createdAt :-1})
         let filterdata = allData.filter((item)=>{
             return item.userId == req.user?._id ||item.indiaMartKey == req.user.indiaMartKey ||item.tradeIndaiKey == req.user.tradeIndaiKey 
         })
