@@ -184,13 +184,27 @@ const updateStatusType = async (req, res, next) => {
 
 }
 const getAllStatus = async (req, res, next) => {
-    let data = await NewLeadStatus.find({userId:req.user?._id})
-    // if(req.user?.role == "admin"){}
-    res.status(200).json({
-        status: true,
-        message: "All Status types",
-        data
-    })
+    let reqUser = req.user
+    // console.log(reqUser );
+    if(["employee" ,"hr" ,"manager"].includes(reqUser?.role)){
+        let data = await NewLeadStatus.find({userId:reqUser?.companyId})
+        // if(req.user?.role == "admin"){}
+        res.status(200).json({
+            status: true,
+            message: "All Status types",
+            data
+        })
+
+    }else{
+        let data = await NewLeadStatus.find({userId:reqUser?._id})
+        // if(req.user?.role == "admin"){}
+        res.status(200).json({
+            status: true,
+            message: "All Status types",
+            data
+        })
+    }
+    
 }
 
 const deleteStatus = async (req, res, next) => {

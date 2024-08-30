@@ -9,10 +9,12 @@ const UserSchema = new mongoose.Schema({
     email: { type: String },
     password: { type: String },
     mobileNumber: { type: Number },
+    companyId: { type: String },
     profilePic: { type: String },
     address: { type: String },
     companyName:{type: String},
     companyLogo:{type: String},
+    designation:{type: String},
     userType: {
         type: String,
         lowercase: true,

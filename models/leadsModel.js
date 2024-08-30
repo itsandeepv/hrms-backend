@@ -4,9 +4,11 @@ const Schema = mongoose.Schema;
 const LeadsSchema = new mongoose.Schema({
     uniqeQueryId:{type:String},
     userId:{type:String},
+    companyId:{type:String},
     rfiId:{type:String},
     indiaMartKey:{type:String},
     tradeIndaiKey:{type:String},
+    leadAddedBy:{type:String},
     leadCallDuration:{type:String},
     queryMcatName:{type:String},
     queryMessage:{type:String},//message == queryMessage we can consider this as requirement of clients

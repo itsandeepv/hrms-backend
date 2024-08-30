@@ -16,6 +16,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 mongoose.set('autoIndex', false);
+// mongoose.set('bufferCommands', false)
+mongoose.set('strictQuery', false);
 
 // Middlewares
 app.use(bodyParser.json());
@@ -33,8 +35,9 @@ app.use(cors({
 // app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
-const mongooseUrl = process.env.DATABASE_URL || "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase";
-
+const mongooseUrl = process.env.DATABASE_URL || 
+// "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase";
+"mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
 // Auth route start here
 app.use("/api", authrouter);
 // leads route
@@ -48,7 +51,7 @@ app.get("/test", (req, res) => {
 })
 
 // Connect to MongoDB
-mongoose.connect(mongooseUrl, {
+ mongoose.connect(mongooseUrl, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
@@ -59,6 +62,7 @@ mongoose.connect(mongooseUrl, {
     console.log("Unable to connect to MongoDB. Error: " + err);
   });
 
+  
 let isMessSave = true
 // Listen for MongoDB changes using Change Streams
 const db = mongoose.connection;
@@ -135,7 +139,6 @@ io.on("connection", (socket) => {
   });
   
   io.emit('triggerUserDetails');
-
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });

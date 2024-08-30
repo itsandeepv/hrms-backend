@@ -1,7 +1,8 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const NewUser = require("../models/newUser");
 const OtherUser = require("../models/otherUser");
+const { publicUrl } = require("../utils/createNotefication");
 
 const register = async (req, res, next) => {
     try {
@@ -15,7 +16,8 @@ const register = async (req, res, next) => {
         if (reqData?.password) {
             bcrypt.hash(reqData.password, 10, function (error, hashPassword) {
                 if (error) {
-                    res.json({
+                    res.status(500).json({
+                        status: false,
                         error: error + "something went wrong !",
                     });
                 }
@@ -30,25 +32,29 @@ const register = async (req, res, next) => {
 
                 // console.log(user);
                 user.save().then((result) => {
-                    res.send({
+                    res.status(200).send({
+                        status: true,
                         message: "New User Added Done",
                         user: result,
                     });
                 })
                     .catch((error) => {
-                        res.json({
+                        res.status(500).json({
+                            status: false,
                             error: error,
                             message: "Above error aa ri hai",
                         });
                     });
             });
         } else {
-            res.json({
+            res.status(500).json({
+                status: false,
                 error: "Something went Wrong ?",
             });
         }
     } catch (error) {
-        res.json({
+        res.status(500).json({
+            status: false,
             message: "Something went Wrong ?",
             error
         });
@@ -90,11 +96,13 @@ const createUserByAdmin = async (req, res, next) => {
                     // console.log(user);
                     user.save().then((result) => {
                         res.send({
+                            status: true,
                             message: "New User created success",
                             user: result,
                         });
                     }).catch((error) => {
                         res.json({
+                            status: false,
                             error: error,
                             message: "error ",
                         });
@@ -102,13 +110,15 @@ const createUserByAdmin = async (req, res, next) => {
                 });
             } else {
                 res.json({
+                    status: false,
                     error: "Something went Wrong ?",
                 });
             }
         }
     } catch (error) {
         res.json({
-            error: "Something went Wrong ?",
+            status: false,
+            error,
         });
     }
 }
@@ -117,14 +127,16 @@ const getCompanyUser = async (req, res) => {
     try {
         let user = req.user
         const allowUser = ["company", "admin", "superadmin"]
-        console.log("user", user);
-
+        // console.log("user", user);
         if (allowUser.includes(user?.role)) {
-            const companyUser = await OtherUser.find({ adminId: user?._id })
+            // if()
+            const AllUser = await OtherUser.find()
+            const companyUser = await OtherUser.find({ companyId: user?._id })
+
             res.status(200).json({
                 status: true,
                 message: "Company Related user",
-                companyUser
+                companyUser: user?.role == "superadmin" ? AllUser : companyUser
             })
         } else {
             res.status(500).json({
@@ -142,22 +154,22 @@ const getAllCompany = async (req, res) => {
     try {
         let user = req.user
         const allowUser = ["superadmin"]
-        
+
         if (allowUser.includes(user?.role)) {
             const data = await NewUser.find()
             // console.log("user", user);
-            let formatedData = data?.map((item)=>{
+            let formatedData = data?.map((item) => {
                 let details = {
                     ...item.toObject(),
-                    password:""
+                    password: ""
                 }
                 return details
-            }).filter((d)=>d.role != "superadmin")
+            }).filter((d) => d.role != "superadmin")
             res.status(200).json({
                 status: true,
                 message: "Company data",
-                data :formatedData ,
-                
+                data: formatedData,
+
                 // :{companyName :data?.companyName }
             })
         } else {
@@ -206,13 +218,13 @@ const editCompanyUser = async (req, res) => {
         const allowUser = ["company", "admin", "superadmin"]
 
         if (allowUser.includes(user?.role)) {
-            const deletedUser = await OtherUser.findByIdAndUpdate(id, {
+            const data = await OtherUser.findByIdAndUpdate(id, {
                 ...bdata
             }, { new: true })
             res.status(200).json({
                 status: true,
                 message: " user edit success",
-                deletedUser
+                data
             })
         } else {
             res.status(500).json({
@@ -222,6 +234,35 @@ const editCompanyUser = async (req, res) => {
         }
     } catch (error) {
         res.status(500).json({
+            message: "Something went Wrong ?", error
+        });
+    }
+}
+const updateCompanyStatus = async (req, res) => {
+    try {
+        let user = req.user
+        let bdata = req.body
+        let { id } = req.params
+        const allowUser = ["company", "admin", "superadmin"]
+
+        if (allowUser.includes(user?.role)) {
+            const data = await NewUser.findByIdAndUpdate(id, {
+                ...bdata
+            }, { new: true })
+            res.status(200).json({
+                status: true,
+                message: " user edit success",
+                data
+            })
+        } else {
+            res.status(500).json({
+                status: false,
+                message: "Authorization Error"
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            status: false,
             message: "Something went Wrong ?", error
         });
     }
@@ -260,6 +301,7 @@ const loginUser = async (req, res, next) => {
                                     moduleAccuss: user.moduleAccuss || [],
                                     address: user.address || "",
                                     userType: user.userType,
+                                    companyId: user.companyId,
                                     role: user.role,
                                     _id: user._id,
                                     email: user.email,
@@ -309,6 +351,7 @@ const loginUser = async (req, res, next) => {
                                     moduleAccuss: user.moduleAccuss || [],
                                     address: user.address || "",
                                     userType: user.userType,
+                                    companyId: user.companyId,
                                     _id: user._id,
                                     role: user.role,
                                     email: user.email,
@@ -541,7 +584,7 @@ const getSettings = async (req, res, next) => {
             res.status(200).json({
                 status: true,
                 message: "User Details !",
-                data :findUser || user
+                data: findUser || user
             });
 
         } else {
@@ -555,6 +598,68 @@ const getSettings = async (req, res, next) => {
     } catch (error) {
         res.status(500).json({
             error: error,
+            status: false
+        });
+    }
+}
+
+let io;
+
+// assign lead to employee api
+const assignLead = async (req, res, next) => {
+    let user = req.user;
+    let { leadId, employeeId } = req.body;
+    // console.log(leadId, employeeId, user);
+    try {
+        // Find the user and check if the leadId already exists in the leadsAssign array
+        const userdata = await OtherUser.findById(employeeId);
+        if (!userdata) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found!",
+            });
+        }
+
+        // Check if the leadId already exists in the leadsAssign array
+        if (!userdata.leadsAssign.includes(leadId)) {
+            userdata.leadsAssign.push(leadId);
+            await userdata.save(); // Save the updated user data
+            let notificationDetails = {
+                title: "A new lead has been assigned to you!",
+                isRead: false,
+                leadId: leadId
+            }
+            const requestOptions = {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(notificationDetails)
+            };
+
+            fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
+                console.log(data, notificationDetails);
+                // io.emit('leadAssigned', notificationDetails);
+            }).catch((er) => {
+                console.log(er);
+            })
+
+            return res.status(200).json({
+                status: true,
+                message: "Lead assigned successfully!",
+                data: userdata
+            });
+        } else {
+            return res.status(200).json({
+                status: true,
+                message: "Lead is already assigned!",
+                data: userdata
+            });
+        }
+
+    } catch (error) {
+        return res.status(500).json({
+            error: error.message || error,
             status: false
         });
     }
@@ -605,6 +710,7 @@ module.exports = {
     register,
     loginUser,
     get_user,
+    assignLead,
     getSingle_user,
     delete_user,
     updateUser,
@@ -616,5 +722,6 @@ module.exports = {
     editCompanyUser,
     updatePassword,
     getSettings,
-    getAllCompany
+    getAllCompany,
+    updateCompanyStatus
 };

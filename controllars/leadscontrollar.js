@@ -1,5 +1,7 @@
+const moment = require("moment");
 const NewLeads = require("../models/leadsModel");
 const { isToday, isBeforeToday } = require("../utils/createNotefication");
+const mongoose = require("mongoose");
 
 
 const createNewLead = async (req, res, next) => {
@@ -9,7 +11,7 @@ const createNewLead = async (req, res, next) => {
             ...reqData, userId: req.user?._id
             // , indiaMartKey: req.user?.indiaMartKey
             , tradeIndaiKey: req.user?.tradeIndaiKey
-            , queryTime: new Date(reqData.queryTime)
+            // , queryTime: new Date(reqData.queryTime)
         })
         // console.log("newLead" ,new Date(reqData.queryTime) );
         let createdLead = await newLead.save()
@@ -95,7 +97,9 @@ const editLead = async (req, res, next) => {
 const getAllLead = async (req, res, next) => {
     try {
         // Get page and limit from query parameters
-        let { page, limit, leadSource } = req.query
+        let { leadSource } = req.query
+        let page = parseInt(req.query?.page, 10) || 1;
+        let limit = parseInt(req.query?.limit, 10) || 10;
         let startfromdate = req.query.startfromdate
         let endfromdate = req.query.endfromdate
         let leadStatus = req.query.leadStatus
@@ -104,38 +108,78 @@ const getAllLead = async (req, res, next) => {
 
         const skip = ((page) - 1) * (limit);
         const query = {};
-        if (leadSource) { query.leadSource = leadSource; }
+        if (leadSource) {
+            const leadSourceArray = Array.isArray(leadSource) ? leadSource : [leadSource];
+            query.leadSource = { $in: leadSourceArray };
+        }
         if (isPositiveLead) { query.isPositiveLead = isPositiveLead; }
         if (startfromdate && endfromdate) {
-            query.createdAt = { $gte: new Date(startfromdate), $lte: new Date(endfromdate) };
+            query.queryTime = {
+                $gte: moment(startfromdate).startOf('day').format('YYYY-MM-DD HH:mm:ss'),
+                $lte: moment(endfromdate).endOf('day').format('YYYY-MM-DD HH:mm:ss'),
+            };
+        } else if (startfromdate) {
+            query.queryTime = { $gte: moment(startfromdate).startOf('day').format('YYYY-MM-DD HH:mm:ss') };
+        } else if (endfromdate) {
+            query.queryTime = { $lte: moment(endfromdate).endOf('day').format('YYYY-MM-DD HH:mm:ss') };
         }
-        if (startfromdate) {
-            query.createdAt = { $gte: new Date(startfromdate) };
-        }
-        if (endfromdate) {
-            query.createdAt = { $lte: new Date(endfromdate) };
-        }
+
         if (leadStatus) {
             // Convert leadStatus to an array if it's a string
             const leadStatusArray = Array.isArray(leadStatus) ? leadStatus : [leadStatus];
             query['leadStatus.statusName'] = { $in: leadStatusArray };
         }
-        // query['createdAt'] = { $sort: { "createdAt": -1 } };
-        // $sort: { "date_recorded": -1 }
 
-        console.log(query, "ADFASDF");
+        let todayDate = new Date()
+        // console.log(todayDate , "<<<<todayDate");
+        if (followUpOf == "today") {
+            query.$and = [
+                { nextFollowUpDate: { $exists: true } }, // Ensure `nextFollowUpDate` exists
+                { nextFollowUpDate: { $ne: "" } }, // Ensure `nextFollowUpDate` is not empty
+                { nextFollowUpDate: { $eq: moment(todayDate).format('YYYY-MM-DD') } } // Apply the `$lt` condition
+            ];
+        }
+        if (followUpOf == "pending") {
+            query.$and = [
+                { nextFollowUpDate: { $exists: true } }, // Ensure `nextFollowUpDate` exists
+                { nextFollowUpDate: { $ne: "" } }, // Ensure `nextFollowUpDate` is not empty
+                { nextFollowUpDate: { $lt: moment(todayDate).format('YYYY-MM-DD') } } // Apply the `$lt` condition
+            ];
+        }
+        const leadIds = req.user?.leadsAssign
 
+        query.$and = query.$and || [];
+        if (["employee", "hr", "manager"].includes(req.user?.role)) {
+            query.$and.push({
+                $or: [
+                    { userId: req.user?._id },
+                    {_id : { $in: leadIds} }
+                ]
+            });
+
+        } else {
+            query.$and.push({
+                $or: [
+                    {
+                        $and: [
+                            { indiaMartKey: { $exists: true } },
+                            { indiaMartKey: { $ne: "" } },
+                            { indiaMartKey: req.user?.indiaMartKey }
+                        ]
+                    },
+                    { companyId: req.user?.companyId },
+                    // { userId: req.user?._id },
+                ]
+            });
+        }
+
+        // console.log(query, "<<<<<<<query");
         let leads = await NewLeads.find(query).sort({ queryTime: -1, createdAt: -1, }).skip(skip).limit(limit);
 
-        let userAllLeads = leads.filter((ld) => {
-            return ld.indiaMartKey == req.user?.indiaMartKey || ld.userId == req.user?._id
-        })
-        let todayFollowUp = userAllLeads.filter(lead => {
-            return isToday(lead.nextFollowUpDate) == true
-        });
-        let pendingFollowUp = userAllLeads.filter(lead => {
-            return isBeforeToday(lead.nextFollowUpDate) == true
-        });
+
+        // let userAllLeads = leads.filter((ld) => {
+        //     return ld.indiaMartKey == req.user?.indiaMartKey || ld.userId == req.user?._id
+        // })
 
         // User-specific query
         const userQuery = {
@@ -144,23 +188,16 @@ const getAllLead = async (req, res, next) => {
                 { userId: req.user?._id }
             ]
         };
-        // Combine user-specific query with existing filter criteria
         const combinedQuery = { ...query, ...userQuery };
-
-        // Get the total count of documents that match the combined filter criteria
-       
         const totalLeads = await NewLeads.countDocuments(combinedQuery);
-        let todayFollowUpcount = Math.ceil(todayFollowUp.length /(limit || 10))
-        let pendingFollowUpcount = Math.ceil(pendingFollowUp.length /(limit || 10))
-        console.log("todayFollowUpcount" ,pendingFollowUpcount, todayFollowUpcount);
-        
+
         res.status(200).json({
             status: true,
             message: "All Leads data",
-            userAllLeads: followUpOf == "pending" ? pendingFollowUp : followUpOf == "today" ? todayFollowUp : userAllLeads,
+            userAllLeads: leads,
             page,
             limit: limit || 10,
-            totalPages: followUpOf == "pending" ? pendingFollowUpcount : followUpOf == "today" ? todayFollowUpcount : Math.ceil(totalLeads / (limit || 10)),
+            totalPages: Math.ceil(totalLeads / (limit || 10)),
             totalLeads,
         })
     } catch (error) {
@@ -257,13 +294,42 @@ const deleteLead = async (req, res, next) => {
 
 
 const dashboardleadCount = async (req, res, next) => {
-    let allLead = await NewLeads.find()
-    let userAllLeads = allLead.filter((ld) => {
-        return ld.indiaMartKey == req.user?.indiaMartKey || ld.userId == req.user?._id
-    })
+    const query = {};
+    query.$and = query.$and || [];
+    if (["employee", "hr", "manager"].includes(req.user?.role)) {
+        query.$and.push({
+            $or: [
+                { userId: req.user?._id },
+            ]
+        });
+
+    } else {
+        query.$and.push({
+            $or: [
+                {
+                    $and: [
+                        { indiaMartKey: { $exists: true } },
+                        { indiaMartKey: { $ne: "" } },
+                        { indiaMartKey: req.user?.indiaMartKey }
+                    ]
+                },
+                { userId: req.user?._id },
+                { companyId: req.user?.companyId },
+            ]
+        });
+    }
+    let userAllLeads = await NewLeads.find(query)
+    // let userAllLeads = allLead.filter((ld) => {
+    //     return ld.indiaMartKey == req.user?.indiaMartKey || ld?.companyId == req.user?.companyId || ld.userId == req.user?._id
+    // })
+    // let employeeLeads = allLead.filter((ld) => {
+    //     return ld.userId == req.user?._id
+    // })
+    // if (["employee", "hr", "manager"].includes(req.user?.role)) 
     // console.log("allLead" ,allLead);
     let postiveLead = userAllLeads.filter((ld) => ld.isPositiveLead == "true")
     let nagetiveLead = userAllLeads.filter((ld) => ld.isPositiveLead == "false")
+
     let todayFollowUp = userAllLeads.filter(lead => {
         return isToday(lead.nextFollowUpDate) == true
     });
@@ -365,24 +431,37 @@ const getChartDetails = async (req, res) => {
         const endOfLastYear = new Date(previousYear, 11, 31, 23, 59, 59); // December 31st of last year
         const userLeadIds = userLeads.map(lead => lead._id); // Get IDs of filtered leads
 
-        // console.log(record, "<<<<<<<<Sdfsdf");
+        // console.log(userLeadIds, "<<<<<<<<Sdfsdf");
         if (record == "6months") {
             // Calculate date for 6 months ago
-            const sixMonthsAgo = new Date(currentDate.getFullYear(), currentDate.getMonth() - 5, 1);
+            const sixMonthsAgo = new Date();
+            // sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+            // sixMonthsAgo.setDate(1);
 
             // Group filtered leads by month within the last 6 months
             const data = await NewLeads.aggregate([
                 {
                     $match: {
                         _id: { $in: userLeadIds },
-                        createdAt: { $gte: sixMonthsAgo, $lte: currentDate } // Filter leads from the last 6 months
+                    }
+                },
+                {
+                    $addFields: {
+                        // Check if `createdAt` exists and is not null, otherwise use `queryTime`
+                        dateField: {
+                            $cond: {
+                                if: { $and: [{ $gt: ["$createdAt", null] }, { $ne: ["$createdAt", ""] }] },
+                                then: { $toDate: "$createdAt" },
+                                else: { $toDate: "$queryTime" }
+                            }
+                        }
                     }
                 },
                 {
                     $group: {
                         _id: {
-                            year: { $year: '$createdAt' },
-                            month: { $month: '$createdAt' }
+                            year: { $year: "$dateField" },
+                            month: { $month: "$dateField" }
                         },
                         count: { $sum: 1 }
                     }
@@ -391,6 +470,8 @@ const getChartDetails = async (req, res) => {
                     $sort: { '_id.year': 1, '_id.month': 1 }
                 }
             ]);
+
+            // console.log("data>>>.", sixMonthsAgo, data);
 
             // Fill in missing months in the last 6 months
             const chartData = [];
@@ -418,10 +499,22 @@ const getChartDetails = async (req, res) => {
                     }
                 },
                 {
+                    $addFields: {
+                        // Check if `createdAt` exists and is not null, otherwise use `queryTime`
+                        dateField: {
+                            $cond: {
+                                if: { $and: [{ $gt: ["$createdAt", null] }, { $ne: ["$createdAt", ""] }] },
+                                then: { $toDate: "$createdAt" },
+                                else: { $toDate: "$queryTime" }
+                            }
+                        }
+                    }
+                },
+                {
                     $group: {
                         _id: {
-                            year: { $year: '$createdAt' },
-                            month: { $month: '$createdAt' }
+                            year: { $year: "$dateField" },
+                            month: { $month: "$dateField" }
                         },
                         count: { $sum: 1 }
                     }
@@ -453,10 +546,22 @@ const getChartDetails = async (req, res) => {
                     $match: { _id: { $in: userLeadIds } } // Filter by the IDs of user-specific leads
                 },
                 {
+                    $addFields: {
+                        // Check if `createdAt` exists and is not null, otherwise use `queryTime`
+                        dateField: {
+                            $cond: {
+                                if: { $and: [{ $gt: ["$createdAt", null] }, { $ne: ["$createdAt", ""] }] },
+                                then: { $toDate: "$createdAt" },
+                                else: { $toDate: "$queryTime" }
+                            }
+                        }
+                    }
+                },
+                {
                     $group: {
                         _id: {
-                            year: { $year: '$createdAt' },
-                            month: { $month: '$createdAt' }
+                            year: { $year: "$dateField" },
+                            month: { $month: "$dateField" }
                         },
                         count: { $sum: 1 }
                     }
@@ -466,6 +571,8 @@ const getChartDetails = async (req, res) => {
                 }
             ]);
 
+            // console.log(data , "<<<<<<<<<sdfsf");
+
             const currentYear = new Date().getFullYear();
             const allMonths = Array.from({ length: 12 }, (_, i) => ({
                 _id: { year: currentYear, month: i + 1 },
@@ -474,7 +581,8 @@ const getChartDetails = async (req, res) => {
 
             // Merge aggregated data with all months
             const mergedData = allMonths.map(month => {
-                const found = data.find(d => d._id.year === month._id.year && d._id.month === month._id.month);
+                // console.log(month._id.year);
+                const found = data.find(d => d._id.year == month._id.year && d._id.month === month._id.month);
                 return found ? found : month;
             });
 
