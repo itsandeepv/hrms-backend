@@ -129,10 +129,9 @@ const getCompanyUser = async (req, res) => {
         const allowUser = ["company", "admin", "superadmin"]
         // console.log("user", user);
         if (allowUser.includes(user?.role)) {
-            // if()
             const AllUser = await OtherUser.find()
             const companyUser = await OtherUser.find({ companyId: user?._id })
-
+           
             res.status(200).json({
                 status: true,
                 message: "Company Related user",
@@ -161,7 +160,6 @@ const getAllCompany = async (req, res) => {
             let formatedData = data?.map((item) => {
                 let details = {
                     ...item.toObject(),
-                    password: ""
                 }
                 return details
             }).filter((d) => d.role != "superadmin")
@@ -246,12 +244,29 @@ const updateCompanyStatus = async (req, res) => {
         const allowUser = ["company", "admin", "superadmin"]
 
         if (allowUser.includes(user?.role)) {
+
+            if (bdata.statusChanges) {
+                // if (bdata.isActive == false) {
+                    let findCompany = await OtherUser.find({ companyId: bdata?._id })
+                    const ids = findCompany.map((itm) => itm?._id)
+                    console.log(bdata.statusChanges, "<<<<<<<<<Asdfa", ids);
+                    if (ids?.length > 0) {
+                        let data = await OtherUser.updateMany(
+                            { _id: { $in: ids } },      // Filter to match multiple IDs
+                            { $set: { isActive: bdata.isActive } }  // Update the isActive field
+                        );
+                        console.log(bdata.statusChanges, "<<<<<<<<<Asdfa", findCompany);
+                    }
+                // }
+            }
+
             const data = await NewUser.findByIdAndUpdate(id, {
                 ...bdata
             }, { new: true })
+
             res.status(200).json({
                 status: true,
-                message: " user edit success",
+                message: "user edit success",
                 data
             })
         } else {
@@ -273,103 +288,118 @@ const updateCompanyStatus = async (req, res) => {
 const loginUser = async (req, res, next) => {
     const { email, password } = req.body
     try {
-        let checkadmin = await NewUser.findOne({ email: email })
+        let checkadmin = await NewUser.findOne({ email: email })        
         if (checkadmin) {
-            await NewUser.findOne({ email: email }).then((user) => {
-                if (user) {
-                    bcrypt.compare(password, user.password, function (error, result) {
-                        if (error) {
-                            res.status(500).json({
-                                status: false,
-                                error: error + "Password is not match",
-                            });
-                        }
-                        if (result) {
-                            let token = jwt.sign({ id: user.id }, "SandeepIsTheKey", {
-                                expiresIn: "1d",
-                            });
-                            res.json({
-                                message: "Login Succesfully",
-                                token: token,
-                                user: {
-                                    fullName: user.fullName,
-                                    indiaMartKey: user.indiaMartKey,
-                                    tradeIndaiKey: user.tradeIndaiKey,
-                                    mobileNumber: user.mobileNumber,
-                                    companyName: user.companyName,
-                                    companyLogo: user.companyLogo || "",
-                                    moduleAccuss: user.moduleAccuss || [],
-                                    address: user.address || "",
-                                    userType: user.userType,
-                                    companyId: user.companyId,
-                                    role: user.role,
-                                    _id: user._id,
-                                    email: user.email,
-                                    IndiaMartCrmUrl: user.IndiaMartCrmUrl,
-                                },
-                            });
-                        } else {
-                            res.status(404).json({
-                                status: false, error: "Wrong email and password !"
-                            });
-                        }
-                    });
-                } else {
-                    res.status(400).json({
-                        status: false,
-                        message: "Please Check Your Email And Password !",
-                    });
-                }
-            });
+            if(checkadmin.isActive){
+                await NewUser.findOne({ email: email }).then((user) => {
+                    if (user) {
+                        bcrypt.compare(password, user.password, function (error, result) {
+                            if (error) {
+                                res.status(500).json({
+                                    status: false,
+                                    error: error + "Password is not match",
+                                });
+                            }
+                            if (result) {
+                                let token = jwt.sign({ id: user.id }, "SandeepIsTheKey", {
+                                    expiresIn: "1d",
+                                });
+                                res.json({
+                                    message: "Login Succesfully",
+                                    token: token,
+                                    user: {
+                                        fullName: user.fullName,
+                                        indiaMartKey: user.indiaMartKey,
+                                        tradeIndaiKey: user.tradeIndaiKey,
+                                        mobileNumber: user.mobileNumber,
+                                        companyName: user.companyName,
+                                        companyLogo: user.companyLogo || "",
+                                        moduleAccuss: user.moduleAccuss || [],
+                                        address: user.address || "",
+                                        userType: user.userType,
+                                        companyId: user.companyId,
+                                        role: user.role,
+                                        _id: user._id,
+                                        email: user.email,
+                                        IndiaMartCrmUrl: user.IndiaMartCrmUrl,
+                                    },
+                                });
+                            } else {
+                                res.status(404).json({
+                                    status: false, error: "Wrong email and password !"
+                                });
+                            }
+                        });
+                    } else {
+                        res.status(400).json({
+                            status: false,
+                            message: "Please Check Your Email And Password !",
+                        });
+                    }
+                });
+            }else{
+                res.status(450).json({
+                    status: false,
+                    message:"Company is inactive Please connect with Super-Admin !"
+                });   
+            }
         } else {
-            await OtherUser.findOne({ email: email }).then((user) => {
-                if (user) {
-                    bcrypt.compare(password, user.password, function (error, result) {
-                        if (error) {
-                            res.status(400).json({
-                                status: false,
-                                error: error + "Password is not match",
-                            });
-                        }
-                        if (result) {
-                            let token = jwt.sign({ id: user.id }, "SandeepIsTheKey", {
-                                expiresIn: "1d",
-                            });
-                            res.status(200).json({
-                                status: true,
-                                message: "Login Succesfully",
-                                token: token,
-                                user: {
-                                    fullName: user.fullName,
-                                    indiaMartKey: user.indiaMartKey,
-                                    tradeIndaiKey: user.tradeIndaiKey,
-                                    adminId: user.adminId,
-                                    permissions: user.permissions || [],
-                                    mobileNumber: user.mobileNumber,
-                                    companyName: user.companyName,
-                                    companyLogo: user.companyLogo || "",
-                                    moduleAccuss: user.moduleAccuss || [],
-                                    address: user.address || "",
-                                    userType: user.userType,
-                                    companyId: user.companyId,
-                                    _id: user._id,
-                                    role: user.role,
-                                    email: user.email,
-                                },
-                            });
-                        } else {
-                            res.status(400).json({
-                                status: false, error: "Wrong email and password !"
-                            });
-                        }
-                    });
-                } else {
-                    res.status(400).json({
-                        status: false,
-                        message: "Please Check Your Email And Password !",
-                    });
-                }
-            });
+            let checkemployee = await OtherUser.findOne({ email: email })
+            if(checkemployee.isActive){
+                await OtherUser.findOne({ email: email }).then((user) => {
+                    if (user) {
+                        bcrypt.compare(password, user.password, function (error, result) {
+                            if (error) {
+                                res.status(400).json({
+                                    status: false,
+                                    error: error + "Password is not match",
+                                });
+                            }
+                            if (result) {
+                                let token = jwt.sign({ id: user.id }, "SandeepIsTheKey", {
+                                    expiresIn: "1d",
+                                });
+                                res.status(200).json({
+                                    status: true,
+                                    message: "Login Succesfully",
+                                    token: token,
+                                    user: {
+                                        fullName: user.fullName,
+                                        indiaMartKey: user.indiaMartKey,
+                                        tradeIndaiKey: user.tradeIndaiKey,
+                                        adminId: user.adminId,
+                                        permissions: user.permissions || [],
+                                        mobileNumber: user.mobileNumber,
+                                        companyName: user.companyName,
+                                        companyLogo: user.companyLogo || "",
+                                        moduleAccuss: user.moduleAccuss || [],
+                                        address: user.address || "",
+                                        userType: user.userType,
+                                        companyId: user.companyId,
+                                        _id: user._id,
+                                        role: user.role,
+                                        email: user.email,
+                                    },
+                                });
+                            } else {
+                                res.status(400).json({
+                                    status: false, error: "Wrong email and password !"
+                                });
+                            }
+                        });
+                    } else {
+                        res.status(400).json({
+                            status: false,
+                            message: "Please Check Your Email And Password !",
+                        });
+                    }
+                });
+            }else{
+                res.status(450).json({
+                    status: false,
+                    message:"Employee is inactive Please connect with admin !"
+                });   
+            }
 
         }
     } catch (error) {
@@ -380,88 +410,7 @@ const loginUser = async (req, res, next) => {
     }
 };
 
-const loginAdmin = async (req, res, next) => {
-    const email = req.body.email;
-    const password = req.body.password;
-    try {
-        NewUser.findOne({ email: email }).then((user) => {
 
-            if (user?.user_type != "admin") {
-                res.json({
-                    message: "Usertype is not valid",
-                });
-            }
-            if (user) {
-                bcrypt.compare(password, user.password, function (error, result) {
-                    if (error) {
-                        res.json({
-                            error: error + "Password is not match",
-                        });
-                    }
-                    if (result) {
-                        let token = jwt.sign({ id: user.id }, "SandeepIsTheKey", {
-                            expiresIn: "1d",
-                        });
-                        res.json({
-                            message: "Login Succesfully",
-                            token: token,
-                            user: user,
-                        });
-                    } else {
-                        res.json({ error: "Wrong email and password !" });
-                    }
-                });
-            } else {
-                res.json({
-                    message: "Please Check Your Email And Password !",
-                });
-            }
-        });
-    } catch (error) {
-        res.status(500).json({
-            error: error,
-        });
-    }
-};
-
-
-const get_user = async (req, res, next) => {
-    try {
-        const users = await NewUser.find();
-        res.status(200).json({
-            users,
-        });
-    } catch (error) {
-        res.status(500).json({
-            error: error,
-        });
-    }
-};
-//get a single user
-const getSingle_user = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        if (!id) {
-            res.status(404).json({
-                message: "User Is not Find Please Check Once !",
-            });
-        }
-
-        console.log(id);
-        const getUserInfo = await NewUser.findById(id);
-
-        if (getUserInfo) {
-            res.status(200).json({
-                getUserInfo,
-            });
-        }
-    } catch (error) {
-        res.status(500).json({
-            error: error,
-        });
-    }
-};
 //update user
 
 
@@ -554,23 +503,6 @@ const updateUser = async (req, res) => {
     }
 };
 
-//delete user
-const delete_user = async (req, res) => {
-    try {
-        const { id } = req.params;
-        await NewUser.findByIdAndDelete(id);
-        res.status(200).json({
-            status: true,
-            message: "User Deleted Succesfully !",
-        });
-    } catch (error) {
-        res.status(500).json({
-            error: error,
-            status: false
-        });
-    }
-};
-
 
 // update user settings 
 const getSettings = async (req, res, next) => {
@@ -602,8 +534,6 @@ const getSettings = async (req, res, next) => {
         });
     }
 }
-
-let io;
 
 // assign lead to employee api
 const assignLead = async (req, res, next) => {
@@ -637,13 +567,14 @@ const assignLead = async (req, res, next) => {
                 body: JSON.stringify(notificationDetails)
             };
 
-            fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
-                console.log(data, notificationDetails);
-                // io.emit('leadAssigned', notificationDetails);
-            }).catch((er) => {
-                console.log(er);
-            })
+            // fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
+            //     console.log(data, notificationDetails);
+            //     // io.emit('leadAssigned', notificationDetails);
+            // }).catch((er) => {
+            //     console.log(er);
+            // })
 
+            // io.emit('leadAssigned', notificationDetails);
             return res.status(200).json({
                 status: true,
                 message: "Lead assigned successfully!",
@@ -706,15 +637,12 @@ const editSettings = async (req, res, next) => {
     }
 }
 
+
 module.exports = {
     register,
     loginUser,
-    get_user,
     assignLead,
-    getSingle_user,
-    delete_user,
     updateUser,
-    loginAdmin,
     createUserByAdmin,
     getCompanyUser,
     editSettings,

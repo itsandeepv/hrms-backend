@@ -6,14 +6,13 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const { Server } = require("socket.io");
-const cron = require('node-cron');
 const { authrouter } = require("./routes/authroutes");
 const { leadsrouter } = require("./routes/allroutes");
-const { createNote, isToday, publicUrl } = require("./utils/createNotefication");
+const { isToday, publicUrl } = require("./utils/createNotefication");
 const NewLeads = require("./models/leadsModel");
 
 const app = express();
-const server = http.createServer(app);
+ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 mongoose.set('autoIndex', false);
 // mongoose.set('bufferCommands', false)
@@ -149,3 +148,7 @@ const port = process.env.PORT || 5001;
 server.listen(port, () => {
   console.log("Server connected successfully on host: " + port);
 });
+
+
+
+module.exports= {server}

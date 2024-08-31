@@ -1,5 +1,5 @@
 const authrouter = require("express").Router()
-const { register, loginUser, createUserByAdmin, getCompanyUser, editSettings, deleteCompanyUser, editCompanyUser, updatePassword, getSettings, getAllCompany, updateCompanyStatus, assignLead } = require("../controllars/authcontrollar")
+const { register, loginUser, createUserByAdmin, getCompanyUser, editSettings, deleteCompanyUser, editCompanyUser, updatePassword, getSettings, getAllCompany, updateCompanyStatus, assignLead, getAllemployee } = require("../controllars/authcontrollar")
 const { ValidateUser } = require("../middlewares/authMiddleware")
 
 
