@@ -4,6 +4,7 @@ const NotificationSchema = new mongoose.Schema({
     title:{type:String},
     status:{type:String},
     userId:{type:String},
+    leadId:{type:String},
     tradeIndaiKey:{type:String},
     indiaMartKey:{type:String},
     message:{type:String},

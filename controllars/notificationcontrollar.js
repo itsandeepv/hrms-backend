@@ -31,15 +31,22 @@ const deleteNotification = async (req, res, next) => {
 }
 const getNotification = async (req, res, next) => {
     try {
-        // console.log(req.user);
-        let allData = await NewNotification.find().sort({createdAt :-1})
+        let query = {}
+        let role = ["employee" ,"hr" ,"manager"].includes(req.user?.role)
+        if(role){
+            query.userId = req.user?._id
+        }
+        
+        let allData = await NewNotification.find(query).sort({createdAt :-1})
+        // console.log(query);
         let filterdata = allData.filter((item)=>{
             return item.userId == req.user?._id ||item.indiaMartKey == req.user.indiaMartKey ||item.tradeIndaiKey == req.user.tradeIndaiKey 
         })
+
         res.status(200).json({
             status: true,
-            message: "notefication fetch",
-            data:filterdata
+            message: "notification fetch",
+            data:role? allData: filterdata
         })
     } catch (error) {
         res.status(500).json({

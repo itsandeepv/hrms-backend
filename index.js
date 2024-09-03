@@ -12,11 +12,12 @@ const { isToday, publicUrl } = require("./utils/createNotefication");
 const NewLeads = require("./models/leadsModel");
 
 const app = express();
- const server = http.createServer(app);
+const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 mongoose.set('autoIndex', false);
 // mongoose.set('bufferCommands', false)
 mongoose.set('strictQuery', false);
+app.set('io', io); // Store io instance in the app context
 
 // Middlewares
 app.use(bodyParser.json());
@@ -34,9 +35,9 @@ app.use(cors({
 // app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
-const mongooseUrl = process.env.DATABASE_URL || 
-// "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase";
-"mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
+const mongooseUrl = process.env.DATABASE_URL ||
+  // "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase";
+  "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
 // Auth route start here
 app.use("/api", authrouter);
 // leads route
@@ -50,7 +51,7 @@ app.get("/test", (req, res) => {
 })
 
 // Connect to MongoDB
- mongoose.connect(mongooseUrl, {
+mongoose.connect(mongooseUrl, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
@@ -61,7 +62,7 @@ app.get("/test", (req, res) => {
     console.log("Unable to connect to MongoDB. Error: " + err);
   });
 
-  
+
 let isMessSave = true
 // Listen for MongoDB changes using Change Streams
 const db = mongoose.connection;
@@ -87,21 +88,21 @@ db.once("open", () => {
       const requestOptions = {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(notificationDetails)
-    };
-      if(isMessSave){
-        fetch(`${publicUrl}/new-notification`, requestOptions).then((res)=>res.json()).then((data)=>{
-          console.log(data ,notificationDetails);
+      };
+      if (isMessSave) {
+        fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
+          // console.log(data, notificationDetails);
           isMessSave = false
-        }).catch((er)=>{
+        }).catch((er) => {
           console.log(er);
         })
       }
 
       //  createNote(noteficationDetails)
-      
+
       io.emit("dbUpdate", changedata); // Broadcast change to all connected clients
     }
   });
@@ -109,7 +110,7 @@ db.once("open", () => {
 
 // WebSocket connection
 io.on("connection", (socket) => {
-  console.log("A user connected",socket.id);
+  console.log("A user connected", socket.id);
   socket.on("userDetails", async (data) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Set to the start of the day
@@ -136,7 +137,7 @@ io.on("connection", (socket) => {
       console.error('Error fetching leads: ', err);
     }
   });
-  
+
   io.emit('triggerUserDetails');
   socket.on("disconnect", () => {
     console.log("User disconnected");
@@ -151,4 +152,4 @@ server.listen(port, () => {
 
 
 
-module.exports= {server}
+module.exports = { server }

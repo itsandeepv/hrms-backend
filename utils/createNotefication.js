@@ -5,7 +5,9 @@ const createNote = async (data) => {
     let createdata = await createNote.save()
     // console.log(createdata);
 }
+// const publicUrl = "https://hrms.gocoolcare.com/api"
 // const publicUrl = "https://api.crmhai.com/api"
+
 const publicUrl = "http://localhost:5001/api"
 
 

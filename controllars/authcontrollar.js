@@ -131,7 +131,13 @@ const getCompanyUser = async (req, res) => {
         if (allowUser.includes(user?.role)) {
             const AllUser = await OtherUser.find()
             const companyUser = await OtherUser.find({ companyId: user?._id })
-           
+            // const formatAllUser = AllUser.map((item) => {
+            //     // const password = bcrypt.compare(currentPassword, checkUser.password || checkOUser.password);
+            //     let data = {}
+            //     return data
+            // })
+            // console.log("formatAllUser", formatAllUser);
+
             res.status(200).json({
                 status: true,
                 message: "Company Related user",
@@ -247,16 +253,16 @@ const updateCompanyStatus = async (req, res) => {
 
             if (bdata.statusChanges) {
                 // if (bdata.isActive == false) {
-                    let findCompany = await OtherUser.find({ companyId: bdata?._id })
-                    const ids = findCompany.map((itm) => itm?._id)
-                    console.log(bdata.statusChanges, "<<<<<<<<<Asdfa", ids);
-                    if (ids?.length > 0) {
-                        let data = await OtherUser.updateMany(
-                            { _id: { $in: ids } },      // Filter to match multiple IDs
-                            { $set: { isActive: bdata.isActive } }  // Update the isActive field
-                        );
-                        console.log(bdata.statusChanges, "<<<<<<<<<Asdfa", findCompany);
-                    }
+                let findCompany = await OtherUser.find({ companyId: bdata?._id })
+                const ids = findCompany.map((itm) => itm?._id)
+                console.log(bdata.statusChanges, "<<<<<<<<<Asdfa", ids);
+                if (ids?.length > 0) {
+                    let data = await OtherUser.updateMany(
+                        { _id: { $in: ids } },      // Filter to match multiple IDs
+                        { $set: { isActive: bdata.isActive } }  // Update the isActive field
+                    );
+                    console.log(bdata.statusChanges, "<<<<<<<<<Asdfa", findCompany);
+                }
                 // }
             }
 
@@ -288,9 +294,9 @@ const updateCompanyStatus = async (req, res) => {
 const loginUser = async (req, res, next) => {
     const { email, password } = req.body
     try {
-        let checkadmin = await NewUser.findOne({ email: email })        
+        let checkadmin = await NewUser.findOne({ email: email })
         if (checkadmin) {
-            if(checkadmin.isActive){
+            if (checkadmin.isActive) {
                 await NewUser.findOne({ email: email }).then((user) => {
                     if (user) {
                         bcrypt.compare(password, user.password, function (error, result) {
@@ -337,15 +343,15 @@ const loginUser = async (req, res, next) => {
                         });
                     }
                 });
-            }else{
+            } else {
                 res.status(450).json({
                     status: false,
-                    message:"Company is inactive Please connect with Super-Admin !"
-                });   
+                    message: "Company is inactive Please connect with Super-Admin !"
+                });
             }
         } else {
             let checkemployee = await OtherUser.findOne({ email: email })
-            if(checkemployee.isActive){
+            if (checkemployee.isActive) {
                 await OtherUser.findOne({ email: email }).then((user) => {
                     if (user) {
                         bcrypt.compare(password, user.password, function (error, result) {
@@ -394,11 +400,11 @@ const loginUser = async (req, res, next) => {
                         });
                     }
                 });
-            }else{
+            } else {
                 res.status(450).json({
                     status: false,
-                    message:"Employee is inactive Please connect with admin !"
-                });   
+                    message: "Employee is inactive Please connect with admin !"
+                });
             }
 
         }
@@ -537,9 +543,11 @@ const getSettings = async (req, res, next) => {
 
 // assign lead to employee api
 const assignLead = async (req, res, next) => {
-    let user = req.user;
+    // let user = req.user;
     let { leadId, employeeId } = req.body;
-    // console.log(leadId, employeeId, user);
+    const io = req.app.get('io');  // Retrieve the io instance from app context
+
+    // console.log(leadId, io);
     try {
         // Find the user and check if the leadId already exists in the leadsAssign array
         const userdata = await OtherUser.findById(employeeId);
@@ -557,6 +565,7 @@ const assignLead = async (req, res, next) => {
             let notificationDetails = {
                 title: "A new lead has been assigned to you!",
                 isRead: false,
+                userId: userdata?._id,
                 leadId: leadId
             }
             const requestOptions = {
@@ -567,14 +576,14 @@ const assignLead = async (req, res, next) => {
                 body: JSON.stringify(notificationDetails)
             };
 
-            // fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
-            //     console.log(data, notificationDetails);
-            //     // io.emit('leadAssigned', notificationDetails);
-            // }).catch((er) => {
-            //     console.log(er);
-            // })
+            fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
+                io.emit('leadAssigned', notificationDetails);
+            }).catch((er) => {
+                console.log(er);
+            })
 
-            // io.emit('leadAssigned', notificationDetails);
+            // console.log("done>>>>>>>>>",);
+
             return res.status(200).json({
                 status: true,
                 message: "Lead assigned successfully!",

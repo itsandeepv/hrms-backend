@@ -97,7 +97,7 @@ const editLead = async (req, res, next) => {
 const getAllLead = async (req, res, next) => {
     try {
         // Get page and limit from query parameters
-        let { leadSource ,leadAddedBy } = req.query
+        let { leadSource, leadAddedBy } = req.query
         let page = parseInt(req.query?.page, 10) || 1;
         let limit = parseInt(req.query?.limit, 10) || 10;
         let startfromdate = req.query.startfromdate
@@ -147,18 +147,18 @@ const getAllLead = async (req, res, next) => {
                 { nextFollowUpDate: { $lt: moment(todayDate).format('YYYY-MM-DD') } } // Apply the `$lt` condition
             ];
         }
-        
+
         query.$and = query.$and || [];
         if (["employee", "hr", "manager"].includes(req.user?.role)) {
             const leadIds = req.user?.leadsAssign
             query.$and.push({
                 $or: [
                     { userId: req.user?._id },
-                    {_id : { $in: leadIds} }
+                    { _id: { $in: leadIds } }
                 ]
             });
 
-        }  else {
+        } else {
             query.$and.push({
                 $or: [
                     {
@@ -169,12 +169,12 @@ const getAllLead = async (req, res, next) => {
                         ]
                     },
                     { companyId: req.user?.companyId },
-                    // { userId: req.user?._id },
+                    { userId: req.user?._id },
                 ]
             });
         }
 
-        console.log(query, "<<<<<<<query" , req.user?.role );
+        // console.log(query, "<<<<<<<query" , req.user?.role );
         let leads = await NewLeads.find(query).sort({ queryTime: -1, createdAt: -1, }).skip(skip).limit(limit);
 
 
@@ -195,7 +195,7 @@ const getAllLead = async (req, res, next) => {
         res.status(200).json({
             status: true,
             message: "All Leads data",
-            userAllLeads:leads,
+            userAllLeads: leads,
             page,
             limit: limit || 10,
             totalPages: Math.ceil(totalLeads / (limit || 10)),
@@ -296,13 +296,18 @@ const deleteLead = async (req, res, next) => {
 
 const dashboardleadCount = async (req, res, next) => {
     const query = {};
+    let employeeName = req.query?.employeeName
+    console.log(employeeName, "<<<<<<<employeeName");
+    if (employeeName) {
+        query.leadAddedBy = employeeName
+    }
     query.$and = query.$and || [];
-    if (["employee", "hr", "manager"].includes(req.user?.role)) {        
+    if (["employee", "hr", "manager"].includes(req.user?.role)) {
         const leadIds = req.user?.leadsAssign
         query.$and.push({
             $or: [
                 { userId: req.user?._id },
-                {_id : { $in: leadIds||[]} }
+                { _id: { $in: leadIds || [] } }
             ]
         });
 
@@ -321,17 +326,17 @@ const dashboardleadCount = async (req, res, next) => {
             ]
         });
     }
-    let userAllLeads = await NewLeads.find(query ||{})
+    let userAllLeads = await NewLeads.find(query || {})
 
     const combinedQuery = { ...query };
     const totalLeads = await NewLeads.countDocuments(combinedQuery);
-    console.log(totalLeads ,query);
-    
+    // console.log(totalLeads ,query);
+
 
     // let userAllLeads = allLead.filter((ld) => {
     //     return ld.indiaMartKey == req.user?.indiaMartKey || ld?.companyId == req.user?.companyId || ld.userId == req.user?._id
     // })
-   
+
     let postiveLead = userAllLeads.filter((ld) => ld.isPositiveLead == "true")
     let nagetiveLead = userAllLeads.filter((ld) => ld.isPositiveLead == "false")
 
@@ -347,7 +352,7 @@ const dashboardleadCount = async (req, res, next) => {
         status: true,
         message: "all types leads data fetched",
         data: {
-            totalLeads: ["employee", "hr", "manager"].includes(req.user?.role)? totalLeads: userAllLeads.length,
+            totalLeads: ["employee", "hr", "manager"].includes(req.user?.role) ? totalLeads : userAllLeads.length,
             postiveLead: postiveLead.length,
             nagetiveLead: nagetiveLead.length,
             todayFollowUp: todayFollowUp.length,
@@ -361,12 +366,12 @@ const getLeadsByStatus = async (req, res) => {
     let { status } = req.params
     const query = {};
     query.$and = query.$and || [];
-    if (["employee", "hr", "manager"].includes(req.user?.role)) {        
+    if (["employee", "hr", "manager"].includes(req.user?.role)) {
         const leadIds = req.user?.leadsAssign
         query.$and.push({
             $or: [
                 { userId: req.user?._id },
-                {_id : { $in: leadIds||[]} }
+                { _id: { $in: leadIds || [] } }
             ]
         });
 
@@ -387,9 +392,6 @@ const getLeadsByStatus = async (req, res) => {
     }
 
     let userLeads = await NewLeads.find(query)
-    // let userLeads = allLeads.filter((ld) => {
-    //     return ld.indiaMartKey == req.user?.indiaMartKey || ld.userId == req.user?._id
-    // })
     try {
         if (status == "positive") {
             let data = userLeads.filter((ld) => ld.isPositiveLead == "true")
@@ -451,11 +453,38 @@ const getLeadsByStatus = async (req, res) => {
 
 const getChartDetails = async (req, res) => {
     try {
-        let allLeads = await NewLeads.find();
+
+        let query={}
+        query.$and = query.$and || [];
+        if (["employee", "hr", "manager"].includes(req.user?.role)) {
+            const leadIds = req.user?.leadsAssign
+            query.$and.push({
+                $or: [
+                    { userId: req.user?._id },
+                    { _id: { $in: leadIds || [] } }
+                ]
+            });
+
+        } else {
+            query.$and.push({
+                $or: [
+                    {
+                        $and: [
+                            { indiaMartKey: { $exists: true } },
+                            { indiaMartKey: { $ne: "" } },
+                            { indiaMartKey: req.user?.indiaMartKey }
+                        ]
+                    },
+                    { userId: req.user?._id },
+                    { companyId: req.user?.companyId },
+                ]
+            });
+        }
+        let userLeads = await NewLeads.find(query);
         let { record } = req.query
-        let userLeads = allLeads.filter((ld) => {
-            return ld.indiaMartKey === req.user?.indiaMartKey || ld.userId === req.user?._id;
-        });
+        // let userLeads = allLeads.filter((ld) => {
+        //     return ld.indiaMartKey === req.user?.indiaMartKey || ld.userId === req.user?._id;
+        // });
 
         const currentDate = new Date();
         const previousYear = currentDate.getFullYear() - 1;
@@ -467,8 +496,6 @@ const getChartDetails = async (req, res) => {
         if (record == "6months") {
             // Calculate date for 6 months ago
             const sixMonthsAgo = new Date();
-            // sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-            // sixMonthsAgo.setDate(1);
 
             // Group filtered leads by month within the last 6 months
             const data = await NewLeads.aggregate([
@@ -631,6 +658,7 @@ const getChartDetails = async (req, res) => {
         });
     }
 };
+
 
 
 module.exports = {
