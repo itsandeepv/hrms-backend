@@ -178,10 +178,6 @@ const getAllLead = async (req, res, next) => {
         let leads = await NewLeads.find(query).sort({ queryTime: -1, createdAt: -1, }).skip(skip).limit(limit);
 
 
-        // let userAllLeads = leads.filter((ld) => {
-        //     return  ld.indiaMartKey == req.user?.indiaMartKey ||  ld.userId == req.user?._id
-        // })
-
         // User-specific query
         const userQuery = {
             $or: [
@@ -297,7 +293,7 @@ const deleteLead = async (req, res, next) => {
 const dashboardleadCount = async (req, res, next) => {
     const query = {};
     let employeeName = req.query?.employeeName
-    console.log(employeeName, "<<<<<<<employeeName");
+    // console.log(employeeName, "<<<<<<<employeeName");
     if (employeeName) {
         query.leadAddedBy = employeeName
     }
@@ -333,10 +329,6 @@ const dashboardleadCount = async (req, res, next) => {
     // console.log(totalLeads ,query);
 
 
-    // let userAllLeads = allLead.filter((ld) => {
-    //     return ld.indiaMartKey == req.user?.indiaMartKey || ld?.companyId == req.user?.companyId || ld.userId == req.user?._id
-    // })
-
     let postiveLead = userAllLeads.filter((ld) => ld.isPositiveLead == "true")
     let nagetiveLead = userAllLeads.filter((ld) => ld.isPositiveLead == "false")
 
@@ -364,7 +356,14 @@ const dashboardleadCount = async (req, res, next) => {
 
 const getLeadsByStatus = async (req, res) => {
     let { status } = req.params
+    let employeeName = req.query?.employee
+
+    // console.log("employeeName>>>>" ,employeeName);
+
     const query = {};
+    if (employeeName && ["admin" ,"company"].includes(req.user?.role)) {
+        query.leadAddedBy = employeeName
+    }
     query.$and = query.$and || [];
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
         const leadIds = req.user?.leadsAssign
@@ -453,8 +452,11 @@ const getLeadsByStatus = async (req, res) => {
 
 const getChartDetails = async (req, res) => {
     try {
-
-        let query={}
+        let employee = req.query?.employee
+        let query = {}
+        if(employee){
+            query.leadAddedBy = employee
+        }
         query.$and = query.$and || [];
         if (["employee", "hr", "manager"].includes(req.user?.role)) {
             const leadIds = req.user?.leadsAssign
