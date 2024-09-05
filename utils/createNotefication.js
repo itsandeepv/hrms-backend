@@ -6,9 +6,9 @@ const createNote = async (data) => {
     // console.log(createdata);
 }
 // const publicUrl = "https://hrms.gocoolcare.com/api"
-// const publicUrl = "https://api.crmhai.com/api"
+const publicUrl = "https://api.crmhai.com/api"
 
-const publicUrl = "http://localhost:5001/api"
+// const publicUrl = "http://localhost:5001/api"
 
 
 const isToday = (date) => {

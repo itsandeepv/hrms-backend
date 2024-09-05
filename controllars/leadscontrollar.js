@@ -161,14 +161,7 @@ const getAllLead = async (req, res, next) => {
         } else {
             query.$and.push({
                 $or: [
-                    {
-                        $and: [
-                            { indiaMartKey: { $exists: true } },
-                            { indiaMartKey: { $ne: "" } },
-                            { indiaMartKey: req.user?.indiaMartKey }
-                        ]
-                    },
-                    { companyId: req.user?.companyId },
+                    { companyId: req.user?._id },
                     { userId: req.user?._id },
                 ]
             });
@@ -181,7 +174,7 @@ const getAllLead = async (req, res, next) => {
         // User-specific query
         const userQuery = {
             $or: [
-                { indiaMartKey: req.user?.indiaMartKey },
+                { companyId: req.user?._id },
                 { userId: req.user?._id }
             ]
         };
@@ -208,12 +201,28 @@ const getAllLead = async (req, res, next) => {
 }
 
 const searchQuary = async (req, res) => {
-    let leads = await NewLeads.find();
-    let { searchValue } = req.query
 
-    let userLeads = leads.filter((ld) => {
-        return ld.indiaMartKey == req.user?.indiaMartKey || ld.userId == req.user?._id
-    })
+    let query ={}
+    query.$and = query.$and || [];
+    if (["employee", "hr", "manager"].includes(req.user?.role)) {
+        const leadIds = req.user?.leadsAssign
+        query.$and.push({
+            $or: [
+                { userId: req.user?._id },
+                { _id: { $in: leadIds } }
+            ]
+        });
+
+    } else {
+        query.$and.push({
+            $or: [
+                { companyId: req.user?._id },
+                { userId: req.user?._id },
+            ]
+        });
+    }
+    let userLeads = await NewLeads.find(query);
+    let { searchValue } = req.query
 
     let filteredLead = userLeads.filter((ld) => {
         return ld.senderCompany?.toLowerCase().includes(searchValue.toLowerCase())
@@ -224,7 +233,6 @@ const searchQuary = async (req, res) => {
             || ld?.uniqeQueryId?.toLowerCase().includes(searchValue.toLowerCase())
             || ld?.queryProductName?.toLowerCase().includes(searchValue.toLowerCase())
             || (ld?.senderMobileNumber && ld.senderMobileNumber.toString().includes(searchValue))
-
     })
 
     res.status(200).json({
@@ -298,6 +306,7 @@ const dashboardleadCount = async (req, res, next) => {
         query.leadAddedBy = employeeName
     }
     query.$and = query.$and || [];
+    
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
         const leadIds = req.user?.leadsAssign
         query.$and.push({
@@ -310,23 +319,22 @@ const dashboardleadCount = async (req, res, next) => {
     } else {
         query.$and.push({
             $or: [
-                {
-                    $and: [
-                        { indiaMartKey: { $exists: true } },
-                        { indiaMartKey: { $ne: "" } },
-                        { indiaMartKey: req.user?.indiaMartKey }
-                    ]
-                },
                 { userId: req.user?._id },
-                { companyId: req.user?.companyId },
+                { companyId: req.user?._id },
             ]
         });
     }
     let userAllLeads = await NewLeads.find(query || {})
+    //     const ids = userAllLeads.map((itm) => itm?._id)
+
+    //    let datas= await NewLeads.updateMany(
+    //         { _id: { $in: ids } },      // Filter to match multiple IDs
+    //         { $set: { indiaMartKey: "", userId:req.user?._id } }  // Update the isActive field
+    //     );
 
     const combinedQuery = { ...query };
     const totalLeads = await NewLeads.countDocuments(combinedQuery);
-    // console.log(totalLeads ,query);
+    // console.log(datas, ids, query);
 
 
     let postiveLead = userAllLeads.filter((ld) => ld.isPositiveLead == "true")
@@ -361,7 +369,7 @@ const getLeadsByStatus = async (req, res) => {
     // console.log("employeeName>>>>" ,employeeName);
 
     const query = {};
-    if (employeeName && ["admin" ,"company"].includes(req.user?.role)) {
+    if (employeeName && ["admin", "company"].includes(req.user?.role)) {
         query.leadAddedBy = employeeName
     }
     query.$and = query.$and || [];
@@ -377,15 +385,8 @@ const getLeadsByStatus = async (req, res) => {
     } else {
         query.$and.push({
             $or: [
-                {
-                    $and: [
-                        { indiaMartKey: { $exists: true } },
-                        { indiaMartKey: { $ne: "" } },
-                        { indiaMartKey: req.user?.indiaMartKey }
-                    ]
-                },
                 { userId: req.user?._id },
-                { companyId: req.user?.companyId },
+                { companyId: req.user?._id },
             ]
         });
     }
@@ -454,7 +455,7 @@ const getChartDetails = async (req, res) => {
     try {
         let employee = req.query?.employee
         let query = {}
-        if(employee){
+        if (employee) {
             query.leadAddedBy = employee
         }
         query.$and = query.$and || [];
@@ -470,23 +471,13 @@ const getChartDetails = async (req, res) => {
         } else {
             query.$and.push({
                 $or: [
-                    {
-                        $and: [
-                            { indiaMartKey: { $exists: true } },
-                            { indiaMartKey: { $ne: "" } },
-                            { indiaMartKey: req.user?.indiaMartKey }
-                        ]
-                    },
                     { userId: req.user?._id },
-                    { companyId: req.user?.companyId },
+                    { companyId: req.user?._id },
                 ]
             });
         }
         let userLeads = await NewLeads.find(query);
         let { record } = req.query
-        // let userLeads = allLeads.filter((ld) => {
-        //     return ld.indiaMartKey === req.user?.indiaMartKey || ld.userId === req.user?._id;
-        // });
 
         const currentDate = new Date();
         const previousYear = currentDate.getFullYear() - 1;

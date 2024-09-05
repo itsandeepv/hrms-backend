@@ -35,9 +35,8 @@ app.use(cors({
 // app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
-const mongooseUrl = process.env.DATABASE_URL ||
+const mongooseUrl = process.env.DATABASE_URL ||"mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
   // "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase";
-  "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
 // Auth route start here
 app.use("/api", authrouter);
 // leads route

@@ -255,13 +255,13 @@ const updateCompanyStatus = async (req, res) => {
                 // if (bdata.isActive == false) {
                 let findCompany = await OtherUser.find({ companyId: bdata?._id })
                 const ids = findCompany.map((itm) => itm?._id)
-                console.log(bdata.statusChanges, "<<<<<<<<<Asdfa", ids);
+                // console.log(bdata.statusChanges, "<<<<<<<<<Asdfa", ids);
                 if (ids?.length > 0) {
                     let data = await OtherUser.updateMany(
                         { _id: { $in: ids } },      // Filter to match multiple IDs
                         { $set: { isActive: bdata.isActive } }  // Update the isActive field
                     );
-                    console.log(bdata.statusChanges, "<<<<<<<<<Asdfa", findCompany);
+                    // console.log(bdata.statusChanges, "<<<<<<<<<Asdfa", findCompany);
                 }
                 // }
             }
@@ -310,7 +310,8 @@ const loginUser = async (req, res, next) => {
                                 let token = jwt.sign({ id: user.id }, "SandeepIsTheKey", {
                                     expiresIn: "1d",
                                 });
-                                res.json({
+                                res.status(200).json({
+                                    status: true,
                                     message: "Login Succesfully",
                                     token: token,
                                     user: {
@@ -344,7 +345,7 @@ const loginUser = async (req, res, next) => {
                     }
                 });
             } else {
-                res.status(450).json({
+                res.status(500).json({
                     status: false,
                     message: "Company is inactive Please connect with Super-Admin !"
                 });
@@ -401,7 +402,7 @@ const loginUser = async (req, res, next) => {
                     }
                 });
             } else {
-                res.status(450).json({
+                res.status(500).json({
                     status: false,
                     message: "Employee is inactive Please connect with admin !"
                 });
