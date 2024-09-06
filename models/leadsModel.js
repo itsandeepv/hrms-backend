@@ -9,6 +9,7 @@ const LeadsSchema = new mongoose.Schema({
     indiaMartKey:{type:String},
     tradeIndaiKey:{type:String},
     leadAddedBy:{type:String},
+    leadAssignTo:{type:String},
     leadCallDuration:{type:String},
     queryMcatName:{type:String},
     queryMessage:{type:String},//message == queryMessage we can consider this as requirement of clients

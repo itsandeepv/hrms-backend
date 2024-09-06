@@ -11,9 +11,9 @@ const createNewLead = async (req, res, next) => {
             ...reqData, userId: req.user?._id
             // , indiaMartKey: req.user?.indiaMartKey
             , tradeIndaiKey: req.user?.tradeIndaiKey
-            // , queryTime: new Date(reqData.queryTime)
+            , queryTime: moment(reqData.queryTime).format('YYYY-MM-DD HH:mm:ss')
         })
-        // console.log("newLead" ,new Date(reqData.queryTime) );
+        console.log("newLead", reqData, newLead);
         let createdLead = await newLead.save()
         res.status(200).json({
             status: true,
@@ -113,7 +113,8 @@ const getAllLead = async (req, res, next) => {
             query.leadSource = { $in: leadSourceArray };
         }
         if (isPositiveLead) { query.isPositiveLead = isPositiveLead; }
-        if (leadAddedBy) { query.leadAddedBy = leadAddedBy; }
+        // if (leadAssignTo) { query.leadAssignTo = leadAssignTo; }
+
         if (startfromdate && endfromdate) {
             query.queryTime = {
                 $gte: moment(startfromdate).startOf('day').format('YYYY-MM-DD HH:mm:ss'),
@@ -149,6 +150,8 @@ const getAllLead = async (req, res, next) => {
         }
 
         query.$and = query.$and || [];
+        // console.log("leadAddedBy" , leadAddedBy);
+
         if (["employee", "hr", "manager"].includes(req.user?.role)) {
             const leadIds = req.user?.leadsAssign
             query.$and.push({
@@ -166,7 +169,14 @@ const getAllLead = async (req, res, next) => {
                 ]
             });
         }
-
+        if (leadAddedBy) {
+            query.$and.push({
+                $or: [
+                    { leadAddedBy: leadAddedBy },
+                    { leadAssignTo: leadAddedBy },
+                ]
+            });
+        }
         // console.log(query, "<<<<<<<query" , req.user?.role );
         let leads = await NewLeads.find(query).sort({ queryTime: -1, createdAt: -1, }).skip(skip).limit(limit);
 
@@ -175,10 +185,12 @@ const getAllLead = async (req, res, next) => {
         const userQuery = {
             $or: [
                 { companyId: req.user?._id },
-                { userId: req.user?._id }
+                { userId: req.user?._id },
             ]
         };
         const combinedQuery = { ...query, ...userQuery };
+        // console.log(query, userQuery ,combinedQuery);
+
         const totalLeads = await NewLeads.countDocuments(combinedQuery);
 
         res.status(200).json({
@@ -202,7 +214,7 @@ const getAllLead = async (req, res, next) => {
 
 const searchQuary = async (req, res) => {
 
-    let query ={}
+    let query = {}
     query.$and = query.$and || [];
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
         const leadIds = req.user?.leadsAssign
@@ -301,12 +313,18 @@ const deleteLead = async (req, res, next) => {
 const dashboardleadCount = async (req, res, next) => {
     const query = {};
     let employeeName = req.query?.employeeName
-    // console.log(employeeName, "<<<<<<<employeeName");
-    if (employeeName) {
-        query.leadAddedBy = employeeName
-    }
+
     query.$and = query.$and || [];
-    
+
+    if (employeeName) {
+        query.$and.push({
+            $or: [
+                { leadAddedBy: employeeName },
+                { leadAssignTo: employeeName },
+            ]
+        });;
+    }
+
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
         const leadIds = req.user?.leadsAssign
         query.$and.push({
@@ -365,14 +383,18 @@ const dashboardleadCount = async (req, res, next) => {
 const getLeadsByStatus = async (req, res) => {
     let { status } = req.params
     let employeeName = req.query?.employee
-
-    // console.log("employeeName>>>>" ,employeeName);
-
     const query = {};
-    if (employeeName && ["admin", "company"].includes(req.user?.role)) {
-        query.leadAddedBy = employeeName
-    }
     query.$and = query.$and || [];
+    if (employeeName && ["admin", "company"].includes(req.user?.role)) {
+        query.$and.push({
+            $or: [
+                { leadAddedBy: employeeName },
+                { leadAssignTo: employeeName },
+            ]
+        });;
+
+    }
+
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
         const leadIds = req.user?.leadsAssign
         query.$and.push({
@@ -457,8 +479,15 @@ const getChartDetails = async (req, res) => {
         let query = {}
         if (employee) {
             query.leadAddedBy = employee
+            query.$and.push({
+                $or: [
+                    { leadAddedBy: employee },
+                    { leadAssignTo: employee },
+                ]
+            });;
         }
         query.$and = query.$and || [];
+
         if (["employee", "hr", "manager"].includes(req.user?.role)) {
             const leadIds = req.user?.leadsAssign
             query.$and.push({

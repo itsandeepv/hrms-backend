@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const NewUser = require("../models/newUser");
 const OtherUser = require("../models/otherUser");
 const { publicUrl } = require("../utils/createNotefication");
+const NewLeads = require("../models/leadsModel");
 
 const register = async (req, res, next) => {
     try {
@@ -547,7 +548,6 @@ const assignLead = async (req, res, next) => {
     // let user = req.user;
     let { leadId, employeeId } = req.body;
     const io = req.app.get('io');  // Retrieve the io instance from app context
-
     // console.log(leadId, io);
     try {
         // Find the user and check if the leadId already exists in the leadsAssign array
@@ -561,6 +561,12 @@ const assignLead = async (req, res, next) => {
 
         // Check if the leadId already exists in the leadsAssign array
         if (!userdata.leadsAssign.includes(leadId)) {
+            // userdata.leadAssignTo = userdata?.fullName||""
+            await NewLeads.findByIdAndUpdate(leadId,{
+                leadAssignTo:userdata?.fullName||""
+            },{new:true})
+            // console.log("updateLead" ,updateLead);
+            
             userdata.leadsAssign.push(leadId);
             await userdata.save(); // Save the updated user data
             let notificationDetails = {
@@ -582,8 +588,6 @@ const assignLead = async (req, res, next) => {
             }).catch((er) => {
                 console.log(er);
             })
-
-            // console.log("done>>>>>>>>>",);
 
             return res.status(200).json({
                 status: true,
