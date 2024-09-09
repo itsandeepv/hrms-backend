@@ -1,20 +1,25 @@
 const moment = require("moment");
 const NewLeads = require("../models/leadsModel");
 const { isToday, isBeforeToday } = require("../utils/createNotefication");
-const mongoose = require("mongoose");
+const OtherUser = require("../models/otherUser");
 
 
 const createNewLead = async (req, res, next) => {
     let reqData = req.body
     try {
         let newLead = new NewLeads({
-            ...reqData, userId: req.user?._id
-            // , indiaMartKey: req.user?.indiaMartKey
-            , tradeIndaiKey: req.user?.tradeIndaiKey
+            ...reqData, userId: req.user?._id,
+            // , indiaMartKey: req.user?.indiaMartKey,
+            tradeIndaiKey: req.user?.tradeIndaiKey
             , queryTime: moment(reqData.queryTime).format('YYYY-MM-DD HH:mm:ss')
         })
-        console.log("newLead", reqData, newLead);
+        // console.log("newLead", reqData, newLead);
         let createdLead = await newLead.save()
+        if (["employee", "hr", "manager"].includes(req.user?.role) && createdLead?._id) {
+            const userdata = await OtherUser.findById(req.user?._id);
+            userdata.leadsAssign.push(createdLead?._id);
+            await userdata.save();
+        }
         res.status(200).json({
             status: true,
             message: "Lead created succuss",
@@ -94,6 +99,9 @@ const editLead = async (req, res, next) => {
         })
     }
 }
+
+
+
 const getAllLead = async (req, res, next) => {
     try {
         // Get page and limit from query parameters
@@ -170,28 +178,39 @@ const getAllLead = async (req, res, next) => {
             });
         }
         if (leadAddedBy) {
+            const trimmedEmployeeName = leadAddedBy.trim();
             query.$and.push({
                 $or: [
-                    { leadAddedBy: leadAddedBy },
-                    { leadAssignTo: leadAddedBy },
+                    {
+                        $expr: {
+                            $eq: [{ $trim: { input: "$leadAddedBy" } }, trimmedEmployeeName]
+                        }
+                    },
+                    {
+                        $expr: {
+                            $eq: [{ $trim: { input: "$leadAssignTo" } }, trimmedEmployeeName]
+                        }
+                    }
                 ]
             });
         }
-        // console.log(query, "<<<<<<<query" , req.user?.role );
-        let leads = await NewLeads.find(query).sort({ queryTime: -1, createdAt: -1, }).skip(skip).limit(limit);
+
+        let sortCondition = {};
+
+        // Check if the role is admin and if leadAssignAt exists and is not empty
+        if (["employee", "hr", "manager"].includes(req.user?.role)) {
+            sortCondition.leadAssignAt = -1;
+            sortCondition.queryTime = -1;
+        } else {
+            // For employee, hr, manager roles, or others
+            sortCondition.queryTime = -1;
+            sortCondition.createdAt = -1;
+        } 
+       
+        let leads = await NewLeads.find(query).sort(sortCondition).skip(skip).limit(limit);
 
 
-        // User-specific query
-        const userQuery = {
-            $or: [
-                { companyId: req.user?._id },
-                { userId: req.user?._id },
-            ]
-        };
-        const combinedQuery = { ...query, ...userQuery };
-        // console.log(query, userQuery ,combinedQuery);
-
-        const totalLeads = await NewLeads.countDocuments(combinedQuery);
+        const totalLeads = await NewLeads.countDocuments(query);
 
         res.status(200).json({
             status: true,
@@ -315,16 +334,6 @@ const dashboardleadCount = async (req, res, next) => {
     let employeeName = req.query?.employeeName
 
     query.$and = query.$and || [];
-
-    if (employeeName) {
-        query.$and.push({
-            $or: [
-                { leadAddedBy: employeeName },
-                { leadAssignTo: employeeName },
-            ]
-        });;
-    }
-
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
         const leadIds = req.user?.leadsAssign
         query.$and.push({
@@ -342,17 +351,37 @@ const dashboardleadCount = async (req, res, next) => {
             ]
         });
     }
-    let userAllLeads = await NewLeads.find(query || {})
-    //     const ids = userAllLeads.map((itm) => itm?._id)
 
-    //    let datas= await NewLeads.updateMany(
-    //         { _id: { $in: ids } },      // Filter to match multiple IDs
-    //         { $set: { indiaMartKey: "", userId:req.user?._id } }  // Update the isActive field
-    //     );
+    // Add filtering based on leadAddedBy or leadAssignTo if employeeName is provided
+    if (employeeName) {
+        const trimmedEmployeeName = employeeName.trim();
+        query.$and.push({
+            $or: [
+                {
+                    $expr: {
+                        $eq: [{ $trim: { input: "$leadAddedBy" } }, trimmedEmployeeName]
+                    }
+                },
+                {
+                    $expr: {
+                        $eq: [{ $trim: { input: "$leadAssignTo" } }, trimmedEmployeeName]
+                    }
+                }
+            ]
+        });
 
-    const combinedQuery = { ...query };
-    const totalLeads = await NewLeads.countDocuments(combinedQuery);
-    // console.log(datas, ids, query);
+    }
+
+    let userAllLeads = await NewLeads.find(query || {}).lean()
+        // const ids = userAllLeads.map((itm) => itm?._id)
+        
+        // let datas= await NewLeads.updateMany(
+        //     { _id: { $in: ids } },      // Filter to match multiple IDs
+        //     { $set: { leadAssignTo: "66d14a7485756e4d51c97f01" } }  // Update the isActive field
+        // );
+        // console.log(datas, ids);
+
+    const totalLeads = await NewLeads.countDocuments(query);
 
 
     let postiveLead = userAllLeads.filter((ld) => ld.isPositiveLead == "true")
@@ -391,8 +420,7 @@ const getLeadsByStatus = async (req, res) => {
                 { leadAddedBy: employeeName },
                 { leadAssignTo: employeeName },
             ]
-        });;
-
+        });
     }
 
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
@@ -477,8 +505,8 @@ const getChartDetails = async (req, res) => {
     try {
         let employee = req.query?.employee
         let query = {}
+        query.$and = query.$and || [];
         if (employee) {
-            query.leadAddedBy = employee
             query.$and.push({
                 $or: [
                     { leadAddedBy: employee },
@@ -486,8 +514,6 @@ const getChartDetails = async (req, res) => {
                 ]
             });;
         }
-        query.$and = query.$and || [];
-
         if (["employee", "hr", "manager"].includes(req.user?.role)) {
             const leadIds = req.user?.leadsAssign
             query.$and.push({
@@ -505,6 +531,8 @@ const getChartDetails = async (req, res) => {
                 ]
             });
         }
+
+
         let userLeads = await NewLeads.find(query);
         let { record } = req.query
 
@@ -513,13 +541,7 @@ const getChartDetails = async (req, res) => {
         const startOfLastYear = new Date(previousYear, 0, 1); // January 1st of last year
         const endOfLastYear = new Date(previousYear, 11, 31, 23, 59, 59); // December 31st of last year
         const userLeadIds = userLeads.map(lead => lead._id); // Get IDs of filtered leads
-
-        // console.log(userLeadIds, "<<<<<<<<Sdfsdf");
         if (record == "6months") {
-            // Calculate date for 6 months ago
-            const sixMonthsAgo = new Date();
-
-            // Group filtered leads by month within the last 6 months
             const data = await NewLeads.aggregate([
                 {
                     $match: {
@@ -528,14 +550,37 @@ const getChartDetails = async (req, res) => {
                 },
                 {
                     $addFields: {
-                        // Check if `createdAt` exists and is not null, otherwise use `queryTime`
+                        // Check if `createdAt` exists and is a valid date, otherwise use `queryTime`
                         dateField: {
                             $cond: {
-                                if: { $and: [{ $gt: ["$createdAt", null] }, { $ne: ["$createdAt", ""] }] },
+                                if: {
+                                    $and: [
+                                        { $gt: ["$createdAt", null] }, // Ensure createdAt is not null
+                                        { $type: "$createdAt" },       // Ensure createdAt is a valid date type
+                                        { $ne: ["$createdAt", ""] }    // Ensure createdAt is not an empty string
+                                    ]
+                                },
                                 then: { $toDate: "$createdAt" },
-                                else: { $toDate: "$queryTime" }
+                                else: {
+                                    $cond: {
+                                        if: {
+                                            $and: [
+                                                { $gt: ["$queryTime", null] },
+                                                { $type: "$queryTime" },
+                                                { $ne: ["$queryTime", ""] }
+                                            ]
+                                        },
+                                        then: { $toDate: "$queryTime" },
+                                        else: null // If neither createdAt nor queryTime is valid, set it to null
+                                    }
+                                }
                             }
                         }
+                    }
+                },
+                {
+                    $match: {
+                        dateField: { $ne: null } // Exclude any documents where dateField is still null
                     }
                 },
                 {
@@ -581,14 +626,37 @@ const getChartDetails = async (req, res) => {
                 },
                 {
                     $addFields: {
-                        // Check if `createdAt` exists and is not null, otherwise use `queryTime`
+                        // Check if `createdAt` exists and is a valid date, otherwise use `queryTime`
                         dateField: {
                             $cond: {
-                                if: { $and: [{ $gt: ["$createdAt", null] }, { $ne: ["$createdAt", ""] }] },
+                                if: {
+                                    $and: [
+                                        { $gt: ["$createdAt", null] }, // Ensure createdAt is not null
+                                        { $type: "$createdAt" },       // Ensure createdAt is a valid date type
+                                        { $ne: ["$createdAt", ""] }    // Ensure createdAt is not an empty string
+                                    ]
+                                },
                                 then: { $toDate: "$createdAt" },
-                                else: { $toDate: "$queryTime" }
+                                else: {
+                                    $cond: {
+                                        if: {
+                                            $and: [
+                                                { $gt: ["$queryTime", null] },
+                                                { $type: "$queryTime" },
+                                                { $ne: ["$queryTime", ""] }
+                                            ]
+                                        },
+                                        then: { $toDate: "$queryTime" },
+                                        else: null // If neither createdAt nor queryTime is valid, set it to null
+                                    }
+                                }
                             }
                         }
+                    }
+                },
+                {
+                    $match: {
+                        dateField: { $ne: null } // Exclude any documents where dateField is still null
                     }
                 },
                 {
@@ -624,18 +692,43 @@ const getChartDetails = async (req, res) => {
             // Group filtered leads by month
             const data = await NewLeads.aggregate([
                 {
-                    $match: { _id: { $in: userLeadIds } } // Filter by the IDs of user-specific leads
+                    $match: {
+                        _id: { $in: userLeadIds }
+                    }
                 },
                 {
                     $addFields: {
-                        // Check if `createdAt` exists and is not null, otherwise use `queryTime`
+                        // Check if `createdAt` exists and is a valid date, otherwise use `queryTime`
                         dateField: {
                             $cond: {
-                                if: { $and: [{ $gt: ["$createdAt", null] }, { $ne: ["$createdAt", ""] }] },
+                                if: {
+                                    $and: [
+                                        { $gt: ["$createdAt", null] }, // Ensure createdAt is not null
+                                        { $type: "$createdAt" },       // Ensure createdAt is a valid date type
+                                        { $ne: ["$createdAt", ""] }    // Ensure createdAt is not an empty string
+                                    ]
+                                },
                                 then: { $toDate: "$createdAt" },
-                                else: { $toDate: "$queryTime" }
+                                else: {
+                                    $cond: {
+                                        if: {
+                                            $and: [
+                                                { $gt: ["$queryTime", null] },
+                                                { $type: "$queryTime" },
+                                                { $ne: ["$queryTime", ""] }
+                                            ]
+                                        },
+                                        then: { $toDate: "$queryTime" },
+                                        else: null // If neither createdAt nor queryTime is valid, set it to null
+                                    }
+                                }
                             }
                         }
+                    }
+                },
+                {
+                    $match: {
+                        dateField: { $ne: null } // Exclude any documents where dateField is still null
                     }
                 },
                 {

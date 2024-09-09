@@ -7,9 +7,7 @@ const createNote = async (data) => {
 }
 // const publicUrl = "https://hrms.gocoolcare.com/api"
 const publicUrl = "https://api.crmhai.com/api"
-
 // const publicUrl = "http://localhost:5001/api"
-
 
 const isToday = (date) => {
   const today = new Date();

@@ -4,6 +4,8 @@ const NewUser = require("../models/newUser");
 const OtherUser = require("../models/otherUser");
 const { publicUrl } = require("../utils/createNotefication");
 const NewLeads = require("../models/leadsModel");
+const moment = require("moment");
+
 
 const register = async (req, res, next) => {
     try {
@@ -562,11 +564,12 @@ const assignLead = async (req, res, next) => {
         // Check if the leadId already exists in the leadsAssign array
         if (!userdata.leadsAssign.includes(leadId)) {
             // userdata.leadAssignTo = userdata?.fullName||""
-            await NewLeads.findByIdAndUpdate(leadId,{
-                leadAssignTo:userdata?.fullName||""
-            },{new:true})
+            await NewLeads.findByIdAndUpdate(leadId, {
+                leadAssignTo: userdata?._id || "",
+                leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss')
+            }, { new: true })
             // console.log("updateLead" ,updateLead);
-            
+
             userdata.leadsAssign.push(leadId);
             await userdata.save(); // Save the updated user data
             let notificationDetails = {
@@ -609,6 +612,41 @@ const assignLead = async (req, res, next) => {
         });
     }
 }
+
+
+const assignLeadupdate = async (req, res, next) => {
+    let { leadId, employeeId } = req.body;
+    try {
+        const userdata = await OtherUser.findById(employeeId);
+        if (!userdata) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found!",
+            });
+        }
+
+        if (userdata.leadsAssign.includes(leadId)) {
+            // userdata.leadAssignTo = userdata?.fullName||""
+            await NewLeads.findByIdAndUpdate(leadId, {
+                leadAssignTo: userdata?.fullName || "",
+                leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss')
+            }, { new: true })
+            // console.log("updateLead" ,updateLead);
+
+            userdata.leadsAssign.filter((item)=>item != leadId);
+            await userdata.save(); // 
+            console.log( userdata.leadsAssign , "<<<<<<<");
+            
+        }
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            error,
+        });
+    }
+
+}
+
 
 
 const editSettings = async (req, res, next) => {
@@ -665,5 +703,6 @@ module.exports = {
     updatePassword,
     getSettings,
     getAllCompany,
-    updateCompanyStatus
+    updateCompanyStatus,
+    assignLeadupdate
 };
