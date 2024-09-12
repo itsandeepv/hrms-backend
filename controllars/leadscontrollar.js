@@ -373,11 +373,11 @@ const dashboardleadCount = async (req, res, next) => {
     }
 
     let userAllLeads = await NewLeads.find(query || {}).lean()
-        // const ids = userAllLeads.map((itm) => itm?._id)
+        const ids = userAllLeads.map((itm) => itm?._id)
         
         // let datas= await NewLeads.updateMany(
         //     { _id: { $in: ids } },      // Filter to match multiple IDs
-        //     { $set: { leadAssignTo: "66d14a7485756e4d51c97f01" } }  // Update the isActive field
+        //     { $set: { leadAssignTo: "" } }  // Update the isActive field
         // );
         // console.log(datas, ids);
 

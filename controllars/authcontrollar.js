@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const NewUser = require("../models/newUser");
 const OtherUser = require("../models/otherUser");
-const { publicUrl } = require("../utils/createNotefication");
+const { publicUrl, formatDate } = require("../utils/createNotefication");
 const NewLeads = require("../models/leadsModel");
 const moment = require("moment");
 
@@ -615,28 +615,128 @@ const assignLead = async (req, res, next) => {
 
 
 const assignLeadupdate = async (req, res, next) => {
-    let { leadId, employeeId } = req.body;
+    let { leadId, newEmployeeId, oldEmployeeId } = req.body;
     try {
-        const userdata = await OtherUser.findById(employeeId);
-        if (!userdata) {
-            return res.status(404).json({
-                status: false,
-                message: "User not found!",
-            });
-        }
+        const io = req.app.get('io');  // Retrieve the io instance from app context
+        if(!oldEmployeeId){
+            const newUserdata = await OtherUser.findById(newEmployeeId);
+            // console.log(oldEmployeeId ,newUserdata , "ADFSA");
+            if (!newUserdata) {
+                return res.status(404).json({
+                    status: false,
+                    message: "User not found!",
+                });
+            }
+            if (newUserdata.leadsAssign.includes(leadId)) {
+                // Filter out the leadId and update leadsAssign array
+                newUserdata.leadsAssign = newUserdata.leadsAssign.filter((item) => item !== leadId);
+                // Save the updated user data
+                await newUserdata.save();
+            }
 
-        if (userdata.leadsAssign.includes(leadId)) {
-            // userdata.leadAssignTo = userdata?.fullName||""
-            await NewLeads.findByIdAndUpdate(leadId, {
-                leadAssignTo: userdata?.fullName || "",
-                leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss')
+            // You can add logic to assign the lead to newEmployeeId if needed.
+            // For example:
+
+            newUserdata.leadsAssign.push(leadId);
+            await newUserdata.save();
+
+          const leaddatasave =   await NewLeads.findByIdAndUpdate(leadId, {
+                leadAssignTo: newUserdata?._id || "",
+                leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss')||""
             }, { new: true })
-            // console.log("updateLead" ,updateLead);
 
-            userdata.leadsAssign.filter((item)=>item != leadId);
-            await userdata.save(); // 
-            console.log( userdata.leadsAssign , "<<<<<<<");
+            console.log(leaddatasave ,moment(new Date).format('YYYY-MM-DD HH:mm:ss') ,formatDate );
             
+
+            let notificationDetails = {
+                title: "A new lead has been assigned to you!",
+                isRead: false,
+                userId: newUserdata?._id,
+                leadId: leadId
+            }
+            const requestOptions = {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(notificationDetails)
+            };
+
+            fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
+                io.emit('leadAssigned', notificationDetails);
+            }).catch((er) => {
+                console.log(er);
+            })
+            return res.status(200).json({
+                status: true,
+                message: "Lead reassigned successfully!",
+                newUserdata
+            });
+
+        } 
+
+        if (newEmployeeId != oldEmployeeId) {
+            const userdata = await OtherUser.findById(oldEmployeeId);
+            const newUserdata = await OtherUser.findById(newEmployeeId);
+            if (!userdata || !newUserdata) {
+                return res.status(404).json({
+                    status: false,
+                    message: "User not found!",
+                });
+            }
+            if (userdata.leadsAssign.includes(leadId)) {
+                // Filter out the leadId and update leadsAssign array
+                userdata.leadsAssign = userdata.leadsAssign.filter((item) => item !== leadId);
+                // Save the updated user data
+                await userdata.save();
+            }
+
+            // You can add logic to assign the lead to newEmployeeId if needed.
+            // For example:
+
+            newUserdata.leadsAssign.push(leadId);
+            await newUserdata.save();
+
+            const leaddatasave =   await NewLeads.findByIdAndUpdate(leadId, {
+                leadAssignTo: newUserdata?._id || "",
+                leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss')||""
+            }, { new: true })
+
+            console.log(leaddatasave ,moment(new Date).format('YYYY-MM-DD HH:mm:ss')  );
+            
+
+            let notificationDetails = {
+                title: "A new lead has been assigned to you!",
+                isRead: false,
+                userId: newUserdata?._id,
+                leadId: leadId
+            }
+            const requestOptions = {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(notificationDetails)
+            };
+
+            fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
+                io.emit('leadAssigned', notificationDetails);
+            }).catch((er) => {
+                console.log(er);
+            })
+            return res.status(200).json({
+                status: true,
+                message: "Lead reassigned successfully!",
+                userdata
+            });
+
+
+        }else  {
+
+            return res.status(500).json({
+                status: false,
+                message: "both id are same !",
+            });
         }
     } catch (error) {
         return res.status(500).json({

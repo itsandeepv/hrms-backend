@@ -1,5 +1,6 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const moment = require("moment");
 
 const LeadsSchema = new mongoose.Schema({
     uniqeQueryId:{type:String},
@@ -10,7 +11,11 @@ const LeadsSchema = new mongoose.Schema({
     tradeIndaiKey:{type:String},
     leadAddedBy:{type:String,trim:true},
     leadAssignTo:{type:String,trim:true},
-    leadAssignAt:{type:String,trim:true},
+    leadAssignAt:{
+        type:String,
+        trim:true,
+        default:moment(new Date).format('YYYY-MM-DD HH:mm:ss')
+    },
     leadCallDuration:{type:String},
     queryMcatName:{type:String},
     queryMessage:{type:String},//message == queryMessage we can consider this as requirement of clients
