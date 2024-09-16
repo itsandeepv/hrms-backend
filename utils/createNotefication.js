@@ -8,7 +8,8 @@ const createNote = async (data) => {
 // const publicUrl = "https://hrms.gocoolcare.com/api"
 // const publicUrl = "https://api.crmhai.com/api"
 // const publicUrl = "http://localhost:5001/api"
- const publicUrl = 'http://3.109.180.22:5001/api';
+//  const publicUrl = 'https://13.127.232.225/api';
+ const publicUrl = 'http://35.154.42.18:5001/api';
 
 
 const isToday = (date) => {
