@@ -350,7 +350,7 @@ const loginUser = async (req, res, next) => {
             } else {
                 res.status(500).json({
                     status: false,
-                    message: "Company is inactive Please connect with Super-Admin !"
+                    message: "Company is inactive Please connect with  Technical Team !"
                 });
             }
         } else {
