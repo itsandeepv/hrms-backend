@@ -408,6 +408,7 @@ const loginUser = async (req, res, next) => {
             } else {
                 res.status(500).json({
                     status: false,
+                    companyInactive:true,
                     message: "Employee is inactive Please connect with admin !"
                 });
             }
