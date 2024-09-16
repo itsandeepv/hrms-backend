@@ -422,8 +422,6 @@ const loginUser = async (req, res, next) => {
 
 
 //update user
-
-
 const updatePassword = async (req, res) => {
     let { newPassword, currentPassword } = req.body
     let user = req.user
