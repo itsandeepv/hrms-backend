@@ -16,7 +16,7 @@ const isToday = (date) => {
   const today = new Date();
   date = new Date(date);
   // console.log(date.getDate() , today.getDate());
-  return date.getDate()+1 == today.getDate() &&
+  return date.getDate() == today.getDate() &&
     date.getMonth() === today.getMonth() &&
     date.getFullYear() === today.getFullYear();
 };

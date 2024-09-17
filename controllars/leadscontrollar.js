@@ -181,11 +181,11 @@ const getAllLead = async (req, res, next) => {
             const trimmedEmployeeName = leadAddedBy.trim();
             query.$and.push({
                 $or: [
-                    {
-                        $expr: {
-                            $eq: [{ $trim: { input: "$leadAddedBy" } }, trimmedEmployeeName]
-                        }
-                    },
+                    // {
+                    //     $expr: {
+                    //         $eq: [{ $trim: { input: "$leadAddedBy" } }, trimmedEmployeeName]
+                    //     }
+                    // },
                     {
                         $expr: {
                             $eq: [{ $trim: { input: "$leadAssignTo" } }, trimmedEmployeeName]
@@ -357,11 +357,11 @@ const dashboardleadCount = async (req, res, next) => {
         const trimmedEmployeeName = employeeName.trim();
         query.$and.push({
             $or: [
-                {
-                    $expr: {
-                        $eq: [{ $trim: { input: "$leadAddedBy" } }, trimmedEmployeeName]
-                    }
-                },
+                // {
+                //     $expr: {
+                //         $eq: [{ $trim: { input: "$leadAddedBy" } }, trimmedEmployeeName]
+                //     }
+                // },
                 {
                     $expr: {
                         $eq: [{ $trim: { input: "$leadAssignTo" } }, trimmedEmployeeName]
@@ -415,9 +415,10 @@ const getLeadsByStatus = async (req, res) => {
     const query = {};
     query.$and = query.$and || [];
     if (employeeName && ["admin", "company"].includes(req.user?.role)) {
+        // { leadAddedBy: employeeName },
+        // { leadAssignTo: employeeName },
         query.$and.push({
             $or: [
-                { leadAddedBy: employeeName },
                 { leadAssignTo: employeeName },
             ]
         });
@@ -509,7 +510,6 @@ const getChartDetails = async (req, res) => {
         if (employee) {
             query.$and.push({
                 $or: [
-                    { leadAddedBy: employee },
                     { leadAssignTo: employee },
                 ]
             });;
