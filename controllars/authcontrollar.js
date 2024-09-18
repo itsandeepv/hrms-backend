@@ -11,19 +11,26 @@ const moment = require("moment");
 const register = async (req, res, next) => {
     try {
         let reqData = req.body
-        const user = await NewUser.find({ email: reqData.email, fullName: reqData.fullName });
-        console.log(user?.length, "<<<<<<<adf");
+        const query = {
+            $or: [
+                { email: reqData.email },
+                { companyName: reqData.companyName }
+            ]
+        };
+        
+        const user = await NewUser.findOne(query);
+        // console.log(user?.length, "<<<<<<<adf");
+        let otp = generateOTP(6)
+        let otpRes = await sendVerifyEmail(reqData.email, reqData.fullName, otp);
 
-        if (user?.length > 0) {
+        if (user) {
             return res.status(409).json({
                 status: false,
                 message: "User with given email/company  already Exist!"
             });
         } else {
             if (reqData?.password) {
-                let otp = generateOTP(6)
-                let otpRes = await sendVerifyEmail(reqData.email, reqData.fullName, otp);
-
+               
                 //    console.log(otpRes.accepted.length ,otpRes.rejected.length );
 
                 bcrypt.hash(reqData.password, 10, function (error, hashPassword) {
@@ -33,7 +40,7 @@ const register = async (req, res, next) => {
                             error
                         });
                     }
-
+                   
                     let user = new NewUser({
                         ...reqData,
                         fullName: reqData.fullName,
@@ -44,7 +51,7 @@ const register = async (req, res, next) => {
                         isVerify: false,
                     });
 
-                    // console.log(user);
+                    console.log(otpRes);
                     if (otpRes.accepted.length > 0) {
                         user.save().then((result) => {
                             res.status(200).send({
@@ -87,8 +94,44 @@ const register = async (req, res, next) => {
 
 
 
-const verifyEmail = async (req ,res)=>{
+const verifyEmail = async (req, res) => {
 
+    try {
+        let { email, otp } = req.body
+        const user = await NewUser.findOne({ email: email });
+
+        console.log("user" ,user , otp);
+        if (user) {
+            if (user.verifyCode == otp) {
+                let updateDetails = await NewUser.findByIdAndUpdate(user?._id, {
+                    isVerify: true,
+                    verifyCode:"",
+                } ,{new:true})
+                res.status(200).json({
+                    status: true,
+                    message: "Opt verified "
+                });
+            } else {
+                res.status(500).json({
+                    status: true,
+                    message: "Wrong Otp !"
+                });
+            }
+        }else{
+            res.status(500).json({
+                status: true,
+                message: "User not found ! Check your email "
+            });
+        }
+
+
+
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            error
+        });
+    }
 }
 
 const createUserByAdmin = async (req, res, next) => {
@@ -326,60 +369,69 @@ const loginUser = async (req, res, next) => {
     try {
         let checkadmin = await NewUser.findOne({ email: email })
         if (checkadmin) {
-            if (checkadmin.isActive) {
-                await NewUser.findOne({ email: email }).then((user) => {
-                    if (user) {
-                        bcrypt.compare(password, user.password, function (error, result) {
-                            if (error) {
-                                res.status(500).json({
-                                    status: false,
-                                    error: error + "Password is not match",
-                                });
-                            }
-                            if (result) {
-                                let token = jwt.sign({ id: user.id }, "SandeepIsTheKey", {
-                                    expiresIn: "1d",
-                                });
-                                res.status(200).json({
-                                    status: true,
-                                    message: "Login Succesfully",
-                                    token: token,
-                                    user: {
-                                        fullName: user.fullName,
-                                        indiaMartKey: user.indiaMartKey,
-                                        tradeIndaiKey: user.tradeIndaiKey,
-                                        mobileNumber: user.mobileNumber,
-                                        companyName: user.companyName,
-                                        companyLogo: user.companyLogo || "",
-                                        moduleAccuss: user.moduleAccuss || [],
-                                        address: user.address || "",
-                                        userType: user.userType,
-                                        companyId: user.companyId,
-                                        role: user.role,
-                                        _id: user._id,
-                                        email: user.email,
-                                        IndiaMartCrmUrl: user.IndiaMartCrmUrl,
-                                    },
-                                });
-                            } else {
-                                res.status(404).json({
-                                    status: false, error: "Wrong email and password !"
-                                });
-                            }
-                        });
-                    } else {
-                        res.status(400).json({
-                            status: false,
-                            message: "Please Check Your Email And Password !",
-                        });
-                    }
-                });
-            } else {
+            // console.log(checkadmin?.isVerify , "<<<<<<checkadmin");
+            if(checkadmin?.isVerify){
+                if (checkadmin.isActive) {
+                    await NewUser.findOne({ email: email }).then((user) => {
+                        if (user) {
+                            bcrypt.compare(password, user.password, function (error, result) {
+                                if (error) {
+                                    res.status(500).json({
+                                        status: false,
+                                        error: error + "Password is not match",
+                                    });
+                                }
+                                if (result) {
+                                    let token = jwt.sign({ id: user.id }, "SandeepIsTheKey", {
+                                        expiresIn: "1d",
+                                    });
+                                    res.status(200).json({
+                                        status: true,
+                                        message: "Login Succesfully",
+                                        token: token,
+                                        user: {
+                                            fullName: user.fullName,
+                                            indiaMartKey: user.indiaMartKey,
+                                            tradeIndaiKey: user.tradeIndaiKey,
+                                            mobileNumber: user.mobileNumber,
+                                            companyName: user.companyName,
+                                            companyLogo: user.companyLogo || "",
+                                            moduleAccuss: user.moduleAccuss || [],
+                                            address: user.address || "",
+                                            userType: user.userType,
+                                            companyId: user.companyId,
+                                            role: user.role,
+                                            _id: user._id,
+                                            email: user.email,
+                                            IndiaMartCrmUrl: user.IndiaMartCrmUrl,
+                                        },
+                                    });
+                                } else {
+                                    res.status(404).json({
+                                        status: false, error: "Wrong email and password !"
+                                    });
+                                }
+                            });
+                        } else {
+                            res.status(400).json({
+                                status: false,
+                                message: "Please Check Your Email And Password !",
+                            });
+                        }
+                    });
+                } else {
+                    res.status(500).json({
+                        status: false,
+                        companyInactive: true,
+                        message: "Company is inactive Please connect with  Technical Team !"
+                    });
+                }
+            }else{
                 res.status(500).json({
                     status: false,
-                    companyInactive: true,
-                    message: "Company is inactive Please connect with  Technical Team !"
+                    message: "Please verify your email address "
                 });
+
             }
         } else {
             let checkemployee = await OtherUser.findOne({ email: email })
@@ -510,7 +562,7 @@ const updatePassword = async (req, res) => {
 
 const updateUser = async (req, res) => {
     const { id } = req.params;
-    console.log(req.params);
+    // console.log(req.params);
     try {
         const hashPassword = await bcrypt.hash(req.body.password, 10);
         let updateUser = await NewUser.findByIdAndUpdate(
@@ -535,6 +587,7 @@ const updateUser = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({
+            status: false,
             error: error,
         });
     }

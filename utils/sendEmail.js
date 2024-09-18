@@ -57,11 +57,10 @@ const sendVerifyEmail = async (email ,name ,code) => {
 
     try {
         let response = await transporter.sendMail({
-            from: 'raossachin37@gmail.com', // Your email
+            from: process.env.EMAIL_USER, // Your email
             ...mailOptions,
         });
-
-        console.log('Email sent successfully', response);
+        console.log('Email sent successfully');
         return response
     } catch (error) {
         console.error('Error sending email:', error);
