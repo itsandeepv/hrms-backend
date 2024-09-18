@@ -30,9 +30,7 @@ const register = async (req, res, next) => {
             });
         } else {
             if (reqData?.password) {
-               
-                //    console.log(otpRes.accepted.length ,otpRes.rejected.length );
-
+            
                 bcrypt.hash(reqData.password, 10, function (error, hashPassword) {
                     if (error) {
                         res.status(500).json({
@@ -428,6 +426,7 @@ const loginUser = async (req, res, next) => {
             }else{
                 res.status(500).json({
                     status: false,
+                    verify:false,
                     message: "Please verify your email address "
                 });
 
