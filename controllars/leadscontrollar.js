@@ -45,9 +45,7 @@ const bulkLeadInset = async (req, res) => {
             return {
                 ...item,
                 userId: user?._id,
-                // indiaMartKey: user?.indiaMartKey,
                 tradeIndaiKey: user?.tradeIndaiKey,
-
             }
         })
         // console.log(req.user , "<<<<<<<<adsfas" ,bulkData);

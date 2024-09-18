@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const NewUser = require("../models/newUser");
 const OtherUser = require("../models/otherUser");
 const { publicUrl, formatDate } = require("../utils/createNotefication");
+const { sendVerifyEmail, generateOTP } = require("../utils/sendEmail");
 const NewLeads = require("../models/leadsModel");
 const moment = require("moment");
 
@@ -10,50 +11,70 @@ const moment = require("moment");
 const register = async (req, res, next) => {
     try {
         let reqData = req.body
-        const user = await NewUser.findOne({ email: reqData.email });
-        if (user)
+        const user = await NewUser.find({ email: reqData.email, fullName: reqData.fullName });
+        console.log(user?.length, "<<<<<<<adf");
+
+        if (user?.length > 0) {
             return res.status(409).json({
                 status: false,
-                message: "User with given email already Exist!"
-            });
-        if (reqData?.password) {
-            bcrypt.hash(reqData.password, 10, function (error, hashPassword) {
-                if (error) {
-                    res.status(500).json({
-                        status: false,
-                        error: error + "something went wrong !",
-                    });
-                }
-
-                let user = new NewUser({
-                    ...reqData,
-                    fullName: reqData.fullName,
-                    email: reqData.email,
-                    password: hashPassword,
-                    userType: reqData.userType,
-                });
-
-                // console.log(user);
-                user.save().then((result) => {
-                    res.status(200).send({
-                        status: true,
-                        message: "New User Added Done",
-                        user: result,
-                    });
-                })
-                    .catch((error) => {
-                        res.status(500).json({
-                            status: false,
-                            error: error,
-                            message: "Above error aa ri hai",
-                        });
-                    });
+                message: "User with given email/company  already Exist!"
             });
         } else {
-            res.status(500).json({
-                status: false,
-                error: "Something went Wrong ?",
-            });
+            if (reqData?.password) {
+                let otp = generateOTP(6)
+                let otpRes = await sendVerifyEmail(reqData.email, reqData.fullName, otp);
+
+                //    console.log(otpRes.accepted.length ,otpRes.rejected.length );
+
+                bcrypt.hash(reqData.password, 10, function (error, hashPassword) {
+                    if (error) {
+                        res.status(500).json({
+                            status: false,
+                            error
+                        });
+                    }
+
+                    let user = new NewUser({
+                        ...reqData,
+                        fullName: reqData.fullName,
+                        email: reqData.email,
+                        password: hashPassword,
+                        userType: reqData.userType,
+                        verifyCode: otp,
+                        isVerify: false,
+                    });
+
+                    // console.log(user);
+                    if (otpRes.accepted.length > 0) {
+                        user.save().then((result) => {
+                            res.status(200).send({
+                                status: true,
+                                message: "User Registered !",
+                                user: result,
+                            });
+
+                        })
+                            .catch((error) => {
+                                res.status(500).json({
+                                    status: false,
+                                    error: error,
+                                    message: "Above error aa ri hai",
+                                });
+                            });
+                    } else {
+                        res.status(500).json({
+                            status: false,
+                            message: "Please enter a valid email address",
+                        });
+
+                    }
+                });
+            } else {
+                res.status(500).json({
+                    status: false,
+                    error: "Password is Required !",
+                });
+            }
         }
     } catch (error) {
         res.status(500).json({
@@ -63,6 +84,12 @@ const register = async (req, res, next) => {
         });
     }
 };
+
+
+
+const verifyEmail = async (req ,res)=>{
+
+}
 
 const createUserByAdmin = async (req, res, next) => {
     try {
@@ -350,7 +377,7 @@ const loginUser = async (req, res, next) => {
             } else {
                 res.status(500).json({
                     status: false,
-                    companyInactive:true,
+                    companyInactive: true,
                     message: "Company is inactive Please connect with  Technical Team !"
                 });
             }
@@ -408,7 +435,7 @@ const loginUser = async (req, res, next) => {
             } else {
                 res.status(500).json({
                     status: false,
-                    companyInactive:true,
+                    companyInactive: true,
                     message: "Employee is inactive Please connect with admin !"
                 });
             }
@@ -618,7 +645,7 @@ const assignLeadupdate = async (req, res, next) => {
     let { leadId, newEmployeeId, oldEmployeeId } = req.body;
     try {
         const io = req.app.get('io');  // Retrieve the io instance from app context
-        if(!oldEmployeeId){
+        if (!oldEmployeeId) {
             const newUserdata = await OtherUser.findById(newEmployeeId);
             // console.log(oldEmployeeId ,newUserdata , "ADFSA");
             if (!newUserdata) {
@@ -640,13 +667,13 @@ const assignLeadupdate = async (req, res, next) => {
             newUserdata.leadsAssign.push(leadId);
             await newUserdata.save();
 
-          const leaddatasave =   await NewLeads.findByIdAndUpdate(leadId, {
+            const leaddatasave = await NewLeads.findByIdAndUpdate(leadId, {
                 leadAssignTo: newUserdata?._id || "",
-                leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss')||""
+                leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss') || ""
             }, { new: true })
 
-            console.log(leaddatasave ,moment(new Date).format('YYYY-MM-DD HH:mm:ss') ,formatDate );
-            
+            console.log(leaddatasave, moment(new Date).format('YYYY-MM-DD HH:mm:ss'), formatDate);
+
 
             let notificationDetails = {
                 title: "A new lead has been assigned to you!",
@@ -673,7 +700,7 @@ const assignLeadupdate = async (req, res, next) => {
                 newUserdata
             });
 
-        } 
+        }
 
         if (newEmployeeId != oldEmployeeId) {
             const userdata = await OtherUser.findById(oldEmployeeId);
@@ -697,13 +724,13 @@ const assignLeadupdate = async (req, res, next) => {
             newUserdata.leadsAssign.push(leadId);
             await newUserdata.save();
 
-            const leaddatasave =   await NewLeads.findByIdAndUpdate(leadId, {
+            const leaddatasave = await NewLeads.findByIdAndUpdate(leadId, {
                 leadAssignTo: newUserdata?._id || "",
-                leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss')||""
+                leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss') || ""
             }, { new: true })
 
-            console.log(leaddatasave ,moment(new Date).format('YYYY-MM-DD HH:mm:ss')  );
-            
+            console.log(leaddatasave, moment(new Date).format('YYYY-MM-DD HH:mm:ss'));
+
 
             let notificationDetails = {
                 title: "A new lead has been assigned to you!",
@@ -731,7 +758,7 @@ const assignLeadupdate = async (req, res, next) => {
             });
 
 
-        }else  {
+        } else {
 
             return res.status(500).json({
                 status: false,
@@ -804,5 +831,6 @@ module.exports = {
     getSettings,
     getAllCompany,
     updateCompanyStatus,
-    assignLeadupdate
+    assignLeadupdate,
+    verifyEmail
 };

@@ -35,8 +35,9 @@ app.use(cors({
 // app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
-const mongooseUrl = process.env.DATABASE_URL ||"mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
-  // "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase";
+const mongooseUrl = process.env.DATABASE_URL || "mongodb://hrmsDBs:98sdis90d@167.71.236.39:27017/hrms?authSource=admin"
+// "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
+
 // Auth route start here
 app.use("/api", authrouter);
 // leads route
@@ -106,6 +107,7 @@ db.once("open", () => {
     }
   });
 });
+
 
 // WebSocket connection
 io.on("connection", (socket) => {

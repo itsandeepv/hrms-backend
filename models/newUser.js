@@ -15,6 +15,8 @@ const NewUserSchema = new mongoose.Schema({
     isActive:{type:Boolean,default:"false"},
     companyName:{type: String},
     companyLogo:{type: String},
+    isVerify:{type:Boolean ,default:false},
+    verifyCode:{type:String},
     userType: {
         type: String,
         lowercase: true,
