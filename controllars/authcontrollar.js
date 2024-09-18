@@ -369,7 +369,6 @@ const loginUser = async (req, res, next) => {
     try {
         let checkadmin = await NewUser.findOne({ email: email })
         if (checkadmin) {
-            // console.log(checkadmin?.isVerify , "<<<<<<checkadmin");
             if(checkadmin?.isVerify){
                 if (checkadmin.isActive) {
                     await NewUser.findOne({ email: email }).then((user) => {
