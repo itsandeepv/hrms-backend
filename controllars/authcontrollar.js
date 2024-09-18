@@ -49,7 +49,7 @@ const register = async (req, res, next) => {
                         isVerify: false,
                     });
 
-                    console.log(otpRes);
+                    // console.log(otpRes);
                     if (otpRes.accepted.length > 0) {
                         user.save().then((result) => {
                             res.status(200).send({
