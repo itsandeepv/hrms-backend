@@ -17,20 +17,28 @@ const register = async (req, res, next) => {
                 { companyName: reqData.companyName }
             ]
         };
-        
+
         const user = await NewUser.findOne(query);
         // console.log(user?.length, "<<<<<<<adf");
         let otp = generateOTP(6)
         let otpRes = await sendVerifyEmail(reqData.email, reqData.fullName, otp);
 
         if (user) {
+            let otp = generateOTP(6)
+            await sendVerifyEmail(user.email, user.fullName, otp);
+
+            await NewUser.findByIdAndUpdate(user?._id, {
+                verifyCode: otp,
+            }, { new: true })
+
             return res.status(409).json({
                 status: false,
-                message: "User with given email/company  already Exist!"
+                isVerify: user?.isVerify || false,
+                message: "User with given email/company already Exist! Please Try to login"
             });
         } else {
             if (reqData?.password) {
-            
+
                 bcrypt.hash(reqData.password, 10, function (error, hashPassword) {
                     if (error) {
                         res.status(500).json({
@@ -38,7 +46,7 @@ const register = async (req, res, next) => {
                             error
                         });
                     }
-                   
+
                     let user = new NewUser({
                         ...reqData,
                         fullName: reqData.fullName,
@@ -57,7 +65,6 @@ const register = async (req, res, next) => {
                                 message: "User Registered !",
                                 user: result,
                             });
-
                         })
                             .catch((error) => {
                                 res.status(500).json({
@@ -98,13 +105,13 @@ const verifyEmail = async (req, res) => {
         let { email, otp } = req.body
         const user = await NewUser.findOne({ email: email });
 
-        console.log("user" ,user , otp);
+        console.log("user", user, otp);
         if (user) {
             if (user.verifyCode == otp) {
                 let updateDetails = await NewUser.findByIdAndUpdate(user?._id, {
                     isVerify: true,
-                    verifyCode:"",
-                } ,{new:true})
+                    verifyCode: "",
+                }, { new: true })
                 res.status(200).json({
                     status: true,
                     message: "Opt verified "
@@ -115,7 +122,7 @@ const verifyEmail = async (req, res) => {
                     message: "Wrong Otp !"
                 });
             }
-        }else{
+        } else {
             res.status(500).json({
                 status: true,
                 message: "User not found ! Check your email "
@@ -328,7 +335,7 @@ const updateCompanyStatus = async (req, res) => {
                 const ids = findCompany.map((itm) => itm?._id)
                 // console.log(bdata.statusChanges, "<<<<<<<<<Asdfa", ids);
                 if (ids?.length > 0) {
-                    let data = await OtherUser.updateMany(
+                    await OtherUser.updateMany(
                         { _id: { $in: ids } },      // Filter to match multiple IDs
                         { $set: { isActive: bdata.isActive } }  // Update the isActive field
                     );
@@ -360,14 +367,100 @@ const updateCompanyStatus = async (req, res) => {
     }
 }
 
+
+//update user
+const changePassword = async (req, res) => {
+    let { newPassword } = req.body
+    let user = req.user
+    try {
+        if(newPassword){
+            let checkUser = await NewUser.findById(user?._id)
+            let checkOUser = await OtherUser.findById(user?._id)
+            if (checkOUser) {
+                const hashPassword = await bcrypt.hash(newPassword, 10);
+                await OtherUser.findByIdAndUpdate(user?._id, {
+                    password: hashPassword
+                }, { new: true })
+                res.status(200).json({
+                    status: true,hashPassword,
+                    message: "Password Changed Success"
+                })
+    
+            } else if (checkUser) {
+                const hashPassword = await bcrypt.hash(newPassword, 10);
+                await NewUser.findByIdAndUpdate(user?._id, {
+                    password: hashPassword
+                }, { new: true })
+                res.status(200).json({
+                    status: true,hashPassword,
+                    message: "Password Changed Success"
+                })
+    
+            } else {
+                res.status(404).json({
+                    status: false,
+                    message: "User Not Found !"
+                })
+            }
+        }else{
+            res.status(404).json({
+                status: false,
+                message: "Password is required !"
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            error: error,
+            status: false
+        });
+    }
+
+}
+
+
 //new user data 
+
+const resendOtp = async (req, res) => {
+    const { email, password } = req.body
+    try {
+        let checkadmin = await NewUser.findOne({ email: email })
+        if (checkadmin) {
+            let otp = generateOTP(6)
+            await sendVerifyEmail(checkadmin.email, checkadmin.fullName, otp);
+            await NewUser.findByIdAndUpdate(checkadmin?._id, {
+                verifyCode: otp,
+            }, { new: true })
+
+            res.status(200).json({
+                status: true,
+                message: "Otp Resend Success !"
+            });
+
+        } else {
+            res.status(500).json({
+                status: false,
+                message: "email not matched !"
+            });
+
+        }
+
+
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            error: error,
+        });
+    }
+
+}
 
 const loginUser = async (req, res, next) => {
     const { email, password } = req.body
     try {
         let checkadmin = await NewUser.findOne({ email: email })
+        // console.log(checkadmin);
         if (checkadmin) {
-            if(checkadmin?.isVerify){
+            if (checkadmin?.isVerify) {
                 if (checkadmin.isActive) {
                     await NewUser.findOne({ email: email }).then((user) => {
                         if (user) {
@@ -423,10 +516,16 @@ const loginUser = async (req, res, next) => {
                         message: "Company is inactive Please connect with  Technical Team !"
                     });
                 }
-            }else{
+            } else {
+                let otp = generateOTP(6)
+                await sendVerifyEmail(checkadmin.email, checkadmin.fullName, otp);
+                await NewUser.findByIdAndUpdate(checkadmin?._id, {
+                    verifyCode: otp,
+                }, { new: true })
+
                 res.status(500).json({
                     status: false,
-                    verify:false,
+                    verify: false,
                     message: "Please verify your email address "
                 });
 
@@ -500,6 +599,7 @@ const loginUser = async (req, res, next) => {
 };
 
 
+
 //update user
 const updatePassword = async (req, res) => {
     let { newPassword, currentPassword } = req.body
@@ -511,7 +611,6 @@ const updatePassword = async (req, res) => {
             const isMatch = await bcrypt.compare(currentPassword, checkUser.password || checkOUser.password);
             if (isMatch) {
                 const hashPassword = await bcrypt.hash(newPassword, 10);
-                // console.log(hashPassword, currentPassword, "<<<<<<<Adf");
                 await OtherUser.findByIdAndUpdate(user?._id, {
                     password: hashPassword
                 }, { new: true })
@@ -883,5 +982,7 @@ module.exports = {
     getAllCompany,
     updateCompanyStatus,
     assignLeadupdate,
-    verifyEmail
+    verifyEmail,
+    resendOtp,
+    changePassword
 };
