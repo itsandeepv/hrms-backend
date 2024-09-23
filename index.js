@@ -10,6 +10,8 @@ const { authrouter } = require("./routes/authroutes");
 const { leadsrouter } = require("./routes/allroutes");
 const { isToday, publicUrl } = require("./utils/createNotefication");
 const NewLeads = require("./models/leadsModel");
+const { MongoClient } = require('mongodb');
+const { sendNotification } = require("./utils/sendNotification");
 
 const app = express();
 const server = http.createServer(app);
@@ -62,10 +64,45 @@ mongoose.connect(mongooseUrl, {
     console.log("Unable to connect to MongoDB. Error: " + err);
   });
 
+  
+  let isMessSave = true
+  // Listen for MongoDB changes using Change Streams
+  const db = mongoose.connection;
 
-let isMessSave = true
-// Listen for MongoDB changes using Change Streams
-const db = mongoose.connection;
+  // db.command({
+  //   grantRolesToUser: "sandeep",
+  //   roles: [{ role: "read", db: "crm" }, { role: "changeStream", db: "crm" }]
+  // })
+
+  // async function main() {
+  //   const uri = "mongodb://hrmsDBs:98sdis90d@167.71.236.39:27017/hrms?authSource=admin";
+    
+  //   const client = new MongoClient(uri,{ useNewUrlParser: true, useUnifiedTopology: true });
+  
+  //   try {
+  //     await client.connect();
+      
+  //     const db = client.db("hrms");
+  
+  //     // Run the command
+  //     // const result = await db.command({
+  //     //   grantRolesToUser: "hrmsDBs",
+  //     //   roles: [{ role: "read", db: "hrms" }, { role: "changeStream", db: "hrms" }]
+  //     // });
+      
+  //     console.log("Command executed:", result);
+  
+  //   } catch (err) {
+  //     console.error(err);
+  //   } finally {
+  //     await client.close();
+  //   }
+  // }
+  
+  // main().catch(console.error);
+
+
+
 db.once("open", () => {
   console.log("MongoDB database connection established successfully");
   const collection = db.collection("leads");
@@ -75,35 +112,33 @@ db.once("open", () => {
     // console.log("Change detected:", changedata);
     let { fullDocument } = changedata
     if (changedata.operationType == "insert") {
-      let notificationDetails = {
-        title: "You received  new lead ",
-        isRead: false,
-        userId: fullDocument.userId || "",
-        indiaMartKey: fullDocument.indiaMartKey || "",
-        tradeIndaiKey: fullDocument.tradeIndaiKey || "",
-        message: fullDocument.queryMessage || "",
-        leadId: fullDocument._id || "",
-        leadSource: fullDocument.leadSource || "",
-      }
-      const requestOptions = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(notificationDetails)
-      };
-      if (isMessSave) {
-        fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
-          // console.log(data, notificationDetails);
-          isMessSave = false
-        }).catch((er) => {
-          console.log(er);
-        })
-      }
-
-      //  createNote(noteficationDetails)
-
-      io.emit("dbUpdate", changedata); // Broadcast change to all connected clients
+      sendNotification(fullDocument ,io ,changedata)
+      // let notificationDetails = {
+      //   title: "You received  new lead ",
+      //   isRead: false,
+      //   userId: fullDocument.userId || "",
+      //   indiaMartKey: fullDocument.indiaMartKey || "",
+      //   tradeIndaiKey: fullDocument.tradeIndaiKey || "",
+      //   message: fullDocument.queryMessage || "",
+      //   leadId: fullDocument._id || "",
+      //   leadSource: fullDocument.leadSource || "",
+      // }
+      // const requestOptions = {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json"
+      //   },
+      //   body: JSON.stringify(notificationDetails)
+      // };
+      // if (isMessSave) {
+      //   fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
+      //     // console.log(data, notificationDetails);
+      //     isMessSave = false
+      //   }).catch((er) => {
+      //     console.log(er);
+      //   })
+      // }
+      // io.emit("dbUpdate", changedata); // Broadcast change to all connected clients
     }
   });
 });

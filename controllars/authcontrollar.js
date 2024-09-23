@@ -373,7 +373,7 @@ const changePassword = async (req, res) => {
     let { newPassword } = req.body
     let user = req.user
     try {
-        if(newPassword){
+        if (newPassword) {
             let checkUser = await NewUser.findById(user?._id)
             let checkOUser = await OtherUser.findById(user?._id)
             if (checkOUser) {
@@ -382,27 +382,27 @@ const changePassword = async (req, res) => {
                     password: hashPassword
                 }, { new: true })
                 res.status(200).json({
-                    status: true,hashPassword,
+                    status: true, hashPassword,
                     message: "Password Changed Success"
                 })
-    
+
             } else if (checkUser) {
                 const hashPassword = await bcrypt.hash(newPassword, 10);
                 await NewUser.findByIdAndUpdate(user?._id, {
                     password: hashPassword
                 }, { new: true })
                 res.status(200).json({
-                    status: true,hashPassword,
+                    status: true, hashPassword,
                     message: "Password Changed Success"
                 })
-    
+
             } else {
                 res.status(404).json({
                     status: false,
                     message: "User Not Found !"
                 })
             }
-        }else{
+        } else {
             res.status(404).json({
                 status: false,
                 message: "Password is required !"
@@ -927,27 +927,44 @@ const assignLeadupdate = async (req, res, next) => {
 
 
 const editSettings = async (req, res, next) => {
-    let { indiaMartKey, IndiaMartCrmUrl } = req.body
+    let { indiaMartKey, IndiaMartCrmUrl, selectedEmployee, autoAssigning } = req.body
     let user = req.user
     try {
         const findUser = await NewUser.findById(user?._id);
-        // console.log(findUser);
+        // console.log(findUser, selectedEmployee);
         if (findUser) {
-            if (indiaMartKey || IndiaMartCrmUrl) {
+            if (autoAssigning == true || autoAssigning == false) {
                 await NewUser.findByIdAndUpdate(user?._id, {
-                    indiaMartKey: indiaMartKey,
-                    IndiaMartCrmUrl: IndiaMartCrmUrl
+                    autoAssigning: autoAssigning
                 }, { new: true })
-
+                res.status(200).json({
+                    status: true,
+                    message: autoAssigning ? "auto Assigning enable !" : "autoAssigning disabled !",
+                });
+            } else if(selectedEmployee.length > 0){
+                await NewUser.findByIdAndUpdate(user?._id, {
+                    selectedEmployee: selectedEmployee
+                }, { new: true })
                 res.status(200).json({
                     status: true,
                     message: "Settings updated Succesfully !",
                 });
             } else {
-                res.status(400).json({
-                    status: false,
-                    message: "indiaMartKey IndiaMartCrmUrl both are required",
-                });
+                if (indiaMartKey || IndiaMartCrmUrl) {
+                    await NewUser.findByIdAndUpdate(user?._id, {
+                        indiaMartKey: indiaMartKey,
+                        IndiaMartCrmUrl: IndiaMartCrmUrl,
+                    }, { new: true })
+                    res.status(200).json({
+                        status: true,
+                        message: "Settings updated Succesfully !",
+                    });
+                } else {
+                    res.status(400).json({
+                        status: false,
+                        message: "indiaMartKey IndiaMartCrmUrl both are required",
+                    });
+                }
             }
 
         } else {
