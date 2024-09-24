@@ -941,9 +941,9 @@ const editSettings = async (req, res, next) => {
                     status: true,
                     message: autoAssigning ? "auto Assigning enable !" : "autoAssigning disabled !",
                 });
-            } else if(selectedEmployee.length > 0){
+            } else if(selectedEmployee.length > 0 || selectedEmployee == 0 ){
                 await NewUser.findByIdAndUpdate(user?._id, {
-                    selectedEmployee: selectedEmployee
+                    selectedEmployee:selectedEmployee == 0?[]: selectedEmployee
                 }, { new: true })
                 res.status(200).json({
                     status: true,

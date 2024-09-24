@@ -4,9 +4,6 @@ const { publicUrl } = require("./createNotefication");
 
 let isMessSave = true
 
-
-
-
 const sendNotification = (fullDocument, io, changedata) => {
   autoLeadAssign(fullDocument)
   let notificationDetails = {
