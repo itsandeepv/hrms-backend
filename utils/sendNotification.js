@@ -1,5 +1,6 @@
 const { autoLeadAssign } = require("../helpers/autoLeadAssign");
 const { publicUrl } = require("./createNotefication");
+const { leadRecivedEmail } = require("./sendEmail");
 
 
 let isMessSave = true
@@ -16,6 +17,7 @@ const sendNotification = (fullDocument, io, changedata) => {
     leadId: fullDocument._id || "",
     leadSource: fullDocument.leadSource || "",
   }
+  leadRecivedEmail(fullDocument )
   const requestOptions = {
     method: "POST",
     headers: {
@@ -32,6 +34,7 @@ const sendNotification = (fullDocument, io, changedata) => {
     })
   }
   //  createNote(noteficationDetails)
+
   io.emit("dbUpdate", changedata);
 }
 

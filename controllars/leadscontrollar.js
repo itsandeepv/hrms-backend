@@ -2,6 +2,7 @@ const moment = require("moment");
 const NewLeads = require("../models/leadsModel");
 const { isToday, isBeforeToday } = require("../utils/createNotefication");
 const OtherUser = require("../models/otherUser");
+const { leadRecivedEmail } = require("../utils/sendEmail");
 
 
 const createNewLead = async (req, res, next) => {
