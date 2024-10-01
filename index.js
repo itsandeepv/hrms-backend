@@ -37,7 +37,8 @@ app.use(cors({
 // app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
-const mongooseUrl = process.env.DATABASE_URL || "mongodb://hrmsDBs:98sdis90d@167.71.236.39:27017/hrms?authSource=admin"
+const mongooseUrl = process.env.DATABASE_URL || "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
+// "mongodb://hrmsDBs:98sdis90d@167.71.236.39:27017/hrms?authSource=admin"
 // "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
 
 // Auth route start here
@@ -64,42 +65,42 @@ mongoose.connect(mongooseUrl, {
     console.log("Unable to connect to MongoDB. Error: " + err);
   });
 
-  
-  let isMessSave = true
-  // Listen for MongoDB changes using Change Streams
-  const db = mongoose.connection;
 
-  // db.command({
-  //   grantRolesToUser: "sandeep",
-  //   roles: [{ role: "read", db: "crm" }, { role: "changeStream", db: "crm" }]
-  // })
+let isMessSave = true
+// Listen for MongoDB changes using Change Streams
+const db = mongoose.connection;
 
-  // async function main() {
-  //   const uri = "mongodb://hrmsDBs:98sdis90d@167.71.236.39:27017/hrms?authSource=admin";
-    
-  //   const client = new MongoClient(uri,{ useNewUrlParser: true, useUnifiedTopology: true });
-  
-  //   try {
-  //     await client.connect();
-      
-  //     const db = client.db("hrms");
-  
-  //     // Run the command
-  //     // const result = await db.command({
-  //     //   grantRolesToUser: "hrmsDBs",
-  //     //   roles: [{ role: "read", db: "hrms" }, { role: "changeStream", db: "hrms" }]
-  //     // });
-      
-  //     console.log("Command executed:", result);
-  
-  //   } catch (err) {
-  //     console.error(err);
-  //   } finally {
-  //     await client.close();
-  //   }
-  // }
-  
-  // main().catch(console.error);
+// db.command({
+//   grantRolesToUser: "sandeep",
+//   roles: [{ role: "read", db: "crm" }, { role: "changeStream", db: "crm" }]
+// })
+
+// async function main() {
+//   const uri = "mongodb://hrmsDBs:98sdis90d@167.71.236.39:27017/hrms?authSource=admin";
+
+//   const client = new MongoClient(uri,{ useNewUrlParser: true, useUnifiedTopology: true });
+
+//   try {
+//     await client.connect();
+
+//     const db = client.db("hrms");
+
+//     // Run the command
+//     // const result = await db.command({
+//     //   grantRolesToUser: "hrmsDBs",
+//     //   roles: [{ role: "read", db: "hrms" }, { role: "changeStream", db: "hrms" }]
+//     // });
+
+//     console.log("Command executed:", result);
+
+//   } catch (err) {
+//     console.error(err);
+//   } finally {
+//     await client.close();
+//   }
+// }
+
+// main().catch(console.error);
 
 
 
@@ -112,33 +113,7 @@ db.once("open", () => {
     // console.log("Change detected:", changedata);
     let { fullDocument } = changedata
     if (changedata.operationType == "insert") {
-      sendNotification(fullDocument ,io ,changedata)
-      // let notificationDetails = {
-      //   title: "You received  new lead ",
-      //   isRead: false,
-      //   userId: fullDocument.userId || "",
-      //   indiaMartKey: fullDocument.indiaMartKey || "",
-      //   tradeIndaiKey: fullDocument.tradeIndaiKey || "",
-      //   message: fullDocument.queryMessage || "",
-      //   leadId: fullDocument._id || "",
-      //   leadSource: fullDocument.leadSource || "",
-      // }
-      // const requestOptions = {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json"
-      //   },
-      //   body: JSON.stringify(notificationDetails)
-      // };
-      // if (isMessSave) {
-      //   fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
-      //     // console.log(data, notificationDetails);
-      //     isMessSave = false
-      //   }).catch((er) => {
-      //     console.log(er);
-      //   })
-      // }
-      // io.emit("dbUpdate", changedata); // Broadcast change to all connected clients
+      sendNotification(fullDocument, io, changedata)
     }
   });
 });

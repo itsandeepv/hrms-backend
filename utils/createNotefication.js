@@ -3,13 +3,13 @@ const NewNotification = require("../models/notification");
 const createNote = async (data) => {
     let createNote = await NewNotification(data)
     let createdata = await createNote.save()
-    // console.log(createdata);
 }
-// const publicUrl = "https://hrms.gocoolcare.com/api"
-// const publicUrl = "https://api.crmhai.com/api"
+
+const publicUrl = "https://api.crmhai.com/api"
+// https://api.crmhai.com/
 // const publicUrl = "http://localhost:5001/api"
 //  const publicUrl = 'https://13.127.232.225/api';
- const publicUrl = 'http://35.154.42.18:5001/api';
+//  const publicUrl = 'http://35.154.42.18:5001/api';
 
 
 const isToday = (date) => {
