@@ -8,9 +8,8 @@ const bodyParser = require("body-parser");
 const { Server } = require("socket.io");
 const { authrouter } = require("./routes/authroutes");
 const { leadsrouter } = require("./routes/allroutes");
-const { isToday, publicUrl } = require("./utils/createNotefication");
+const { isToday } = require("./utils/createNotefication");
 const NewLeads = require("./models/leadsModel");
-const { MongoClient } = require('mongodb');
 const { sendNotification } = require("./utils/sendNotification");
 
 const app = express();
