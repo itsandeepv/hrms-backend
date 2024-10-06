@@ -1,6 +1,7 @@
 const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus, getChartDetails, bulkLeadInset } = require("../controllars/leadscontrollar");
 const { createleadsUpdate, getLeadhistory, updateLeadStatus, getLeadStatus, addNewleadStatus, getAllStatus, deleteStatus, updateStatusType, createNotification } = require("../controllars/leadsUpdatescontrollar");
 const { deleteNotification, getNotification, deleteNotificationAll } = require("../controllars/notificationcontrollar");
+const { addProduct, getProduct, getProductDetail, deleteProduct } = require("../controllars/productControllar");
 const { ValidateUser } = require("../middlewares/authMiddleware");
 
 const leadsrouter = require("express").Router()
@@ -42,5 +43,11 @@ leadsrouter.get("/get-lead-by-count" ,ValidateUser,dashboardleadCount)
 leadsrouter.get("/search" ,ValidateUser,searchQuary)
 leadsrouter.get("/home-leads/:status" ,ValidateUser,getLeadsByStatus)
 leadsrouter.get("/chart" ,ValidateUser,getChartDetails)
+
+//product 
+leadsrouter.post("/add-product", ValidateUser, addProduct)
+leadsrouter.get("/get-product", ValidateUser, getProduct)
+leadsrouter.get("/get-product-detail/:id", ValidateUser, getProductDetail)
+leadsrouter.get("/delete-product/:id", ValidateUser, deleteProduct)
 
 module.exports = {leadsrouter};
