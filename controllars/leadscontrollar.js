@@ -7,6 +7,7 @@ const { leadRecivedEmail } = require("../utils/sendEmail");
 
 const createNewLead = async (req, res, next) => {
     let reqData = req.body
+
     try {
         let newLead = new NewLeads({
             ...reqData, userId: req.user?._id,
@@ -20,7 +21,12 @@ const createNewLead = async (req, res, next) => {
             const userdata = await OtherUser.findById(req.user?._id);
             userdata.leadsAssign.push(createdLead?._id);
             await userdata.save();
+        }else{
+            const userdata = await OtherUser.findById(reqData?.leadAssignTo);
+            userdata.leadsAssign.push(createdLead?._id);
+            await userdata.save();
         }
+
         res.status(200).json({
             status: true,
             message: "Lead created succuss",
