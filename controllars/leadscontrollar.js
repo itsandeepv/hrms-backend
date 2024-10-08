@@ -17,12 +17,13 @@ const createNewLead = async (req, res, next) => {
         })
         // console.log("newLead", reqData, newLead);
         let createdLead = await newLead.save()
-        if(reqData?.leadAssignTo){
+
+        if (reqData?.leadAssignTo) {
             if (["employee", "hr", "manager"].includes(req.user?.role) && createdLead?._id) {
                 const userdata = await OtherUser.findById(req.user?._id);
                 userdata.leadsAssign.push(createdLead?._id);
                 await userdata.save();
-            }else{
+            } else {
                 const userdata = await OtherUser.findById(reqData?.leadAssignTo);
                 userdata.leadsAssign.push(createdLead?._id);
                 await userdata.save();
@@ -107,8 +108,6 @@ const editLead = async (req, res, next) => {
     }
 }
 
-
-
 const getAllLead = async (req, res, next) => {
     try {
         // Get page and limit from query parameters
@@ -164,17 +163,27 @@ const getAllLead = async (req, res, next) => {
             ];
         }
 
+        if (["employee", "hr", "manager"].includes(req.user?.role)) {
+            // query.leadAssignTo = req.user?._id
+
+        }
         query.$and = query.$and || [];
         // console.log("leadAddedBy" , leadAddedBy);
 
         if (["employee", "hr", "manager"].includes(req.user?.role)) {
-            const leadIds = req.user?.leadsAssign
+            // console.log("User ID:", req.user?._id.toString());
+            // Filter leads by 'leadAssignTo' field, matching with the current user's ID
             query.$and.push({
-                $or: [
-                    { userId: req.user?._id },
-                    { _id: { $in: leadIds } }
-                ]
+                leadAssignTo: req.user?._id.toString()
             });
+
+            // const leadIds = req.user?.leadsAssign
+            // query.$and.push({
+            //     $or: [
+            //         { userId: req.user?._id },
+            //         { _id: { $in: leadIds } }
+            //     ]
+            // });
 
         } else {
             query.$and.push({
@@ -188,11 +197,6 @@ const getAllLead = async (req, res, next) => {
             const trimmedEmployeeName = leadAddedBy.trim();
             query.$and.push({
                 $or: [
-                    // {
-                    //     $expr: {
-                    //         $eq: [{ $trim: { input: "$leadAddedBy" } }, trimmedEmployeeName]
-                    //     }
-                    // },
                     {
                         $expr: {
                             $eq: [{ $trim: { input: "$leadAssignTo" } }, trimmedEmployeeName]
@@ -212,8 +216,8 @@ const getAllLead = async (req, res, next) => {
             // For employee, hr, manager roles, or others
             sortCondition.queryTime = -1;
             sortCondition.createdAt = -1;
-        } 
-       
+        }
+
         let leads = await NewLeads.find(query).sort(sortCondition).skip(skip).limit(limit);
 
 
@@ -243,12 +247,17 @@ const searchQuary = async (req, res) => {
     let query = {}
     query.$and = query.$and || [];
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
-        const leadIds = req.user?.leadsAssign
+        // const leadIds = req.user?.leadsAssign
+        // query.$and.push({
+        //     $or: [
+        //         { userId: req.user?._id },
+        //         { _id: { $in: leadIds } }
+        //     ]
+        // });
+        // console.log("User ID:", req.user?._id.toString());
+        // Filter leads by 'leadAssignTo' field, matching with the current user's ID
         query.$and.push({
-            $or: [
-                { userId: req.user?._id },
-                { _id: { $in: leadIds } }
-            ]
+            leadAssignTo: req.user?._id.toString()
         });
 
     } else {
@@ -342,12 +351,18 @@ const dashboardleadCount = async (req, res, next) => {
 
     query.$and = query.$and || [];
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
-        const leadIds = req.user?.leadsAssign
+        // const leadIds = req.user?.leadsAssign
+        // query.$and.push({
+        //     $or: [
+        //         { userId: req.user?._id },
+        //         { _id: { $in: leadIds || [] } }
+        //     ]
+        // });
+        // console.log("User ID:", req.user?._id.toString());
+        // Filter leads by 'leadAssignTo' field, matching with the current user's ID
+        
         query.$and.push({
-            $or: [
-                { userId: req.user?._id },
-                { _id: { $in: leadIds || [] } }
-            ]
+            leadAssignTo: req.user?._id.toString()
         });
 
     } else {
@@ -364,11 +379,6 @@ const dashboardleadCount = async (req, res, next) => {
         const trimmedEmployeeName = employeeName.trim();
         query.$and.push({
             $or: [
-                // {
-                //     $expr: {
-                //         $eq: [{ $trim: { input: "$leadAddedBy" } }, trimmedEmployeeName]
-                //     }
-                // },
                 {
                     $expr: {
                         $eq: [{ $trim: { input: "$leadAssignTo" } }, trimmedEmployeeName]
@@ -380,13 +390,13 @@ const dashboardleadCount = async (req, res, next) => {
     }
 
     let userAllLeads = await NewLeads.find(query || {}).lean()
-        const ids = userAllLeads.map((itm) => itm?._id)
-        
-        // let datas= await NewLeads.updateMany(
-        //     { _id: { $in: ids } },      // Filter to match multiple IDs
-        //     { $set: { leadAssignTo: "" } }  // Update the isActive field
-        // );
-        // console.log(datas, ids);
+    const ids = userAllLeads.map((itm) => itm?._id)
+
+    // let datas= await NewLeads.updateMany(
+    //     { _id: { $in: ids } },      // Filter to match multiple IDs
+    //     { $set: { leadAssignTo: "" } }  // Update the isActive field
+    // );
+    // console.log(datas, ids);
 
     const totalLeads = await NewLeads.countDocuments(query);
 
@@ -432,13 +442,18 @@ const getLeadsByStatus = async (req, res) => {
     }
 
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
-        const leadIds = req.user?.leadsAssign
-        query.$and.push({
-            $or: [
-                { userId: req.user?._id },
-                { _id: { $in: leadIds || [] } }
-            ]
-        });
+        // const leadIds = req.user?.leadsAssign
+        // query.$and.push({
+        //     $or: [
+        //         { userId: req.user?._id },
+        //         { _id: { $in: leadIds || [] } }
+        //     ]
+        // });
+         // console.log("User ID:", req.user?._id.toString());
+            // Filter leads by 'leadAssignTo' field, matching with the current user's ID
+            query.$and.push({
+                leadAssignTo: req.user?._id.toString()
+            });
 
     } else {
         query.$and.push({
@@ -522,12 +537,17 @@ const getChartDetails = async (req, res) => {
             });;
         }
         if (["employee", "hr", "manager"].includes(req.user?.role)) {
-            const leadIds = req.user?.leadsAssign
+            // const leadIds = req.user?.leadsAssign
+            // query.$and.push({
+            //     $or: [
+            //         { userId: req.user?._id },
+            //         { _id: { $in: leadIds || [] } }
+            //     ]
+            // });
+             // console.log("User ID:", req.user?._id.toString());
+            // Filter leads by 'leadAssignTo' field, matching with the current user's ID
             query.$and.push({
-                $or: [
-                    { userId: req.user?._id },
-                    { _id: { $in: leadIds || [] } }
-                ]
+                leadAssignTo: req.user?._id.toString()
             });
 
         } else {

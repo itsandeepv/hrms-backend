@@ -5,9 +5,9 @@ const createNote = async (data) => {
     let createdata = await createNote.save()
 }
 
-const publicUrl = "https://api.crmhai.com/api"
+// const publicUrl = "https://api.crmhai.com/api"
 // https://api.crmhai.com/
-// const publicUrl = "http://localhost:5001/api"
+const publicUrl = "http://localhost:5001/api"
 //  const publicUrl = 'https://13.127.232.225/api';
 //  const publicUrl = 'http://35.154.42.18:5001/api';
 

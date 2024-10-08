@@ -715,6 +715,7 @@ const assignLead = async (req, res, next) => {
     let { leadId, employeeId } = req.body;
     const io = req.app.get('io');  // Retrieve the io instance from app context
     // console.log(leadId, io);
+    
     try {
         // Find the user and check if the leadId already exists in the leadsAssign array
         const userdata = await OtherUser.findById(employeeId);
@@ -723,19 +724,12 @@ const assignLead = async (req, res, next) => {
                 status: false,
                 message: "User not found!",
             });
-        }
-
-        // Check if the leadId already exists in the leadsAssign array
-        if (!userdata.leadsAssign.includes(leadId)) {
-            // userdata.leadAssignTo = userdata?.fullName||""
+        }else{
             await NewLeads.findByIdAndUpdate(leadId, {
                 leadAssignTo: userdata?._id || "",
                 leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss')
             }, { new: true })
-            // console.log("updateLead" ,updateLead);
 
-            userdata.leadsAssign.push(leadId);
-            await userdata.save(); // Save the updated user data
             let notificationDetails = {
                 title: "A new lead has been assigned to you!",
                 isRead: false,
@@ -750,24 +744,19 @@ const assignLead = async (req, res, next) => {
                 body: JSON.stringify(notificationDetails)
             };
 
-            fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
+           await fetch(`${publicUrl}/save-notification`, requestOptions).then((res) => res.json()).then((data) => {
                 io.emit('leadAssigned', notificationDetails);
             }).catch((er) => {
                 console.log(er);
             })
-
             return res.status(200).json({
                 status: true,
                 message: "Lead assigned successfully!",
                 data: userdata
             });
-        } else {
-            return res.status(200).json({
-                status: true,
-                message: "Lead is already assigned!",
-                data: userdata
-            });
         }
+
+       
 
     } catch (error) {
         return res.status(500).json({
@@ -775,140 +764,6 @@ const assignLead = async (req, res, next) => {
             status: false
         });
     }
-}
-
-
-const assignLeadupdate = async (req, res, next) => {
-    let { leadId, newEmployeeId, oldEmployeeId } = req.body;
-    try {
-        const io = req.app.get('io');  // Retrieve the io instance from app context
-        if (!oldEmployeeId) {
-            const newUserdata = await OtherUser.findById(newEmployeeId);
-            // console.log(oldEmployeeId ,newUserdata , "ADFSA");
-            if (!newUserdata) {
-                return res.status(404).json({
-                    status: false,
-                    message: "User not found!",
-                });
-            }
-            if (newUserdata.leadsAssign.includes(leadId)) {
-                // Filter out the leadId and update leadsAssign array
-                newUserdata.leadsAssign = newUserdata.leadsAssign.filter((item) => item !== leadId);
-                // Save the updated user data
-                await newUserdata.save();
-            }
-
-            // You can add logic to assign the lead to newEmployeeId if needed.
-            // For example:
-
-            newUserdata.leadsAssign.push(leadId);
-            await newUserdata.save();
-
-            const leaddatasave = await NewLeads.findByIdAndUpdate(leadId, {
-                leadAssignTo: newUserdata?._id || "",
-                leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss') || ""
-            }, { new: true })
-
-            console.log(leaddatasave, moment(new Date).format('YYYY-MM-DD HH:mm:ss'), formatDate);
-
-
-            let notificationDetails = {
-                title: "A new lead has been assigned to you!",
-                isRead: false,
-                userId: newUserdata?._id,
-                leadId: leadId
-            }
-            const requestOptions = {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(notificationDetails)
-            };
-
-            fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
-                io.emit('leadAssigned', notificationDetails);
-            }).catch((er) => {
-                console.log(er);
-            })
-            return res.status(200).json({
-                status: true,
-                message: "Lead reassigned successfully!",
-                newUserdata
-            });
-
-        }
-
-        if (newEmployeeId != oldEmployeeId) {
-            const userdata = await OtherUser.findById(oldEmployeeId);
-            const newUserdata = await OtherUser.findById(newEmployeeId);
-            if (!userdata || !newUserdata) {
-                return res.status(404).json({
-                    status: false,
-                    message: "User not found!",
-                });
-            }
-            if (userdata.leadsAssign.includes(leadId)) {
-                // Filter out the leadId and update leadsAssign array
-                userdata.leadsAssign = userdata.leadsAssign.filter((item) => item !== leadId);
-                // Save the updated user data
-                await userdata.save();
-            }
-
-            // You can add logic to assign the lead to newEmployeeId if needed.
-            // For example:
-
-            newUserdata.leadsAssign.push(leadId);
-            await newUserdata.save();
-
-            const leaddatasave = await NewLeads.findByIdAndUpdate(leadId, {
-                leadAssignTo: newUserdata?._id || "",
-                leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss') || ""
-            }, { new: true })
-
-            console.log(leaddatasave, moment(new Date).format('YYYY-MM-DD HH:mm:ss'));
-
-
-            let notificationDetails = {
-                title: "A new lead has been assigned to you!",
-                isRead: false,
-                userId: newUserdata?._id,
-                leadId: leadId
-            }
-            const requestOptions = {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(notificationDetails)
-            };
-
-            fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
-                io.emit('leadAssigned', notificationDetails);
-            }).catch((er) => {
-                console.log(er);
-            })
-            return res.status(200).json({
-                status: true,
-                message: "Lead reassigned successfully!",
-                userdata
-            });
-
-
-        } else {
-
-            return res.status(500).json({
-                status: false,
-                message: "both id are same !",
-            });
-        }
-    } catch (error) {
-        return res.status(500).json({
-            status: false,
-            error,
-        });
-    }
-
 }
 
 
@@ -985,7 +840,6 @@ module.exports = {
     getSettings,
     getAllCompany,
     updateCompanyStatus,
-    assignLeadupdate,
     verifyEmail,
     resendOtp,
     changePassword
