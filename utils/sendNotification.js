@@ -17,7 +17,9 @@ const sendNotification = (fullDocument, io, changedata) => {
     leadId: fullDocument._id || "",
     leadSource: fullDocument.leadSource || "",
   }
-  leadRecivedEmail(fullDocument )
+  if(fullDocument.leadSource != "direct"){
+    leadRecivedEmail(fullDocument)
+  }
   const requestOptions = {
     method: "POST",
     headers: {

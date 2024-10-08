@@ -17,14 +17,16 @@ const createNewLead = async (req, res, next) => {
         })
         // console.log("newLead", reqData, newLead);
         let createdLead = await newLead.save()
-        if (["employee", "hr", "manager"].includes(req.user?.role) && createdLead?._id) {
-            const userdata = await OtherUser.findById(req.user?._id);
-            userdata.leadsAssign.push(createdLead?._id);
-            await userdata.save();
-        }else{
-            const userdata = await OtherUser.findById(reqData?.leadAssignTo);
-            userdata.leadsAssign.push(createdLead?._id);
-            await userdata.save();
+        if(reqData?.leadAssignTo){
+            if (["employee", "hr", "manager"].includes(req.user?.role) && createdLead?._id) {
+                const userdata = await OtherUser.findById(req.user?._id);
+                userdata.leadsAssign.push(createdLead?._id);
+                await userdata.save();
+            }else{
+                const userdata = await OtherUser.findById(reqData?.leadAssignTo);
+                userdata.leadsAssign.push(createdLead?._id);
+                await userdata.save();
+            }
         }
 
         res.status(200).json({

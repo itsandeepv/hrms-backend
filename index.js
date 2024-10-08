@@ -69,39 +69,6 @@ let isMessSave = true
 // Listen for MongoDB changes using Change Streams
 const db = mongoose.connection;
 
-// db.command({
-//   grantRolesToUser: "sandeep",
-//   roles: [{ role: "read", db: "crm" }, { role: "changeStream", db: "crm" }]
-// })
-
-// async function main() {
-//   const uri = "mongodb://hrmsDBs:98sdis90d@167.71.236.39:27017/hrms?authSource=admin";
-
-//   const client = new MongoClient(uri,{ useNewUrlParser: true, useUnifiedTopology: true });
-
-//   try {
-//     await client.connect();
-
-//     const db = client.db("hrms");
-
-//     // Run the command
-//     // const result = await db.command({
-//     //   grantRolesToUser: "hrmsDBs",
-//     //   roles: [{ role: "read", db: "hrms" }, { role: "changeStream", db: "hrms" }]
-//     // });
-
-//     console.log("Command executed:", result);
-
-//   } catch (err) {
-//     console.error(err);
-//   } finally {
-//     await client.close();
-//   }
-// }
-
-// main().catch(console.error);
-
-
 
 db.once("open", () => {
   console.log("MongoDB database connection established successfully");

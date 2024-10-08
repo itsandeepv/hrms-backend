@@ -205,28 +205,15 @@ const getCompanyUser = async (req, res) => {
     try {
         let user = req.user
         const allowUser = ["company", "admin", "superadmin"]
-        // console.log("user", user);
-        if (allowUser.includes(user?.role)) {
+        // if (allowUser.includes(user?.role)) {
             const AllUser = await OtherUser.find()
-            const companyUser = await OtherUser.find({ companyId: user?._id })
-            // const formatAllUser = AllUser.map((item) => {
-            //     // const password = bcrypt.compare(currentPassword, checkUser.password || checkOUser.password);
-            //     let data = {}
-            //     return data
-            // })
-            // console.log("formatAllUser", formatAllUser);
-
+            const companyUser = await OtherUser.find({ companyId: allowUser.includes(user?.role) ? user?._id : user?.companyId})
             res.status(200).json({
                 status: true,
                 message: "Company Related user",
                 companyUser: user?.role == "superadmin" ? AllUser : companyUser
             })
-        } else {
-            res.status(500).json({
-                status: false,
-                message: "Authorization Error"
-            })
-        }
+       
     } catch (error) {
         res.status(500).json({
             message: "Something went Wrong ?", error
@@ -941,9 +928,9 @@ const editSettings = async (req, res, next) => {
                     status: true,
                     message: autoAssigning ? "auto Assigning enable !" : "autoAssigning disabled !",
                 });
-            } else if(selectedEmployee.length > 0 || selectedEmployee == 0 ){
+            } else if (selectedEmployee.length > 0 || selectedEmployee == 0) {
                 await NewUser.findByIdAndUpdate(user?._id, {
-                    selectedEmployee:selectedEmployee == 0?[]: selectedEmployee
+                    selectedEmployee: selectedEmployee == 0 ? [] : selectedEmployee
                 }, { new: true })
                 res.status(200).json({
                     status: true,
