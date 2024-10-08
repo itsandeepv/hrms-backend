@@ -123,7 +123,73 @@ const leadRecivedEmail = async (leadDetails) => {
                     </tr>
                     <tr>
                         <td style="padding: 8px; border: 1px solid #dddddd;">Message</td>
-                        <td style="padding: 8px; border: 1px solid #dddddd;">${leadDetails?.queryMessage}</td>
+                        <td style="padding: 8px; border: 1px solid #dddddd;">${leadDetails?.subject}</td>
+                    </tr>
+                </table>
+                <p style="color: #555555; margin-top: 20px;">
+                    Please follow up with the lead at your earliest convenience.
+                </p>
+                <p style="color: #555555;">
+                    Thank you,<br>
+                    <strong>Cut Edge Technology</strong>
+                </p>
+            </div>
+            <div style="text-align: center; color: #999999; margin-top: 20px; font-size: 12px;">
+                <p>&copy; 2024 Cut Edge Technology. All rights reserved.</p>
+            </div>
+        </div>
+        `, // HTML body
+    };
+
+
+    try {
+        let response = await smptTransporter.sendMail({
+            from: `"Crmhai.com" <sandeep@cutedgetechnology.com>`, // Your email
+            ...mailOptions,
+        });
+        console.log('Email sent successfully');
+        return response
+    } catch (error) {
+        console.error('Error sending email:', error);
+        return error
+    }
+};
+
+const leadAssignEmail = async (leadDetails) => {
+    let findUser = await NewUser.findById(leadDetails?.userId)
+    const mailOptions = {
+        to: findUser?.email||"", // Admin email to receive the notification
+        subject: 'New Lead Assign', // Subject line
+        html: `
+        <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+                <h2 style="color: #333333; text-align: center;">New Lead Notification</h2>
+                <p style="color: #555555;">Dear ${findUser?.fullName || ""} ,</p>
+                <p style="color: #555555;">  A new lead has been assigned to you! . Below are the details:</p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <tr>
+                        <th style="text-align: left; padding: 8px; background-color: #1a73e8; color: #ffffff;">Field</th>
+                        <th style="text-align: left; padding: 8px; background-color: #1a73e8; color: #ffffff;">Details</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #dddddd;">Sender Name</td>
+                        <td style="padding: 8px; border: 1px solid #dddddd;">${leadDetails?.senderName}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #dddddd;">Mobile Number</td>
+                        <td style="padding: 8px; border: 1px solid #dddddd;">${leadDetails?.senderMobileNumber}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #dddddd;">Received Time</td>
+                        <td style="padding: 8px; border: 1px solid #dddddd;">${moment(leadDetails?.queryTime).calendar()}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #dddddd;">Source</td>
+                        <td style="padding: 8px; border: 1px solid #dddddd;">${leadDetails?.leadSource}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #dddddd;">Message</td>
+                        <td style="padding: 8px; border: 1px solid #dddddd;">${leadDetails?.subject}</td>
                     </tr>
                 </table>
                 <p style="color: #555555; margin-top: 20px;">
@@ -159,4 +225,4 @@ const leadRecivedEmail = async (leadDetails) => {
 
 
 
-module.exports = { sendVerifyEmail, generateOTP, leadRecivedEmail };
+module.exports = { sendVerifyEmail,leadAssignEmail, generateOTP, leadRecivedEmail };
