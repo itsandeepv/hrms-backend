@@ -1,6 +1,32 @@
 const NewNotification = require("../models/notification")
 
+const saveNotification = async (req, res, next) => {
+    let { leadId, userId } = req.body;
+    try {
+        const io = req.app.get('io');  // Retrieve the io instance from app context
+        let createNote = await NewNotification({
+            title: "A new lead has been assigned to you!",
+            isRead: false,
+            userId:userId,
+            leadId: leadId
+        })
+        let createdata = await createNote.save()
+        res.status(200).json({
+            status: true,
+            message: "Message saved",
+            createdata
+        })
+        io.emit('leadAssigned', createdata);
+    } catch (error) {
+         res.status(500).json({
+            status: false,
+            message: "server error",
+            error
+        })
+    }
 
+
+}
 
 
 const deleteNotification = async (req, res, next) => {
@@ -59,22 +85,11 @@ const deleteNotificationAll = async (req, res, next) => {
 
 const getNotification = async (req, res, next) => {
     try {
-        let query = {}
-        let role = ["employee", "hr", "manager"].includes(req.user?.role)
-        if (role) {
-            query.userId = req.user?._id
-        }
-
-        let allData = await NewNotification.find(query).sort({ createdAt: -1 })
-        // console.log(query);
-        let filterdata = allData.filter((item) => {
-            return item.userId == req.user?._id || item.indiaMartKey == req.user.indiaMartKey || item.tradeIndaiKey == req.user.tradeIndaiKey
-        })
-
+        let allData = await NewNotification.find({userId:req.user?._id.toString()}).sort({ createdAt: -1 })
         res.status(200).json({
             status: true,
             message: "notification fetch",
-            data: role ? allData : filterdata
+            data:  allData 
         })
     } catch (error) {
         res.status(500).json({
@@ -86,4 +101,4 @@ const getNotification = async (req, res, next) => {
 
 }
 
-module.exports = { deleteNotification, getNotification ,deleteNotificationAll}
+module.exports = {saveNotification, deleteNotification, getNotification ,deleteNotificationAll}
