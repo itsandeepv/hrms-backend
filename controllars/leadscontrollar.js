@@ -2,7 +2,7 @@ const moment = require("moment");
 const NewLeads = require("../models/leadsModel");
 const { isToday, isBeforeToday } = require("../utils/createNotefication");
 const OtherUser = require("../models/otherUser");
-const { leadRecivedEmail } = require("../utils/sendEmail");
+const { publicUrl } = require("../utils/createNotefication");
 
 
 const createNewLead = async (req, res, next) => {
@@ -19,15 +19,28 @@ const createNewLead = async (req, res, next) => {
         let createdLead = await newLead.save()
 
         if (reqData?.leadAssignTo) {
-            if (["employee", "hr", "manager"].includes(req.user?.role) && createdLead?._id) {
-                const userdata = await OtherUser.findById(req.user?._id);
-                userdata.leadsAssign.push(createdLead?._id);
-                await userdata.save();
-            } else {
-                const userdata = await OtherUser.findById(reqData?.leadAssignTo);
-                userdata.leadsAssign.push(createdLead?._id);
-                await userdata.save();
+
+            console.log("reqData?.leadAssignTo" ,reqData?.leadAssignTo);
+            
+
+            let notificationDetails = { 
+                userId:reqData?.leadAssignTo,
+                leadId: createdLead?._id
             }
+            const requestOptions = {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(notificationDetails)
+            };
+            await fetch(`${publicUrl}/save-notification`, requestOptions
+                ).then((res) => res.json()).then((data) => {
+                // console.log(data);
+                // io.emit('leadAssigned', notificationDetails);
+            }).catch((er) => {
+                console.log(er);
+            })
         }
 
         res.status(200).json({
