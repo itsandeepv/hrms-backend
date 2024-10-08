@@ -23,6 +23,34 @@ const addProduct = async(req, res, next) => {
     }
 }
 
+const editProduct = async(req, res, next) => {
+    try{
+        // const {name, price, id} = req.body
+        const data = await Product.findById(req.params.id)
+
+        if(data){
+            const newData = await Product.findByIdAndUpdate(req.params.id, {
+                ...req.body
+            }, { new: true })
+            res.status(200).json({
+                status: true,
+                message: 'Product updated successfully.',
+                data: newData
+            })
+        }else{
+            res.status(404).json({
+                status: false,
+                message: "Products not found"
+            })
+        }
+    }catch(error){
+        res.status(error.code).json({
+            status: false,
+            message: error.message
+        })
+    }
+}
+
 const getProduct = async(req, res, next) => {
     try{
         const data = await Product.find({addedBy: req.user?._id})
@@ -97,4 +125,4 @@ const deleteProduct = async(req, res, next) => {
 }
 
 
-module.exports = {addProduct, getProduct, getProductDetail, deleteProduct}
+module.exports = {addProduct, getProduct, getProductDetail, deleteProduct, editProduct}
