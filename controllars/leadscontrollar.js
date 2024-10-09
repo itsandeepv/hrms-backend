@@ -193,15 +193,6 @@ const getAllLead = async (req, res, next) => {
             query.$and.push({
                 leadAssignTo: req.user?._id.toString()
             });
-
-            // const leadIds = req.user?.leadsAssign
-            // query.$and.push({
-            //     $or: [
-            //         { userId: req.user?._id },
-            //         { _id: { $in: leadIds } }
-            //     ]
-            // });
-
         } else {
             query.$and.push({
                 $or: [
@@ -264,14 +255,6 @@ const searchQuary = async (req, res) => {
     let query = {}
     query.$and = query.$and || [];
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
-        // const leadIds = req.user?.leadsAssign
-        // query.$and.push({
-        //     $or: [
-        //         { userId: req.user?._id },
-        //         { _id: { $in: leadIds } }
-        //     ]
-        // });
-        // console.log("User ID:", req.user?._id.toString());
         // Filter leads by 'leadAssignTo' field, matching with the current user's ID
         query.$and.push({
             leadAssignTo: req.user?._id.toString()
@@ -368,16 +351,7 @@ const dashboardleadCount = async (req, res, next) => {
 
     query.$and = query.$and || [];
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
-        // const leadIds = req.user?.leadsAssign
-        // query.$and.push({
-        //     $or: [
-        //         { userId: req.user?._id },
-        //         { _id: { $in: leadIds || [] } }
-        //     ]
-        // });
-        // console.log("User ID:", req.user?._id.toString());
         // Filter leads by 'leadAssignTo' field, matching with the current user's ID
-        
         query.$and.push({
             leadAssignTo: req.user?._id.toString()
         });
@@ -459,14 +433,6 @@ const getLeadsByStatus = async (req, res) => {
     }
 
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
-        // const leadIds = req.user?.leadsAssign
-        // query.$and.push({
-        //     $or: [
-        //         { userId: req.user?._id },
-        //         { _id: { $in: leadIds || [] } }
-        //     ]
-        // });
-         // console.log("User ID:", req.user?._id.toString());
             // Filter leads by 'leadAssignTo' field, matching with the current user's ID
             query.$and.push({
                 leadAssignTo: req.user?._id.toString()
@@ -554,14 +520,6 @@ const getChartDetails = async (req, res) => {
             });;
         }
         if (["employee", "hr", "manager"].includes(req.user?.role)) {
-            // const leadIds = req.user?.leadsAssign
-            // query.$and.push({
-            //     $or: [
-            //         { userId: req.user?._id },
-            //         { _id: { $in: leadIds || [] } }
-            //     ]
-            // });
-             // console.log("User ID:", req.user?._id.toString());
             // Filter leads by 'leadAssignTo' field, matching with the current user's ID
             query.$and.push({
                 leadAssignTo: req.user?._id.toString()
