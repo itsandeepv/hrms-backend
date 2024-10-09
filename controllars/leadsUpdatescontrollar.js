@@ -17,6 +17,7 @@ const createleadsUpdate = async (req, res, next) => {
                 {
                     nextFollowUpDate:reqData.nextFollowUp,
                     isLeadComplete:createdLeadUp.isDealComplete,
+                    dealStatus:createdLeadUp.dealStatus,
                     nextFollowUpTime:createdLeadUp?.nextFollowUpTime,
                     $push: { followupDates: createdLeadUp },
                 },

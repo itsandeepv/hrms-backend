@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const LeadsUpdatesSchema = new mongoose.Schema({
     communicationSource:{type:String},
     isDealComplete:{type:String,default:false},
+    dealStatus:{type:String},
     nextFollowUp:{type:Date},
     queryRemark:{type:String,default:"Buyer"},
     userId:{type:String},

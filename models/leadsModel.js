@@ -58,6 +58,7 @@ const LeadsSchema = new mongoose.Schema({
     isPositiveLead:{type:String ,default:"new"},
     createdAt:{type:Date ,default:Date.now()},
     leadStatus:[],
+    dealStatus:{type:String},
     leadsUpdates:{type:Schema.Types.ObjectId ,ref:"LeadsUpdates"}
 
 }, { timestamps: true })
