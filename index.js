@@ -65,7 +65,6 @@ mongoose.connect(mongooseUrl, {
   });
 
 
-let isMessSave = true
 // Listen for MongoDB changes using Change Streams
 const db = mongoose.connection;
 
@@ -93,16 +92,26 @@ io.on("connection", (socket) => {
     today.setHours(0, 0, 0, 0); // Set to the start of the day
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1); // Set to the start of the next day
+
     try {
+      const query = {};
+      query.$and = query.$and || [];
+      if (["employee", "hr", "manager"].includes(data?.role)) {
+        // Filter leads by 'leadAssignTo' field, matching with the current user's ID
+        query.$and.push({
+          leadAssignTo: data?._id.toString()
+        });
+      } else {
+        query.$and.push({
+          $or: [
+            { companyId: data?._id },
+            { userId: data?._id },
+          ]
+        });
+      }
       // Fetch leads based on user details and follow-up date
-      const leads = await NewLeads.find({
-        $or: [
-          { indiaMartKey: data.indiaMartKey },
-          { userId: data._id }
-        ]
-      });
+      const leads = await NewLeads.find(query);
       const filteredLeads = leads.filter(lead => isToday(lead.nextFollowUpDate));
-      // console.log(filteredLeads);
       // Emit notifications for the filtered leads
       filteredLeads.forEach(lead => {
         socket.emit('followUpNotification', {

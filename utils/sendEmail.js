@@ -2,6 +2,8 @@
 const nodemailer = require('nodemailer');
 const NewUser = require('../models/newUser');
 const moment = require('moment');
+const NewLeads = require('../models/leadsModel');
+const OtherUser = require('../models/otherUser');
 
 function generateOTP(length) {
     const charset = '0123456789';
@@ -155,8 +157,10 @@ const leadRecivedEmail = async (leadDetails) => {
     }
 };
 
-const leadAssignEmail = async (leadDetails) => {
-    let findUser = await NewUser.findById(leadDetails?.userId)
+const leadAssignEmail = async (details) => {
+    let leadDetails = await NewLeads.findById(details?.leadId)
+    let findUser = await OtherUser.findById(details?.userId)
+    // console.log(findUser ,leadDetails);
     const mailOptions = {
         to: findUser?.email||"", // Admin email to receive the notification
         subject: 'New Lead Assign', // Subject line

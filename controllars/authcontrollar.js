@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const NewUser = require("../models/newUser");
 const OtherUser = require("../models/otherUser");
 const { publicUrl, formatDate } = require("../utils/createNotefication");
-const { sendVerifyEmail, generateOTP } = require("../utils/sendEmail");
+const { sendVerifyEmail, generateOTP, leadAssignEmail } = require("../utils/sendEmail");
 const NewLeads = require("../models/leadsModel");
 const moment = require("moment");
 
@@ -206,14 +206,14 @@ const getCompanyUser = async (req, res) => {
         let user = req.user
         const allowUser = ["company", "admin", "superadmin"]
         // if (allowUser.includes(user?.role)) {
-            const AllUser = await OtherUser.find()
-            const companyUser = await OtherUser.find({ companyId: allowUser.includes(user?.role) ? user?._id : user?.companyId})
-            res.status(200).json({
-                status: true,
-                message: "Company Related user",
-                companyUser: user?.role == "superadmin" ? AllUser : companyUser
-            })
-       
+        const AllUser = await OtherUser.find()
+        const companyUser = await OtherUser.find({ companyId: allowUser.includes(user?.role) ? user?._id : user?.companyId })
+        res.status(200).json({
+            status: true,
+            message: "Company Related user",
+            companyUser: user?.role == "superadmin" ? AllUser : companyUser
+        })
+
     } catch (error) {
         res.status(500).json({
             message: "Something went Wrong ?", error
@@ -715,7 +715,6 @@ const assignLead = async (req, res, next) => {
     let { leadId, employeeId } = req.body;
     const io = req.app.get('io');  // Retrieve the io instance from app context
     // console.log(leadId, io);
-    
     try {
         // Find the user and check if the leadId already exists in the leadsAssign array
         const userdata = await OtherUser.findById(employeeId);
@@ -724,7 +723,7 @@ const assignLead = async (req, res, next) => {
                 status: false,
                 message: "User not found!",
             });
-        }else{
+        } else {
             await NewLeads.findByIdAndUpdate(leadId, {
                 leadAssignTo: userdata?._id || "",
                 leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss')
@@ -733,8 +732,8 @@ const assignLead = async (req, res, next) => {
             let notificationDetails = {
                 title: "A new lead has been assigned to you!",
                 isRead: false,
-                userId: userdata?._id,
-                leadId: leadId
+                userId: userdata?._id.toString(),
+                leadId: leadId,
             }
             const requestOptions = {
                 method: "POST",
@@ -744,7 +743,9 @@ const assignLead = async (req, res, next) => {
                 body: JSON.stringify(notificationDetails)
             };
 
-           await fetch(`${publicUrl}/save-notification`, requestOptions).then((res) => res.json()).then((data) => {
+            // leadAssignEmail(notificationDetails)
+
+            await fetch(`${publicUrl}/save-notification`, requestOptions).then((res) => res.json()).then((data) => {
                 io.emit('leadAssigned', notificationDetails);
             }).catch((er) => {
                 console.log(er);
@@ -756,7 +757,7 @@ const assignLead = async (req, res, next) => {
             });
         }
 
-       
+
 
     } catch (error) {
         return res.status(500).json({

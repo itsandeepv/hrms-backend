@@ -1,4 +1,5 @@
-const NewNotification = require("../models/notification")
+const NewNotification = require("../models/notification");
+const { leadAssignEmail } = require("../utils/sendEmail");
 
 const saveNotification = async (req, res, next) => {
     let { leadId, userId } = req.body;
@@ -10,7 +11,9 @@ const saveNotification = async (req, res, next) => {
             userId:userId,
             leadId: leadId
         })
+
         let createdata = await createNote.save()
+        leadAssignEmail(createdata)
         res.status(200).json({
             status: true,
             message: "Message saved",

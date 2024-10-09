@@ -116,7 +116,7 @@ const editLead = async (req, res, next) => {
         }
 
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         res.status(500).json({
             status: false,
             message: "Lead not updated",
@@ -180,10 +180,7 @@ const getAllLead = async (req, res, next) => {
             ];
         }
 
-        if (["employee", "hr", "manager"].includes(req.user?.role)) {
-            // query.leadAssignTo = req.user?._id
-
-        }
+        
         query.$and = query.$and || [];
         // console.log("leadAddedBy" , leadAddedBy);
 
