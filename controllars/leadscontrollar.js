@@ -9,45 +9,49 @@ const createNewLead = async (req, res, next) => {
     let reqData = req.body
 
     try {
-        let newLead = new NewLeads({
-            ...reqData, userId: req.user?._id,
-            // , indiaMartKey: req.user?.indiaMartKey,
-            tradeIndaiKey: req.user?.tradeIndaiKey
-            , queryTime: moment(reqData.queryTime).format('YYYY-MM-DD HH:mm:ss')
-        })
-        // console.log("newLead", reqData, newLead);
-        let createdLead = await newLead.save()
-
-        if (reqData?.leadAssignTo) {
-
-            console.log("reqData?.leadAssignTo" ,reqData?.leadAssignTo);
-            
-
-            let notificationDetails = { 
-                userId:reqData?.leadAssignTo,
-                leadId: createdLead?._id
+        const checkLeadisExist = await NewLeads.findOne({senderMobileNumber:reqData.senderMobileNumber})
+        if(checkLeadisExist){
+            res.status(500).json({
+                status: false,
+                message: "Lead already exist with same number please try again",
+            })
+        }else{
+            let newLead = new NewLeads({
+                ...reqData, userId: req.user?._id,
+                // , indiaMartKey: req.user?.indiaMartKey,
+                tradeIndaiKey: req.user?.tradeIndaiKey
+                , queryTime: moment(reqData.queryTime).format('YYYY-MM-DD HH:mm:ss')
+            })
+            // console.log("newLead", reqData, newLead);
+            let createdLead = await newLead.save()
+    
+            if (reqData?.leadAssignTo) {
+                let notificationDetails = { 
+                    userId:reqData?.leadAssignTo,
+                    leadId: createdLead?._id
+                }
+                const requestOptions = {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(notificationDetails)
+                };
+                await fetch(`${publicUrl}/save-notification`, requestOptions
+                    ).then((res) => res.json()).then((data) => {
+                    // console.log(data);
+                    // io.emit('leadAssigned', notificationDetails);
+                }).catch((er) => {
+                    console.log(er);
+                })
             }
-            const requestOptions = {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(notificationDetails)
-            };
-            await fetch(`${publicUrl}/save-notification`, requestOptions
-                ).then((res) => res.json()).then((data) => {
-                // console.log(data);
-                // io.emit('leadAssigned', notificationDetails);
-            }).catch((er) => {
-                console.log(er);
+    
+            res.status(200).json({
+                status: true,
+                message: "Lead created succuss",
+                createdLead
             })
         }
-
-        res.status(200).json({
-            status: true,
-            message: "Lead created succuss",
-            createdLead
-        })
 
     } catch (error) {
         // console.log(error);
