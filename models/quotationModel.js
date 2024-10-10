@@ -30,30 +30,52 @@ const QuotationSchema = new mongoose.Schema({
         type: String,
         require: true,
     },
+    leadId: {
+        type: String,
+    },
     products: [quotationProductSchema],
     discount: {
         type: Number,
         default: 0,
     },
     tax: {
-        type: Number,
-        default: 0,
+        value: {
+            type: Number,
+            default: 0,
+        },
+        isIncluded: {
+            type: Boolean,
+            default: false
+        }
     },
     shippingCharge: {
-        type: Number,
-        default: 0,
+        value: {
+            type: Number,
+            default: 0,
+        },
+        isIncluded: {
+            type: Boolean,
+            default: false
+        }
     },
     additionalInfo: {
         type: String,
     },
-    deliveryTime: {
-        type: Object,
+    deliveryPeriod: {
+        periodType: String,
+        count: String,
     },
     companyDetails: {
         name: String,
         address: String,
         contactNumber: String,
         referredBy: String,
+    },
+    clientDetails: {
+        name: {type: String},
+        email: String,
+        address: String,
+        contactNumber: String,
     }
 }, {timestamps: true})
 

@@ -3,7 +3,7 @@ const { createleadsUpdate, getLeadhistory, updateLeadStatus, getLeadStatus, addN
 const { addProduct, getProduct, getProductDetail, deleteProduct, editProduct, searchProduct } = require("../controllars/product.controller");
 const { deleteNotification, getNotification, deleteNotificationAll, saveNotification } = require("../controllars/notificationcontrollar");
 const { ValidateUser } = require("../middlewares/authMiddleware");
-const { createQuotation, getQuotation } = require("../controllars/quotation.controller");
+const { createQuotation, getQuotation, deleteQuotation, getQuotationDetails, editQuotation } = require("../controllars/quotation.controller");
 
 const leadsrouter = require("express").Router()
 
@@ -56,5 +56,8 @@ leadsrouter.get("/search-product", ValidateUser, searchProduct)
 
 leadsrouter.post("/create-quotation", ValidateUser, createQuotation)
 leadsrouter.get("/get-quotation", ValidateUser, getQuotation)
+leadsrouter.get("/get-quotation-details/:id", ValidateUser, getQuotationDetails)
+leadsrouter.put("/edit-quotation/:id", ValidateUser, editQuotation)
+leadsrouter.delete("/delete-quotation/:id", ValidateUser, deleteQuotation)
 
 module.exports = {leadsrouter};
