@@ -460,7 +460,7 @@ const loginUser = async (req, res, next) => {
                                 }
                                 if (result) {
                                     let token = jwt.sign({ id: user.id }, "SandeepIsTheKey", {
-                                        expiresIn: "1d",
+                                        expiresIn: "7d",
                                     });
                                     res.status(200).json({
                                         status: true,
@@ -531,7 +531,7 @@ const loginUser = async (req, res, next) => {
                             }
                             if (result) {
                                 let token = jwt.sign({ id: user.id }, "SandeepIsTheKey", {
-                                    expiresIn: "1d",
+                                    expiresIn: "7d",
                                 });
                                 res.status(200).json({
                                     status: true,

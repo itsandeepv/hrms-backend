@@ -97,6 +97,12 @@ const bulkLeadInset = async (req, res) => {
 const editLead = async (req, res, next) => {
     let reqData = req.body
     try {
+
+        const checkexist = await NewLeads.findById(req.params.id)
+
+        console.log(checkexist , "<<<<<<<checkexist");
+        
+
         let findedDetails = await NewLeads.findByIdAndUpdate(req.params.id, {
             ...reqData
         }, { new: true })
