@@ -1,8 +1,9 @@
 const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus, getChartDetails, bulkLeadInset } = require("../controllars/leadscontrollar");
 const { createleadsUpdate, getLeadhistory, updateLeadStatus, getLeadStatus, addNewleadStatus, getAllStatus, deleteStatus, updateStatusType, createNotification } = require("../controllars/leadsUpdatescontrollar");
-const { addProduct, getProduct, getProductDetail, deleteProduct, editProduct } = require("../controllars/productControllar");
+const { addProduct, getProduct, getProductDetail, deleteProduct, editProduct, searchProduct } = require("../controllars/product.controller");
 const { deleteNotification, getNotification, deleteNotificationAll, saveNotification } = require("../controllars/notificationcontrollar");
 const { ValidateUser } = require("../middlewares/authMiddleware");
+const { createQuotation, getQuotation } = require("../controllars/quotation.controller");
 
 const leadsrouter = require("express").Router()
 
@@ -51,5 +52,9 @@ leadsrouter.get("/get-product", ValidateUser, getProduct)
 leadsrouter.get("/get-product-detail/:id", ValidateUser, getProductDetail)
 leadsrouter.get("/delete-product/:id", ValidateUser, deleteProduct)
 leadsrouter.post("/edit-product/:id", ValidateUser, editProduct)
+leadsrouter.get("/search-product", ValidateUser, searchProduct)
+
+leadsrouter.post("/create-quotation", ValidateUser, createQuotation)
+leadsrouter.get("/get-quotation", ValidateUser, getQuotation)
 
 module.exports = {leadsrouter};
