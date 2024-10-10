@@ -743,7 +743,7 @@ const assignLead = async (req, res, next) => {
                 body: JSON.stringify(notificationDetails)
             };
 
-            leadAssignEmail(notificationDetails)
+            // leadAssignEmail(notificationDetails)
 
             await fetch(`${publicUrl}/save-notification`, requestOptions).then((res) => res.json()).then((data) => {
                 io.emit('leadAssigned', notificationDetails);
