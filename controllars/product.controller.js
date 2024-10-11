@@ -2,12 +2,13 @@ const Product = require('../models/productModel');
 
 
 const addProduct = async(req, res, next) => {
-    const {name, price} = req.body
+    const {name, price, description} = req.body
     // console.log('name', req.user?._id )
     try{
         const product = await Product.create({
             name,
             price,
+            description,
             addedBy: req.user?._id
         })
         res.status(201).json({
@@ -124,5 +125,41 @@ const deleteProduct = async(req, res, next) => {
     }
 }
 
+const searchProduct = async(req, res, next) => {
+    try {
+        const {searchQuery} = req.query;  // Search string
+        const userId = req.user?._id;  // Assuming req.user contains the logged-in user's _id
 
-module.exports = {addProduct, getProduct, getProductDetail, deleteProduct, editProduct}
+        const data = await Product.find({
+            $and: [
+                {addedBy: userId},
+                {$or: [
+                    { name: { $regex: searchQuery, $options: "i" } },
+                    { price: !isNaN(searchQuery) ? Number(searchQuery) : null }
+                ]}
+            ]
+        });
+
+        if(data){
+            res.status(200).json({
+                status: true,
+                message: "Search result",
+                data: data
+            })
+        }else{
+            res.status(404).json({
+                status: false,
+                message: "Product not found"
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: error.message,
+            error: error,
+        })
+    }
+}
+
+
+module.exports = {addProduct, getProduct, getProductDetail, deleteProduct, editProduct, searchProduct}
