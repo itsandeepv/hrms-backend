@@ -1,9 +1,9 @@
-const Quotation = require("../models/quotationModel");
+const Invoice = require("../models/invoiceModel");
 
-const createQuotation = async(req, res, next) => {
+const createInvoice = async(req, res, next) => {
     try {
         const user = req.user
-        const data = await Quotation.create({
+        const data = await Invoice.create({
             ...req.body,
             companyId: user.role==="admin" ? user._id : user.companyId,
             createdBy: user._id,
@@ -12,7 +12,7 @@ const createQuotation = async(req, res, next) => {
         if(data){
             res.status(200).json({
                 status: true,
-                message: "Quotation created successfully",
+                message: "Invoice created successfully",
                 data: data
             })
         }else{
@@ -30,26 +30,26 @@ const createQuotation = async(req, res, next) => {
     }
 }
 
-const getQuotation = async(req, res, next) => {
+const getInvoice = async(req, res, next) => {
     try {
         let data
         const user = req.user
         if(user.role==="employee"){
-            data = await Quotation.find({createdBy: user?._id})
+            data = await Invoice.find({createdBy: user?._id})
         }else if(user.role==="admin"){
-            data = await Quotation.find({companyId: user?._id})
+            data = await Invoice.find({companyId: user?._id})
         }
         
         if(data){
             res.status(200).json({
                 status: true,
-                message: "Quotation fetched successfully",
+                message: "Invoice fetched successfully",
                 data: data
             })
         }else{
             res.status(404).json({
                 status: false,
-                message: "Quotation not found"
+                message: "Invoice not found"
             })
         }
     } catch (error) {
@@ -61,20 +61,20 @@ const getQuotation = async(req, res, next) => {
     }
 }
 
-const getQuotationDetails = async(req, res, next) => {
+const getInvoiceDetails = async(req, res, next) => {
     try {
         const {id} = req.params
-        const data = await Quotation.findById(id)
+        const data = await Invoice.findById(id)
         if(data){
             res.status(200).json({
                 status: true,
-                message: "Quotation fetched successfully.",
+                message: "Invoice fetched successfully.",
                 data,
             })
         }else{
             res.status(404).json({
                 status: false,
-                message: "Quotation not found"
+                message: "Invoice not found"
             })
         }
     } catch (error) {
@@ -86,23 +86,23 @@ const getQuotationDetails = async(req, res, next) => {
     }
 }
 
-const editQuotation = async(req, res, next) => {
+const editInvoice = async(req, res, next) => {
     // console.log("body==>", req.params.id, req.body)
     try {
-        const data = await Quotation.findByIdAndUpdate(req.params.id, {
+        const data = await Invoice.findByIdAndUpdate(req.params.id, {
             ...req.body
         }, { new: true })
 
         if(data){
             res.status(200).json({
                 status: true,
-                message: 'Quotation updated successfully.',
+                message: 'Invoice updated successfully.',
                 data
             })
         }else{
             res.status(404).json({
                 status: false,
-                message: "Quotation not found"
+                message: "Invoice not found"
             })
         }
     }catch(error){
@@ -114,20 +114,20 @@ const editQuotation = async(req, res, next) => {
     }
 }
 
-const deleteQuotation = async(req, res, next) => {
+const deleteInvoice = async(req, res, next) => {
     try {
         const {id} = req.params
-        const data = await Quotation.findById(id)
+        const data = await Invoice.findById(id)
         if(data){
-            await Quotation.findByIdAndDelete(id)
+            await Invoice.findByIdAndDelete(id)
             res.status(200).json({
                 status: true,
-                message: "Quotation deleted successfully."
+                message: "Invoice deleted successfully."
             })
         }else{
             res.status(404).json({
                 status: false,
-                message: "Quotation not found"
+                message: "Invoice not found"
             })
         }
     } catch (error) {
@@ -139,4 +139,4 @@ const deleteQuotation = async(req, res, next) => {
     }
 }
 
-module.exports = {createQuotation, getQuotation, getQuotationDetails, editQuotation, deleteQuotation}
+module.exports = {createInvoice, getInvoice, getInvoiceDetails, editInvoice, deleteInvoice}

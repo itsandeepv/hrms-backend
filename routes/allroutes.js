@@ -4,6 +4,7 @@ const { addProduct, getProduct, getProductDetail, deleteProduct, editProduct, se
 const { deleteNotification, getNotification, deleteNotificationAll, saveNotification } = require("../controllars/notificationcontrollar");
 const { ValidateUser } = require("../middlewares/authMiddleware");
 const { createQuotation, getQuotation, deleteQuotation, getQuotationDetails, editQuotation } = require("../controllars/quotation.controller");
+const { createInvoice, getInvoice, getInvoiceDetails, editInvoice, deleteInvoice } = require("../controllars/invoice.controller");
 
 const leadsrouter = require("express").Router()
 
@@ -59,5 +60,11 @@ leadsrouter.get("/get-quotation", ValidateUser, getQuotation)
 leadsrouter.get("/get-quotation-details/:id", ValidateUser, getQuotationDetails)
 leadsrouter.put("/edit-quotation/:id", ValidateUser, editQuotation)
 leadsrouter.delete("/delete-quotation/:id", ValidateUser, deleteQuotation)
+
+leadsrouter.post("/create-invoice", ValidateUser, createInvoice)
+leadsrouter.get("/get-invoice", ValidateUser, getInvoice)
+leadsrouter.get("/get-invoice-details/:id", ValidateUser, getInvoiceDetails)
+leadsrouter.put("/edit-invoice/:id", ValidateUser, editInvoice)
+leadsrouter.delete("/delete-invoice/:id", ValidateUser, deleteInvoice)
 
 module.exports = {leadsrouter};
