@@ -774,11 +774,12 @@ const editSettings = async (req, res, next) => {
     let user = req.user
     try {
         const findUser = await NewUser.findById(user?._id);
-        // console.log(findUser, selectedEmployee);
         if (findUser) {
-            if (autoAssigning == true || autoAssigning == false) {
+            if (autoAssigning == true || autoAssigning == false || indiaMartKey || IndiaMartCrmUrl) {
                 await NewUser.findByIdAndUpdate(user?._id, {
-                    autoAssigning: autoAssigning
+                    autoAssigning: autoAssigning,
+                    indiaMartKey: indiaMartKey,
+                    IndiaMartCrmUrl: IndiaMartCrmUrl,
                 }, { new: true })
                 res.status(200).json({
                     status: true,
