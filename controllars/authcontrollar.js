@@ -462,7 +462,6 @@ const loginUser = async (req, res, next) => {
                                     let token = jwt.sign({ id: user.id }, "SandeepIsTheKey", {
                                         expiresIn: "7d",
                                     });
-                                    // const companyDetails = await user
                                     res.status(200).json({
                                         status: true,
                                         message: "Login Succesfully",
@@ -482,13 +481,6 @@ const loginUser = async (req, res, next) => {
                                             _id: user._id,
                                             email: user.email,
                                             IndiaMartCrmUrl: user.IndiaMartCrmUrl,
-                                            companyDetails: {
-                                                name: user.companyName,
-                                                address: user.address || "",
-                                                email: user.email,
-                                                contactNumber: user.mobileNumber,
-                                                companyLogo: user.companyLogo || "",
-                                            }
                                         },
                                     });
                                 } else {
@@ -528,63 +520,54 @@ const loginUser = async (req, res, next) => {
         } else {
             let checkemployee = await OtherUser.findOne({ email: email })
             if (checkemployee.isActive) {
-                const user = await OtherUser.findOne({ email: email })
-                const companyDetails = await NewUser.findById(checkemployee.companyId)
-                if (user) {
-                    bcrypt.compare(password, user.password, function async(error, result) {
-                        if (error) {
-                            res.status(400).json({
-                                status: false,
-                                error: error + "Password is not match",
-                            });
-                        }
-                        if (result) {
-                            let token = jwt.sign({ id: user.id }, "SandeepIsTheKey", {
-                                expiresIn: "7d",
-                            });
-                            res.status(200).json({
-                                status: true,
-                                message: "Login Succesfully",
-                                token: token,
-                                user: {
-                                    fullName: user.fullName,
-                                    indiaMartKey: user.indiaMartKey,
-                                    tradeIndaiKey: user.tradeIndaiKey,
-                                    adminId: user.adminId,
-                                    permissions: user.permissions || [],
-                                    mobileNumber: user.mobileNumber,
-                                    companyName: user.companyName,
-                                    companyLogo: user.companyLogo || "",
-                                    moduleAccuss: user.moduleAccuss || [],
-                                    address: user.address || "",
-                                    userType: user.userType,
-                                    companyId: user.companyId,
-                                    _id: user._id,
-                                    role: user.role,
-                                    email: user.email,
-                                    companyDetails: {
-                                        name: companyDetails.companyName,
-                                        address: companyDetails.address || "",
-                                        email: companyDetails.email,
-                                        contactNumber: companyDetails.mobileNumber,
-                                        companyLogo: companyDetails.companyLogo || "",
+                await OtherUser.findOne({ email: email }).then((user) => {
+                    if (user) {
+                        bcrypt.compare(password, user.password, function (error, result) {
+                            if (error) {
+                                res.status(400).json({
+                                    status: false,
+                                    error: error + "Password is not match",
+                                });
+                            }
+                            if (result) {
+                                let token = jwt.sign({ id: user.id }, "SandeepIsTheKey", {
+                                    expiresIn: "7d",
+                                });
+                                res.status(200).json({
+                                    status: true,
+                                    message: "Login Succesfully",
+                                    token: token,
+                                    user: {
+                                        fullName: user.fullName,
+                                        indiaMartKey: user.indiaMartKey,
+                                        tradeIndaiKey: user.tradeIndaiKey,
+                                        adminId: user.adminId,
+                                        permissions: user.permissions || [],
+                                        mobileNumber: user.mobileNumber,
+                                        companyName: user.companyName,
+                                        companyLogo: user.companyLogo || "",
+                                        moduleAccuss: user.moduleAccuss || [],
+                                        address: user.address || "",
+                                        userType: user.userType,
+                                        companyId: user.companyId,
+                                        _id: user._id,
+                                        role: user.role,
+                                        email: user.email,
                                     },
-                                },
-                            });
-                        } else {
-                            res.status(400).json({
-                                status: false, error: "Wrong email and password !"
-                            });
-                        }
-                    });
-                } else {
-                    res.status(400).json({
-                        status: false,
-                        message: "Please Check Your Email And Password !",
-                    });
-                }
-                // .then((user) => {
-                // });
+                                });
+                            } else {
+                                res.status(400).json({
+                                    status: false, error: "Wrong email and password !"
+                                });
+                            }
+                        });
+                    } else {
+                        res.status(400).json({
+                            status: false,
+                            message: "Please Check Your Email And Password !",
+                        });
+                    }
+                });
             } else {
                 res.status(500).json({
                     status: false,
