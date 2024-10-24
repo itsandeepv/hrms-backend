@@ -56,6 +56,7 @@ app.get("/test", (req, res) => {
 mongoose.connect(mongooseUrl, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 30000,
 })
   .then((result) => {
     console.log("Your DataBase is Connected successfully");
@@ -102,16 +103,20 @@ io.on("connection", (socket) => {
           leadAssignTo: data?._id.toString()
         });
       } else {
+        // console.log("data" ,data);
         query.$and.push({
           $or: [
-            { companyId: data?._id },
+            // { companyId: data?._id },
             { userId: data?._id },
+            { leadAssignTo: "" }
           ]
         });
       }
       // Fetch leads based on user details and follow-up date
       const leads = await NewLeads.find(query);
+      
       const filteredLeads = leads.filter(lead => isToday(lead.nextFollowUpDate));
+      // console.log("filteredLeads" ,filteredLeads);
       // Emit notifications for the filtered leads
       filteredLeads.forEach(lead => {
         socket.emit('followUpNotification', {
