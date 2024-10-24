@@ -778,7 +778,7 @@ const getChartDetails = async (req, res) => {
 const getJustdialLead = async(req, res) => {
     const leadData = req.body;
     
-    // console.log("Lead received:", leadData);
+    console.log("Lead received:", leadData);
     const user = await NewUser.findById(req.params.id)
     
     if(user){
@@ -804,6 +804,35 @@ const getJustdialLead = async(req, res) => {
     
 }
 
+const getIndiamartLead = async(req, res) => {
+    const leadData = req.body;
+    
+    console.log("Lead received:", leadData);
+    const user = await NewUser.findById(req.params.id)
+    
+    if(user){
+        const data = await NewLeads.create({
+            "userId": user?._id,
+            // "companyId": user?.role==="admin" ? user?._id : user?.companyId,
+            // "uniqeQueryId": leadData?.leadid,
+            // "senderName": leadData?.name,
+            // "senderEmail": leadData?.email,
+            // "senderMobileNumber": leadData?.mobile,
+            // "senderCity": leadData?.city,
+            // "senderAddress": `${leadData?.area} ${leadData?.city}`,
+            // "senderCompany": leadData?.company,
+            // "leadSource": "justdial",
+            // "queryTime": `${leadData?.date} ${leadData?.time}`,
+            // "queryProductName": leadData?.category
+        })
+
+        res.send('RECEIVED');
+    }else{
+        res.send("FAILED")
+    }
+    
+}
+
 module.exports = {
     createNewLead, getAllLead,
     getSingleLead,
@@ -813,5 +842,6 @@ module.exports = {
     searchQuary, getChartDetails,
     getLeadsByStatus,
     bulkLeadInset,
-    getJustdialLead
+    getJustdialLead,
+    getIndiamartLead,
 }

@@ -1,4 +1,4 @@
-const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus, getChartDetails, bulkLeadInset, getJustdialLead } = require("../controllars/leadscontrollar");
+const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus, getChartDetails, bulkLeadInset, getJustdialLead, getIndiamartLead } = require("../controllars/leadscontrollar");
 const { createleadsUpdate, getLeadhistory, updateLeadStatus, getLeadStatus, addNewleadStatus, getAllStatus, deleteStatus, updateStatusType, createNotification } = require("../controllars/leadsUpdatescontrollar");
 const { addProduct, getProduct, getProductDetail, deleteProduct, editProduct, searchProduct } = require("../controllars/product.controller");
 const { deleteNotification, getNotification, deleteNotificationAll, saveNotification } = require("../controllars/notificationcontrollar");
@@ -68,5 +68,6 @@ leadsrouter.put("/edit-invoice/:id", ValidateUser, editInvoice)
 leadsrouter.delete("/delete-invoice/:id", ValidateUser, deleteInvoice)
 
 leadsrouter.post("/justdial/:id", getJustdialLead)
+leadsrouter.post("/indiamart/:id", getIndiamartLead)
 
 module.exports = {leadsrouter};
