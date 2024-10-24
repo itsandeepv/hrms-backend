@@ -481,6 +481,13 @@ const loginUser = async (req, res, next) => {
                                             _id: user._id,
                                             email: user.email,
                                             IndiaMartCrmUrl: user.IndiaMartCrmUrl,
+                                            companyDetails: {
+                                                name: user.companyName,
+                                                address: user.address || "",
+                                                email: user.email,
+                                                contactNumber: user.mobileNumber,
+                                                companyLogo: user.companyLogo || "",
+                                            }
                                         },
                                     });
                                 } else {
@@ -520,7 +527,10 @@ const loginUser = async (req, res, next) => {
         } else {
             let checkemployee = await OtherUser.findOne({ email: email })
             if (checkemployee.isActive) {
+                const user = await OtherUser.findOne({ email: email })
+                const companyDetails = await NewUser.findById(checkemployee.companyId)
                 await OtherUser.findOne({ email: email }).then((user) => {
+
                     if (user) {
                         bcrypt.compare(password, user.password, function (error, result) {
                             if (error) {
@@ -553,6 +563,13 @@ const loginUser = async (req, res, next) => {
                                         _id: user._id,
                                         role: user.role,
                                         email: user.email,
+                                        companyDetails: {
+                                            name: companyDetails.companyName,
+                                            address: companyDetails.address || "",
+                                            email: companyDetails.email,
+                                            contactNumber: companyDetails.mobileNumber,
+                                            companyLogo: companyDetails.companyLogo || "",
+                                        },
                                     },
                                 });
                             } else {
