@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 
-const quotationProductSchema = new mongoose.Schema({
+const invoiceProductSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -21,7 +21,7 @@ const quotationProductSchema = new mongoose.Schema({
     }
 })
 
-const QuotationSchema = new mongoose.Schema({
+const InvoiceSchema = new mongoose.Schema({
     companyId: {
         type: String,
         required: true,
@@ -37,7 +37,7 @@ const QuotationSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    products: [quotationProductSchema],
+    products: [invoiceProductSchema],
     discount: {
         type: Number,
         default: 0,
@@ -92,5 +92,5 @@ const QuotationSchema = new mongoose.Schema({
     }
 }, {timestamps: true})
 
-const Quotation = mongoose.model("Quotation", QuotationSchema)
-module.exports = Quotation;
+const Invoice = mongoose.model("Invoice", InvoiceSchema)
+module.exports = Invoice;

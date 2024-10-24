@@ -12,6 +12,10 @@ const productSchema = new mongoose.Schema({
   addedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: '',
+  },
+  description: {
+    type: String,
+    required: true
   }
 }, {timestamps: true});
 
