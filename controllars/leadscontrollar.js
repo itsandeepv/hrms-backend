@@ -779,8 +779,8 @@ const getJustdialLead = async(req, res) => {
     const leadData = req.body;
     
     // console.log("Lead received:", leadData);
-    const user = await NewUser.find({indiaMartKey: req.params.id})
-    
+    const user = await NewUser.findOne({indiaMartKey: req.params.id})
+    // console.log("user", user)
     if(user){
         const data = await NewLeads.create({
             "userId": user?._id,
@@ -794,8 +794,11 @@ const getJustdialLead = async(req, res) => {
             "senderCompany": leadData?.company,
             "leadSource": "justdial",
             "queryTime": `${leadData?.date} ${leadData?.time}`,
-            "queryProductName": leadData?.category
+            "queryProductName": leadData?.category,
+            "queryMessage": leadData?.category,
         })
+
+        // console.log("data", data)
 
         res.send('RECEIVED');
     }else{
