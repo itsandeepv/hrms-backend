@@ -779,7 +779,7 @@ const getJustdialLead = async(req, res) => {
     const leadData = req.body;
     
     // console.log("Lead received:", leadData);
-    const user = await NewUser.findById(req.params.id)
+    const user = await NewUser.find({indiaMartKey: req.params.id})
     
     if(user){
         const data = await NewLeads.create({
