@@ -56,7 +56,7 @@ app.get("/test", (req, res) => {
 mongoose.connect(mongooseUrl, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 30000,
+  // serverSelectionTimeoutMS: 30000,
 })
   .then((result) => {
     console.log("Your DataBase is Connected successfully");
@@ -108,7 +108,7 @@ io.on("connection", (socket) => {
           $or: [
             // { companyId: data?._id },
             { userId: data?._id },
-            { leadAssignTo: "" }
+            // { leadAssignTo: "" }
           ]
         });
       }
