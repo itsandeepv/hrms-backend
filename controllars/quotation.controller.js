@@ -1,3 +1,4 @@
+const NewLeads = require("../models/leadsModel");
 const Quotation = require("../models/quotationModel");
 
 const createQuotation = async(req, res, next) => {
@@ -8,7 +9,12 @@ const createQuotation = async(req, res, next) => {
             companyId: user.role==="admin" ? user._id : user.companyId,
             createdBy: user._id,
         })
-    
+        
+        let leadData = await NewLeads.findById(req.body.leadId)
+        leadData.quotationIds.push(data._id)
+        await leadData.save();
+
+
         if(data){
             res.status(200).json({
                 status: true,
@@ -118,6 +124,11 @@ const deleteQuotation = async(req, res, next) => {
     try {
         const {id} = req.params
         const data = await Quotation.findById(id)
+
+        let leadData = await NewLeads.findById(data.leadId)
+        leadData.quotationIds = leadData.quotationIds.filter(id => id.toString() !== data._id.toString());
+        await leadData.save();
+
         if(data){
             await Quotation.findByIdAndDelete(id)
             res.status(200).json({
