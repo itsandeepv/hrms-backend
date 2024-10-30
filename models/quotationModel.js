@@ -38,6 +38,11 @@ const QuotationSchema = new mongoose.Schema({
         required: true
     },
     products: [quotationProductSchema],
+    quotationFile: {
+        fileID: "",
+        url: "",
+        path:""
+    },
     discount: {
         type: Number,
         default: 0,

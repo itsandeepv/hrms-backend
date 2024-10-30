@@ -35,6 +35,7 @@ app.use(cors({
 }));
 // app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static("uploads"));
 
 const mongooseUrl = process.env.DATABASE_URL || "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
 // "mongodb://hrmsDBs:98sdis90d@167.71.236.39:27017/hrms?authSource=admin"

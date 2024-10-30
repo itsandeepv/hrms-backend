@@ -33,11 +33,17 @@ const InvoiceSchema = new mongoose.Schema({
     leadId: {
         type: String,
     },
+    invoiceFile: {
+        fileID: "",
+        url: "",
+        path:""
+    },
     subject: {
         type: String,
         required: true
     },
     products: [invoiceProductSchema],
+
     discount: {
         type: Number,
         default: 0,
@@ -83,14 +89,14 @@ const InvoiceSchema = new mongoose.Schema({
         GSTIN: String
     },
     clientDetails: {
-        name: {type: String},
+        name: { type: String },
         email: String,
         address: String,
         companyName: String,
         contactNumber: String,
         GSTIN: String
     }
-}, {timestamps: true})
+}, { timestamps: true })
 
 const Invoice = mongoose.model("Invoice", InvoiceSchema)
 module.exports = Invoice;
