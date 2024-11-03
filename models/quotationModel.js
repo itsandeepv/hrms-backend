@@ -89,6 +89,9 @@ const QuotationSchema = new mongoose.Schema({
         companyName: String,
         contactNumber: String,
         GSTIN: String
+    },
+    paymentTerms: {
+        type: String,
     }
 }, {timestamps: true})
 
