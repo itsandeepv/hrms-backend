@@ -5,10 +5,10 @@ const path = require('path');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, 'uploads/invoices/'); // Directory where files will be saved
+      cb(null, 'uploads/profile/'); // Directory where files will be saved
     },
     filename: function (req, file, cb) {
-      cb(null, "invoice" + Date.now() + path.extname(file.originalname));
+      cb(null, "profile" + Date.now() + path.extname(file.originalname));
     }
   });
   

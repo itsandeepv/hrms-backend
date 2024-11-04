@@ -1,11 +1,13 @@
 const authrouter = require("express").Router()
-const { register, loginUser,verifyEmail, createUserByAdmin, getCompanyUser, editSettings, deleteCompanyUser, editCompanyUser, updatePassword, getSettings, getAllCompany, updateCompanyStatus, assignLead, resendOtp, changePassword } = require("../controllars/authcontrollar")
+const { register, loginUser,verifyEmail, createUserByAdmin, getCompanyUser, editSettings, deleteCompanyUser, editCompanyUser, updatePassword, getSettings, getAllCompany, updateCompanyStatus, assignLead, resendOtp, changePassword, uploadProfileImage } = require("../controllars/authcontrollar")
 const { ValidateUser } = require("../middlewares/authMiddleware")
+const upload = require("../middlewares/uploadFiles")
 
 
 // new  user register routes
 authrouter.post("/register" ,register)
 authrouter.post("/create-user" , ValidateUser,createUserByAdmin)
+authrouter.post("/update-image" , ValidateUser,upload.single("image") ,uploadProfileImage)
 authrouter.get("/get-company-user" , ValidateUser,getCompanyUser)
 authrouter.delete("/delete-company-user/:id" , ValidateUser,deleteCompanyUser)
 authrouter.put("/update-company-status/:id" , ValidateUser,updateCompanyStatus)
