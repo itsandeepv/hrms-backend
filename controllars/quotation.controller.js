@@ -36,17 +36,6 @@ const createQuotation = async(req, res, next) => {
     }
 }
 
-const saveQuotationFile = async (req, res) => {
-    const id = req.params
-    const file = req.file
-    console.log(file ,id);
-    
-    try {
-
-    } catch (error) {
-
-    }
-}
 
 
 const getQuotation = async(req, res, next) => {

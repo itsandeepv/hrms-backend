@@ -68,7 +68,6 @@ leadsrouter.get("/get-invoice-details/:id", ValidateUser, getInvoiceDetails)
 leadsrouter.put("/edit-invoice/:id", ValidateUser, editInvoice)
 leadsrouter.delete("/delete-invoice/:id", ValidateUser, deleteInvoice)
 
-// leadsrouter.get("/save-invoice-file", ValidateUser, upload.single("file"), saveInvoiceFile);
 
 leadsrouter.post("/justdial/:id", getJustdialLead)
 leadsrouter.post("/indiamart/:id", getIndiamartLead)

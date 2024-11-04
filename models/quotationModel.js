@@ -85,6 +85,7 @@ const QuotationSchema = new mongoose.Schema({
         address: String,
         contactNumber: String,
         referredBy: String,
+        companyLogo:Object,
         GSTIN: String
     },
     clientDetails: {
