@@ -54,7 +54,14 @@ const editProduct = async(req, res, next) => {
 
 const getProduct = async(req, res, next) => {
     try{
-        const data = await Product.find({addedBy: req.user?._id})
+        // const data = await Product.find({addedBy: req.user?._id})
+        let data
+        const user = req.user
+        if(user.role==="employee"){
+            data = await Product.find({addedBy: user?.companyId})
+        }else if(user.role==="admin"){
+            data = await Product.find({addedBy: user?._id})
+        }
         if(data){
             res.status(200).json({
                 status: true,
