@@ -561,6 +561,8 @@ const loginUser = async (req, res, next) => {
                                                 email: user.email,
                                                 contactNumber: user.mobileNumber,
                                                 companyLogo: user.companyLogo || "",
+                                                bankDetails: user.bankDetails,
+                                                GSTIN: user.GSTIN
                                             }
                                         },
                                     });
@@ -643,6 +645,8 @@ const loginUser = async (req, res, next) => {
                                             email: companyDetails.email,
                                             contactNumber: companyDetails.mobileNumber,
                                             companyLogo: companyDetails.companyLogo || "",
+                                            bankDetails: companyDetails.bankDetails,
+                                            GSTIN: companyDetails.GSTIN
                                         },
                                     },
                                 });

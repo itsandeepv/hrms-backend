@@ -34,7 +34,25 @@ const NewUserSchema = new mongoose.Schema({
         default: "user",
         enum: ["company", "admin", "superadmin", "employee", "hr", "manager"]
     },
-    moduleAccuss: []
+    moduleAccuss: [],
+    GSTIN: {
+        type: String
+    },
+    bankDetails: {
+        name: String,
+        accountNumber: String,
+        ifscCode: String,
+        branch: String,
+        bankName: String
+    },
+    totalQuotation: {
+        type: Number,
+        default: 0
+    },
+    totalInvoice: {
+        type: Number,
+        default: 0
+    }
 
 }, { timestamps: true })
 

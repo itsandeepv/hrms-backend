@@ -86,7 +86,8 @@ const QuotationSchema = new mongoose.Schema({
         contactNumber: String,
         referredBy: String,
         companyLogo:Object,
-        GSTIN: String
+        GSTIN: String,
+        bankDetails: Object
     },
     clientDetails: {
         name: {type: String},
@@ -98,6 +99,9 @@ const QuotationSchema = new mongoose.Schema({
     },
     paymentTerms: {
         type: String,
+    },
+    quotationId: {
+        type: String
     }
 }, {timestamps: true})
 

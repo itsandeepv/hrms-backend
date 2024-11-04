@@ -1,14 +1,34 @@
 const NewLeads = require("../models/leadsModel");
+const NewUser = require("../models/newUser");
 const Quotation = require("../models/quotationModel");
+
+const getQuotationId = (companyName, number) => {
+    console.log("companyName", companyName.trim().split(" "))
+    const companyPrefix = companyName.trim().split(" ")
+        .map(word => word[0].toUpperCase())
+        .join("")
+        .slice(0, 3); // Get the first 3 letters if there are more
+
+    const paddedNumber = String(number).padStart(6, '0'); // Pad the number to 6 digits
+
+    return `QT-${companyPrefix}-${paddedNumber}`;
+}
 
 const createQuotation = async(req, res, next) => {
     try {
         const user = req.user
+
+        let userData = await NewUser.findById(user.role==="admin" ? user._id : user.companyId)
+        console.log("userData?.companyName", userData?.companyName)
         const data = await Quotation.create({
             ...req.body,
             companyId: user.role==="admin" ? user._id : user.companyId,
             createdBy: user._id,
+            quotationId: getQuotationId(userData?.companyName, userData.totalQuotation+1)
         })
+
+        userData.totalQuotation = userData.totalQuotation + 1
+        await userData.save();
         
         let leadData = await NewLeads.findById(req.body.leadId)
         leadData.quotationIds.push(data._id)
