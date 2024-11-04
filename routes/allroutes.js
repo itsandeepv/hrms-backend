@@ -4,7 +4,7 @@ const { addProduct, getProduct, getProductDetail, deleteProduct, editProduct, se
 const { deleteNotification, getNotification, deleteNotificationAll, saveNotification } = require("../controllars/notificationcontrollar");
 const { ValidateUser } = require("../middlewares/authMiddleware");
 const { createQuotation, getQuotation, deleteQuotation, getQuotationDetails, editQuotation } = require("../controllars/quotation.controller");
-const { createInvoice, getInvoice, getInvoiceDetails, editInvoice, deleteInvoice, saveInvoiceFile } = require("../controllars/invoice.controller");
+const { createInvoice, getInvoice, getInvoiceDetails, editInvoice, deleteInvoice } = require("../controllars/invoice.controller");
 const upload = require("../middlewares/uploadFiles");
 
 const leadsrouter = require("express").Router()
@@ -73,7 +73,6 @@ leadsrouter.delete("/delete-invoice/:id", ValidateUser, deleteInvoice)
 leadsrouter.post("/justdial/:id", getJustdialLead)
 leadsrouter.post("/indiamart/:id", getIndiamartLead)
 
-leadsrouter.post("/save-invoice-file/:type/:id", upload.single("file"),saveInvoiceFile );
 
 
 module.exports = {leadsrouter};
