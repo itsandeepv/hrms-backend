@@ -51,7 +51,7 @@ const editProduct = async (req, res, next) => {
         // const {name, price, id} = req.body
         const data = await Product.findById(req.params.id)
         const file = req.file
-        // console.log('name', file)
+        console.log('name', file)
         let img_url = ""
         if (file) {
             img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
@@ -60,7 +60,7 @@ const editProduct = async (req, res, next) => {
         if (data) {
             if (file) {
                 const filePath = data?.image?.path;
-                // console.log("filePath" ,filePath);
+                console.log("filePath" ,filePath);
                 if (filePath) {
                     fs.unlink(filePath, (err) => {
                         if (err) {

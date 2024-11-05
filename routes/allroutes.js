@@ -53,7 +53,7 @@ leadsrouter.post("/add-product", ValidateUser,uploadImage.single("image"), addPr
 leadsrouter.get("/get-product", ValidateUser, getProduct)
 leadsrouter.get("/get-product-detail/:id", ValidateUser, getProductDetail)
 leadsrouter.get("/delete-product/:id", ValidateUser, deleteProduct)
-leadsrouter.post("/edit-product/:id", ValidateUser, editProduct)
+leadsrouter.post("/edit-product/:id", ValidateUser,uploadImage.single("image"), editProduct)
 leadsrouter.get("/search-product", ValidateUser, searchProduct)
 
 leadsrouter.post("/create-quotation", ValidateUser, createQuotation)
