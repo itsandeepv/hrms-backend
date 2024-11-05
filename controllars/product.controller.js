@@ -5,17 +5,29 @@ const addProduct = async(req, res, next) => {
     const {name, price, description} = req.body
     // console.log('name', req.user?._id )
     try{
-        const product = await Product.create({
-            name,
-            price,
-            description,
-            addedBy: req.user?._id
-        })
-        res.status(201).json({
-            status: true,
-            message: 'Product added successfully.',
-            data: product
-        })
+        const checkExist = await Product.findOne({name:name})
+        console.log("checkExist" ,checkExist);
+        if(checkExist){
+            res.status(500).json({
+                status: false,
+                message: 'Product already exist .',
+            })
+        }else{
+            const product = await Product.create({
+                name,
+                price,
+                description,
+                addedBy: req.user?._id
+            })
+            res.status(201).json({
+                status: true,
+                message: 'Product added successfully.',
+                data: product
+            })
+
+        }
+        
+        
     }catch(error){
         res.status(500).json({
             status: false,
