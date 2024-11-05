@@ -14,34 +14,34 @@ const getQuotationId = (companyName, number) => {
     return `QT-${companyPrefix}-${paddedNumber}`;
 }
 
-const createQuotation = async(req, res, next) => {
+const createQuotation = async (req, res, next) => {
     try {
         const user = req.user
 
-        let userData = await NewUser.findById(user.role==="admin" ? user._id : user.companyId)
+        let userData = await NewUser.findById(user.role === "admin" ? user._id : user.companyId)
         console.log("userData?.companyName", userData?.companyName)
         const data = await Quotation.create({
             ...req.body,
-            companyId: user.role==="admin" ? user._id : user.companyId,
+            companyId: user.role === "admin" ? user._id : user.companyId,
             createdBy: user._id,
-            quotationId: getQuotationId(userData?.companyName, userData.totalQuotation+1)
+            quotationId: getQuotationId(userData?.companyName, userData.totalQuotation + 1)
         })
 
         userData.totalQuotation = userData.totalQuotation + 1
         await userData.save();
-        
+
         let leadData = await NewLeads.findById(req.body.leadId)
         leadData.quotationIds.push(data._id)
         await leadData.save();
 
 
-        if(data){
+        if (data) {
             res.status(200).json({
                 status: true,
                 message: "Quotation created successfully",
                 data: data
             })
-        }else{
+        } else {
             res.status(404).json({
                 status: false,
                 message: "Product not found"
@@ -58,23 +58,23 @@ const createQuotation = async(req, res, next) => {
 
 
 
-const getQuotation = async(req, res, next) => {
+const getQuotation = async (req, res, next) => {
     try {
         let data
         const user = req.user
-        if(user.role==="employee"){
-            data = await Quotation.find({createdBy: user?._id})
-        }else if(user.role==="admin"){
-            data = await Quotation.find({companyId: user?._id})
+        if (user.role === "employee") {
+            data = await Quotation.find({ createdBy: user?._id }).sort({ createdAt: -1 })
+        } else if (user.role === "admin") {
+            data = await Quotation.find({ companyId: user?._id }).sort({ createdAt: -1 })
         }
-        
-        if(data){
+
+        if (data) {
             res.status(200).json({
                 status: true,
                 message: "Quotation fetched successfully",
                 data: data
             })
-        }else{
+        } else {
             res.status(404).json({
                 status: false,
                 message: "Quotation not found"
@@ -89,17 +89,17 @@ const getQuotation = async(req, res, next) => {
     }
 }
 
-const getQuotationDetails = async(req, res, next) => {
+const getQuotationDetails = async (req, res, next) => {
     try {
-        const {id} = req.params
+        const { id } = req.params
         const data = await Quotation.findById(id)
-        if(data){
+        if (data) {
             res.status(200).json({
                 status: true,
                 message: "Quotation fetched successfully.",
                 data,
             })
-        }else{
+        } else {
             res.status(404).json({
                 status: false,
                 message: "Quotation not found"
@@ -114,26 +114,26 @@ const getQuotationDetails = async(req, res, next) => {
     }
 }
 
-const editQuotation = async(req, res, next) => {
+const editQuotation = async (req, res, next) => {
     // console.log("body==>", req.params.id, req.body)
     try {
         const data = await Quotation.findByIdAndUpdate(req.params.id, {
             ...req.body
         }, { new: true })
 
-        if(data){
+        if (data) {
             res.status(200).json({
                 status: true,
                 message: 'Quotation updated successfully.',
                 data
             })
-        }else{
+        } else {
             res.status(404).json({
                 status: false,
                 message: "Quotation not found"
             })
         }
-    }catch(error){
+    } catch (error) {
         console.log('in catch', error)
         res.status(500).json({
             status: false,
@@ -142,22 +142,22 @@ const editQuotation = async(req, res, next) => {
     }
 }
 
-const deleteQuotation = async(req, res, next) => {
+const deleteQuotation = async (req, res, next) => {
     try {
-        const {id} = req.params
+        const { id } = req.params
         const data = await Quotation.findById(id)
 
         let leadData = await NewLeads.findById(data.leadId)
         leadData.quotationIds = leadData.quotationIds.filter(id => id.toString() !== data._id.toString());
         await leadData.save();
 
-        if(data){
+        if (data) {
             await Quotation.findByIdAndDelete(id)
             res.status(200).json({
                 status: true,
                 message: "Quotation deleted successfully."
             })
-        }else{
+        } else {
             res.status(404).json({
                 status: false,
                 message: "Quotation not found"
@@ -172,4 +172,4 @@ const deleteQuotation = async(req, res, next) => {
     }
 }
 
-module.exports = {createQuotation, getQuotation, getQuotationDetails, editQuotation, deleteQuotation}
+module.exports = { createQuotation, getQuotation, getQuotationDetails, editQuotation, deleteQuotation }
