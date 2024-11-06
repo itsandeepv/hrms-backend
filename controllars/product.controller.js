@@ -5,13 +5,13 @@ const addProduct = async (req, res, next) => {
     const { name, price, description } = req.body
     try {
         const file = req.file
-        // console.log('name', file)
+        // console.log('name', req.user)
         let img_url = ""
         if (file) {
             img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
         }
 
-        const checkExist = await Product.findOne({ name: name })
+        const checkExist = await Product.findOne({ name: name  ,addedBy:req.user?._id})
         // console.log("checkExist" ,checkExist);
         if (checkExist) {
             res.status(500).json({
