@@ -17,7 +17,9 @@ const quotationProductSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: false,
+    },
+    image: {
+        type: String,
     }
 })
 
