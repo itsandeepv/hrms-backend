@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
 const quotationProductSchema = new mongoose.Schema({
     name: {
@@ -18,6 +18,9 @@ const quotationProductSchema = new mongoose.Schema({
     description: {
         type: String,
         required: false,
+    },
+    image: {
+        type: String
     }
 })
 
