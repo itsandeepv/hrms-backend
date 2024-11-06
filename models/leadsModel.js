@@ -10,7 +10,7 @@ const LeadsSchema = new mongoose.Schema({
     indiaMartKey:{type:String},
     tradeIndaiKey:{type:String},
     leadAddedBy:{type:String,trim:true},
-    leadAssignTo:{type:String,trim:true},
+    leadAssignTo:{type:String, default: ""},
     leadAssignAt:{
         type:String,
         trim:true,
