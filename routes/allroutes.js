@@ -5,7 +5,7 @@ const { deleteNotification, getNotification, deleteNotificationAll, saveNotifica
 const { ValidateUser } = require("../middlewares/authMiddleware");
 const { createQuotation, getQuotation, deleteQuotation, getQuotationDetails, editQuotation } = require("../controllars/quotation.controller");
 const { createInvoice, getInvoice, getInvoiceDetails, editInvoice, deleteInvoice } = require("../controllars/invoice.controller");
-const upload = require("../middlewares/uploadFiles");
+const uploadImage = require("../middlewares/uploadImage");
 
 const leadsrouter = require("express").Router()
 
@@ -49,11 +49,11 @@ leadsrouter.get("/home-leads/:status" ,ValidateUser,getLeadsByStatus)
 leadsrouter.get("/chart" ,ValidateUser,getChartDetails)
 
 //product 
-leadsrouter.post("/add-product", ValidateUser, addProduct)
+leadsrouter.post("/add-product", ValidateUser,uploadImage.single("image"), addProduct)
 leadsrouter.get("/get-product", ValidateUser, getProduct)
 leadsrouter.get("/get-product-detail/:id", ValidateUser, getProductDetail)
 leadsrouter.get("/delete-product/:id", ValidateUser, deleteProduct)
-leadsrouter.post("/edit-product/:id", ValidateUser, editProduct)
+leadsrouter.post("/edit-product/:id", ValidateUser,uploadImage.single("image"), editProduct)
 leadsrouter.get("/search-product", ValidateUser, searchProduct)
 
 leadsrouter.post("/create-quotation", ValidateUser, createQuotation)

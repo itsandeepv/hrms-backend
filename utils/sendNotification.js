@@ -8,6 +8,8 @@ let isMessSave = true
 const sendNotification = (fullDocument, io, changedata) => {
 
   autoLeadAssign(fullDocument)
+  // console.log("fullDocument" ,fullDocument);
+  
   let notificationDetails = {
     title: "You received  new lead ",
     isRead: false,
@@ -29,7 +31,7 @@ const sendNotification = (fullDocument, io, changedata) => {
     };
     if (isMessSave) {
       fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
-        // console.log(data, notificationDetails);
+        console.log(data, notificationDetails);
         isMessSave = false
       }).catch((er) => {
         console.log(er);
