@@ -1,6 +1,9 @@
 const Product = require('../models/productModel');
 const fs = require("fs")
 
+const escapeRegExp = (string) => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape special regex characters
+};
 const addProduct = async (req, res, next) => {
     const { name, price, description } = req.body
     try {
@@ -11,7 +14,7 @@ const addProduct = async (req, res, next) => {
             img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
         }
 
-        const checkExist = await Product.findOne({ name: name  ,addedBy:req.user?._id})
+        const checkExist = await Product.findOne({ name: new RegExp(`^${escapeRegExp(name)}$`, 'i')  ,addedBy:req.user?._id})
         // console.log("checkExist" ,checkExist);
         if (checkExist) {
             res.status(500).json({
