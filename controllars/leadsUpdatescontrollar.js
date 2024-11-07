@@ -25,7 +25,15 @@ const createleadsUpdate = async (req, res, next) => {
                 },
                 { new: true })
                 
-            // io.emit('followUpNotification', []);
+                const today = new Date().toISOString().split('T')[0];
+                const nextFollowUpDate = new Date(reqData.nextFollowUp).toISOString().split('T')[0];
+    
+                if (nextFollowUpDate === today) {
+                    io.emit("newFollowup", {
+                        message: `This is a reminder for your follow-up scheduled for today with ${checkValid.senderName}`,
+                        lead: checkValid
+                    });
+                }
 
             res.status(200).json({
                 status: true,
