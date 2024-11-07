@@ -90,26 +90,10 @@ io.on("connection", (socket) => {
   console.log("A user connected", socket.id);
   socket.on("userDetails", async (data) => {
     try {
-      // const query = {};
-      // query.$and = query.$and || [];
-      // if (["employee", "hr", "manager"].includes(data?.role)) {
-       
-      //   query.$and.push({
-      //     leadAssignTo: data?._id.toString()
-      //   });
-      // } else {
-      //   // console.log("data" ,data);ccc
-      //   query.$and.push({
-      //     userId: data?._id.toString()
-      //   });
-      // }
       // Fetch leads based on user details and follow-up date
       const leads = data?.role === "admin" ? await NewLeads.find({userId: data?._id}) : await NewLeads.find({leadAssignTo: data?._id})
       const filteredLeads = data?.role === "admin" ? leads.filter(lead => isToday(lead.nextFollowUpDate) && (lead?.leadAssignTo===undefined || lead?.leadAssignTo==="")) : leads.filter(lead => isToday(lead.nextFollowUpDate))
-      console.log("leads===>", filteredLeads.length)
-      // data?.role == "admin" ? leads.filter(lead => isToday(lead.nextFollowUpDate) && lead?.leadAssignTo === "") : leads.filter(lead => isToday(lead.nextFollowUpDate))
-
-      // console.log("filteredLeads" ,filteredLeads?.length);
+     
       // Emit notifications for the filtered leads
       const newData = filteredLeads.map(lead => {return {
         message: 'This is a reminder for your follow-up scheduled for today with ' + lead.senderName,
