@@ -260,7 +260,7 @@ const uploadProfileImage = async (req, res, next) => {
                 message: "Data Not found"
             })
         }
-       
+
     } catch (error) {
         res.status(500).json({
             status: false,
@@ -270,7 +270,73 @@ const uploadProfileImage = async (req, res, next) => {
     }
 }
 
+const editProfile = async (req, res, next) => {
+    let data = req.body
 
+    let user = req.user
+    let file = req.file
+    // console.log(user, file);
+    let img_url = ""
+    if (!file) {
+        img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
+    }
+    try {
+        const findUser = await NewUser.findById(user?._id);
+
+        if (findUser) {
+
+            if (file) {
+                const filePath = findUser?.companyLogo?.path;
+                if (filePath) {
+                    fs.unlink(filePath, (err) => {
+                        if (err) {
+                            return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
+                        }
+                    });
+                }
+
+                const updatedData = await NewUser.findByIdAndUpdate(user?._id, {
+                    ...data,
+                    companyLogo: {
+                        fileID: 1,
+                        url: img_url,
+                        path: file?.path
+                    }
+
+                }, { new: true })
+                res.status(200).json({
+                    status: true,
+                    message: "Profile updated success",
+                    data: updatedData
+                });
+
+            }else{
+                const updatedData = await NewUser.findByIdAndUpdate(user?._id, {
+                    ...data
+                }, { new: true })
+                res.status(200).json({
+                    status: true,
+                    message: "Profile updated success",
+                    data: updatedData
+                }); 
+            }
+
+
+        } else {
+            res.status(404).json({
+                status: false,
+                message: "User not found !",
+            });
+        }
+
+
+    } catch (error) {
+        res.status(500).json({
+            error: error,
+            status: false
+        });
+    }
+}
 
 
 
@@ -923,11 +989,13 @@ const editSettings = async (req, res, next) => {
 }
 
 
+
 module.exports = {
     register,
     loginUser,
     assignLead,
     updateUser,
+    editProfile,
     createUserByAdmin,
     getCompanyUser,
     editSettings,
