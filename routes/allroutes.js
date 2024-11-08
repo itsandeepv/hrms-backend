@@ -1,7 +1,7 @@
 const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus, getChartDetails, bulkLeadInset, getJustdialLead, getIndiamartLead } = require("../controllars/leadscontrollar");
 const { createleadsUpdate, getLeadhistory, updateLeadStatus, getLeadStatus, addNewleadStatus, getAllStatus, deleteStatus, updateStatusType, createNotification } = require("../controllars/leadsUpdatescontrollar");
 const { addProduct, getProduct, getProductDetail, deleteProduct, editProduct, searchProduct } = require("../controllars/product.controller");
-const { deleteNotification, getNotification, deleteNotificationAll, saveNotification } = require("../controllars/notificationcontrollar");
+const { deleteNotification, getNotification, deleteNotificationAll, saveNotification, readNotification } = require("../controllars/notificationcontrollar");
 const { ValidateUser } = require("../middlewares/authMiddleware");
 const { createQuotation, getQuotation, deleteQuotation, getQuotationDetails, editQuotation } = require("../controllars/quotation.controller");
 const { createInvoice, getInvoice, getInvoiceDetails, editInvoice, deleteInvoice } = require("../controllars/invoice.controller");
@@ -25,6 +25,7 @@ leadsrouter.delete("/clear-all" ,ValidateUser,deleteNotificationAll)
 leadsrouter.post("/save-notification" ,saveNotification)
 leadsrouter.post("/new-notification" ,createNotification)
 leadsrouter.get("/get-notefication" ,ValidateUser,getNotification)
+leadsrouter.put("/read-notification" ,ValidateUser, readNotification)
 
 // leads updates
 leadsrouter.post("/create-leads-update/:leadId" ,ValidateUser,createleadsUpdate)

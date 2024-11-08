@@ -104,4 +104,32 @@ const getNotification = async (req, res, next) => {
 
 }
 
-module.exports = {saveNotification, deleteNotification, getNotification ,deleteNotificationAll}
+const readNotification = async (req, res) => {
+    try {
+      const { notificationIds } = req.body;
+  
+      if (!notificationIds || !Array.isArray(notificationIds)) {
+        return res.status(400).json({ error: 'Invalid notification IDs' });
+      }
+  
+      // Update the notifications in the database
+      const result = await NewNotification.updateMany(
+        { _id: { $in: notificationIds } },
+        { $set: { isRead: true } }
+      );
+  
+      res.status(200).json({
+        status: true,
+        message: "Notification marked as read successfully."
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: false,
+        message: error.message,
+        error
+      });
+    }
+  };
+
+module.exports = {saveNotification, deleteNotification, getNotification ,deleteNotificationAll, readNotification}
