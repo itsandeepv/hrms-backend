@@ -277,12 +277,11 @@ const editProfile = async (req, res, next) => {
     let file = req.file
     // console.log(user, file);
     let img_url = ""
-    if (!file) {
+    if (file) {
         img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
     }
     try {
         const findUser = await NewUser.findById(user?._id);
-
         if (findUser) {
 
             if (file) {
