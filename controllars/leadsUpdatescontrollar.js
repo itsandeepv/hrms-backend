@@ -15,7 +15,7 @@ const createleadsUpdate = async (req, res, next) => {
         let createdLeadUp = await newLeadupdate.save()
         let checkValid = await NewLeads.findById(leadId)
         if (checkValid) {
-            await NewLeads.findByIdAndUpdate(leadId,
+            const updatedLead = await NewLeads.findByIdAndUpdate(leadId,
                 {
                     nextFollowUpDate: reqData.nextFollowUp,
                     isLeadComplete: createdLeadUp.isDealComplete,
@@ -31,7 +31,7 @@ const createleadsUpdate = async (req, res, next) => {
                 if (nextFollowUpDate === today) {
                     io.emit("newFollowup", {
                         message: `This is a reminder for your follow-up scheduled for today with ${checkValid.senderName}`,
-                        lead: checkValid
+                        lead: updatedLead
                     });
                 }
 
