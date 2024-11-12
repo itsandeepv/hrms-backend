@@ -6,6 +6,7 @@ const { ValidateUser } = require("../middlewares/authMiddleware");
 const { createQuotation, getQuotation, deleteQuotation, getQuotationDetails, editQuotation } = require("../controllars/quotation.controller");
 const { createInvoice, getInvoice, getInvoiceDetails, editInvoice, deleteInvoice } = require("../controllars/invoice.controller");
 const uploadImage = require("../middlewares/uploadImage");
+const { addLabel, getLabel, deleteLabel, editLabel } = require("../controllars/label.controller");
 
 const leadsrouter = require("express").Router()
 
@@ -72,6 +73,14 @@ leadsrouter.delete("/delete-invoice/:id", ValidateUser, deleteInvoice)
 
 leadsrouter.post("/justdial/:id", getJustdialLead)
 leadsrouter.post("/indiamart/:id", getIndiamartLead)
+
+
+// label api's
+leadsrouter.post("/add-label",ValidateUser, addLabel)
+leadsrouter.get("/get-label",ValidateUser, getLabel)
+leadsrouter.delete("/delete-label/:id",ValidateUser, deleteLabel)
+leadsrouter.put("/edit-label/:id",ValidateUser, editLabel)
+
 
 
 module.exports = {leadsrouter};
