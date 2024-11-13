@@ -130,17 +130,22 @@ const editLead = async (req, res, next) => {
 const getAllLead = async (req, res, next) => {
     try {
         // Get page and limit from query parameters
-        let { leadSource, leadAddedBy } = req.query
+        let { leadSource, leadAddedBy  } = req.query
         let page = parseInt(req.query?.page, 10) || 1;
         let limit = parseInt(req.query?.limit, 10) || 10;
         let startfromdate = req.query.startfromdate
         let endfromdate = req.query.endfromdate
         let leadStatus = req.query.leadStatus
+        let labelValue = req.query.labelValue
         const isPositiveLead = req.query.isPositive; // Convert to boolean if needed
         const followUpOf = req.query.followUpOf; // Convert to boolean if needed
 
         const skip = ((page) - 1) * (limit);
         const query = {};
+        if (leadSource) {
+            const leadSourceArray = Array.isArray(leadSource) ? leadSource : [leadSource];
+            query.leadSource = { $in: leadSourceArray };
+        }
         if (leadSource) {
             const leadSourceArray = Array.isArray(leadSource) ? leadSource : [leadSource];
             query.leadSource = { $in: leadSourceArray };
@@ -163,6 +168,11 @@ const getAllLead = async (req, res, next) => {
             // Convert leadStatus to an array if it's a string
             const leadStatusArray = Array.isArray(leadStatus) ? leadStatus : [leadStatus];
             query['leadStatus.statusName'] = { $in: leadStatusArray };
+        }
+        if (labelValue) {
+            // Convert leadStatus to an array if it's a string
+            const labelValueArray = Array.isArray(labelValue) ? labelValue : [labelValue];
+            query.labelValue = { $in: labelValueArray };
         }
 
         let todayDate = new Date()
