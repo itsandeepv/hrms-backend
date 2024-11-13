@@ -52,6 +52,7 @@ const LeadsSchema = new mongoose.Schema({
     nextFollowUpDate:{type:String},
     nextFollowUpTime:{type:String},
     productId:{type:String},
+    labelValue:{type:String},
     leadSource:{type:String},
     statusBar:{type:Array,},
     followupDates:[],

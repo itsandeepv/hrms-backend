@@ -5,12 +5,10 @@ const escapeRegExp = (string) => {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape special regex characters
 };
 const addLabel = async (req, res, next) => {
-    const data = req.body
-    console.log("data " ,data);
-    
+    const data = req.body    
     try {
        
-        const checkExist = await NewLabel.findOne({ name: new RegExp(`^${escapeRegExp(data?.name)}$`, 'i')  ,addedBy:req.user?._id})
+        const checkExist = await NewLabel.findOne({ name: new RegExp(`^${escapeRegExp(data?.name)}$`, 'i')  ,addedBy:req.user?._id ,color:data.color})
         // console.log("checkExist" ,checkExist);
         if (checkExist) {
             res.status(500).json({
@@ -74,10 +72,10 @@ const getLabel = async (req, res, next) => {
         const user = req.user
         
         if (user.role === "employee") {
-            data = await NewLabel.find({ addedBy: user?.companyId })
+            data = await NewLabel.find({ addedBy: user?.companyId }).sort({createdAt:-1})
         } else if (user.role === "admin") {
-            console.log(user);
-            data = await NewLabel.find({ addedBy: user?._id?.toString() })
+            // console.log(user);
+            data = await NewLabel.find({ addedBy: user?._id?.toString() }).sort({createdAt:-1})
         }
         if (data) {
             res.status(200).json({
