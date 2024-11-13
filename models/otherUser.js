@@ -18,7 +18,7 @@ const UserSchema = new mongoose.Schema({
     userType: {
         type: String,
         lowercase: true,
-       default: "sub-user"
+        default: "sub-user"
     },
     leadsAssign:[],
     isActive:{type:Boolean,default:false},
@@ -27,7 +27,7 @@ const UserSchema = new mongoose.Schema({
         lowercase: true,
         default: "employee"
     },
-    permissions:[]
+    moduleAccess:[]
 
 }, { timestamps: true })
 

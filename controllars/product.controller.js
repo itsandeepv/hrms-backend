@@ -143,7 +143,7 @@ const getProductDetail = async (req, res, next) => {
     try {
         const { id } = req.params
         const data = await Product.findById(id)
-        console.log('data', data)
+        // console.log('data', data)
         if (data) {
             res.status(200).json({
                 status: true,
