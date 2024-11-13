@@ -10,12 +10,16 @@ const publicUrl = "https://api.crmhai.com/api"
 
 
 const isToday = (date) => {
-  const today = new Date();
-  date = new Date(date);
-  // console.log(date.getDate() , today.getDate());
-  return date.getDate() == today.getDate() &&
-    date.getMonth() === today.getMonth() &&
-    date.getFullYear() === today.getFullYear();
+  if(date){
+    const today = new Date();
+    date = new Date(date);
+    // console.log(date.getDate() , today.getDate());
+    return date.getDate() == today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
+  }else{
+    return false
+  }
 };
 
 

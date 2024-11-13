@@ -8,25 +8,40 @@ const NewStatus = require("../models/statusModel");
 const createleadsUpdate = async (req, res, next) => {
     let reqData = req.body
     let { leadId } = req.params
+    const io = req.app.get('io');  // Retrieve the io instance from app context
+
     try {
         let newLeadupdate = new LeadsUpdates({ ...reqData, leadId: leadId, userId: req.user?._id })
         let createdLeadUp = await newLeadupdate.save()
         let checkValid = await NewLeads.findById(leadId)
         if (checkValid) {
-            await NewLeads.findByIdAndUpdate(leadId,
+            const updatedLead = await NewLeads.findByIdAndUpdate(leadId,
                 {
-                    nextFollowUpDate:reqData.nextFollowUp,
-                    isLeadComplete:createdLeadUp.isDealComplete,
-                    dealStatus:createdLeadUp.dealStatus,
-                    nextFollowUpTime:createdLeadUp?.nextFollowUpTime,
+                    nextFollowUpDate: reqData.nextFollowUp,
+                    isLeadComplete: createdLeadUp.isDealComplete,
+                    dealStatus: createdLeadUp.dealStatus,
+                    nextFollowUpTime: createdLeadUp?.nextFollowUpTime,
                     $push: { followupDates: createdLeadUp },
                 },
                 { new: true })
+                
+                const today = new Date().toISOString().split('T')[0];
+                const nextFollowUpDate = new Date(reqData.nextFollowUp).toISOString().split('T')[0];
+    
+                if (nextFollowUpDate === today) {
+                    io.emit("newFollowup", {
+                        message: `This is a reminder for your follow-up scheduled for today with ${checkValid.senderName}`,
+                        lead: updatedLead
+                    });
+                }
+
             res.status(200).json({
                 status: true,
                 message: "Lead updates submitted",
                 createdLeadUp
             })
+
+
         } else {
             res.status(500).json({
                 status: false,
@@ -72,10 +87,10 @@ const updateLeadStatus = async (req, res, next) => {
         let checkValid = await NewLeads.findById(reqData.leadId)
 
         if (checkValid) {
-            const statusExists = checkValid.leadStatus.some(status => 
+            const statusExists = checkValid.leadStatus.some(status =>
                 status.statusName == leadStatusupdated.statusName  // Replace statusField with the unique field to identify leadStatus
             );
-            if(!statusExists){
+            if (!statusExists) {
                 await NewLeads.findByIdAndUpdate(reqData.leadId,
                     {
                         isPositiveLead: leadStatusupdated.isPositive,
@@ -187,8 +202,8 @@ const updateStatusType = async (req, res, next) => {
 const getAllStatus = async (req, res, next) => {
     let reqUser = req.user
     // console.log(reqUser );
-    if(["employee" ,"hr" ,"manager"].includes(reqUser?.role)){
-        let data = await NewLeadStatus.find({userId:reqUser?.companyId})
+    if (["employee", "hr", "manager"].includes(reqUser?.role)) {
+        let data = await NewLeadStatus.find({ userId: reqUser?.companyId })
         // if(req.user?.role == "admin"){}
         res.status(200).json({
             status: true,
@@ -196,8 +211,8 @@ const getAllStatus = async (req, res, next) => {
             data
         })
 
-    }else{
-        let data = await NewLeadStatus.find({userId:reqUser?._id})
+    } else {
+        let data = await NewLeadStatus.find({ userId: reqUser?._id })
         // if(req.user?.role == "admin"){}
         res.status(200).json({
             status: true,
@@ -205,7 +220,7 @@ const getAllStatus = async (req, res, next) => {
             data
         })
     }
-    
+
 }
 
 const deleteStatus = async (req, res, next) => {
@@ -226,8 +241,8 @@ const deleteStatus = async (req, res, next) => {
 }
 
 
-const createNotification = async (req,res) => {
-    try {        
+const createNotification = async (req, res) => {
+    try {
         let createNote = await NewNotification(req.body)
         let createdata = await createNote.save()
         res.status(200).json({
@@ -242,11 +257,11 @@ const createNotification = async (req,res) => {
         })
     }
     // console.log(createdata);
-    
+
 }
 
 module.exports = {
     createleadsUpdate, getLeadhistory, getAllStatus,
     updateLeadStatus, getLeadStatus, addNewleadStatus,
-    deleteStatus, updateStatusType,createNotification
+    deleteStatus, updateStatusType, createNotification
 }

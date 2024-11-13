@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 const express = require("express");
 const http = require("http");
@@ -35,6 +34,7 @@ app.use(cors({
 }));
 // app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static("uploads"));
 
 const mongooseUrl = process.env.DATABASE_URL || "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
 // "mongodb://hrmsDBs:98sdis90d@167.71.236.39:27017/hrms?authSource=admin"
@@ -56,7 +56,7 @@ app.get("/test", (req, res) => {
 mongoose.connect(mongooseUrl, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 30000,
+  // serverSelectionTimeoutMS: 30000,
 })
   .then((result) => {
     console.log("Your DataBase is Connected successfully");
@@ -89,41 +89,17 @@ db.once("open", () => {
 io.on("connection", (socket) => {
   console.log("A user connected", socket.id);
   socket.on("userDetails", async (data) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to the start of the day
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1); // Set to the start of the next day
-
     try {
-      const query = {};
-      query.$and = query.$and || [];
-      if (["employee", "hr", "manager"].includes(data?.role)) {
-        // Filter leads by 'leadAssignTo' field, matching with the current user's ID
-        query.$and.push({
-          leadAssignTo: data?._id.toString()
-        });
-      } else {
-        // console.log("data" ,data);
-        query.$and.push({
-          $or: [
-            // { companyId: data?._id },
-            { userId: data?._id },
-            { leadAssignTo: "" }
-          ]
-        });
-      }
       // Fetch leads based on user details and follow-up date
-      const leads = await NewLeads.find(query);
-      
-      const filteredLeads = leads.filter(lead => isToday(lead.nextFollowUpDate));
-      // console.log("filteredLeads" ,filteredLeads);
+      const leads = data?.role === "admin" ? await NewLeads.find({userId: data?._id}) : await NewLeads.find({leadAssignTo: data?._id})
+      const filteredLeads = data?.role === "admin" ? leads.filter(lead => isToday(lead.nextFollowUpDate) && (lead?.leadAssignTo===undefined || lead?.leadAssignTo==="")) : leads.filter(lead => isToday(lead.nextFollowUpDate))
+     
       // Emit notifications for the filtered leads
-      filteredLeads.forEach(lead => {
-        socket.emit('followUpNotification', {
-          message: 'This is a reminder for your follow-up scheduled for today with ' + lead.senderName,
-          lead
-        });
-      });
+      const newData = filteredLeads.map(lead => {return {
+        message: 'This is a reminder for your follow-up scheduled for today with ' + lead.senderName,
+        lead
+      }});
+      socket.emit('followUpNotification', newData);
     } catch (err) {
       console.error('Error fetching leads: ', err);
     }
@@ -141,6 +117,3 @@ server.listen(port, () => {
   console.log("Server connected successfully on host: " + port);
 });
 
-
-
-module.exports = { server }

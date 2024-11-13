@@ -6,6 +6,7 @@ const { publicUrl, formatDate } = require("../utils/createNotefication");
 const { sendVerifyEmail, generateOTP, leadAssignEmail } = require("../utils/sendEmail");
 const NewLeads = require("../models/leadsModel");
 const moment = require("moment");
+const fs = require("fs")
 
 
 const register = async (req, res, next) => {
@@ -200,6 +201,144 @@ const createUserByAdmin = async (req, res, next) => {
         });
     }
 }
+
+
+const uploadProfileImage = async (req, res, next) => {
+    try {
+        const user = req.user
+        let file = req.file
+
+        // console.log(user, file);
+        if (!file) {
+            return res.status(400).json({ status: false, message: 'No file uploaded' });
+        }
+        const img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
+        // if (type == "quotation") {
+        const findUser = await NewUser.findById(user?._id)
+        if (findUser) {
+
+            if (findUser?.companyLogo?.url) {
+                const filePath = findUser?.companyLogo?.path;
+                fs.unlink(filePath, (err) => {
+                    if (err) {
+                        return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
+                    }
+                });
+                let updateData = await NewUser.findByIdAndUpdate(user?._id, {
+                    companyLogo: {
+                        fileID: 1,
+                        url: img_url,
+                        path: file?.path
+                    }
+                }, { new: true })
+                res.status(200).json({
+                    status: true,
+                    message: "image file saved",
+                    data: updateData?.companyLogo
+
+                })
+
+            } else {
+                const updateq = await NewUser.findByIdAndUpdate(user?._id, {
+                    companyLogo: {
+                        fileID: 1,
+                        url: img_url,
+                        path: file?.path
+                    }
+                }, { new: true })
+                res.status(200).json({
+                    status: true,
+                    message: "Image  file saved",
+                    data: updateq?.companyLogo
+                })
+
+            }
+
+        } else {
+            res.status(200).json({
+                status: false,
+                message: "Data Not found"
+            })
+        }
+
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: error.message,
+            error: error,
+        })
+    }
+}
+
+const editProfile = async (req, res, next) => {
+    let data = req.body
+
+    let user = req.user
+    let file = req.file
+    // console.log(user, file);
+    let img_url = ""
+    if (file) {
+        img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
+    }
+    try {
+        const findUser = await NewUser.findById(user?._id);
+        if (findUser) {
+
+            if (file) {
+                const filePath = findUser?.companyLogo?.path;
+                if (filePath) {
+                    fs.unlink(filePath, (err) => {
+                        if (err) {
+                            return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
+                        }
+                    });
+                }
+
+                const updatedData = await NewUser.findByIdAndUpdate(user?._id, {
+                    ...data,
+                    companyLogo: {
+                        fileID: 1,
+                        url: img_url,
+                        path: file?.path
+                    }
+
+                }, { new: true })
+                res.status(200).json({
+                    status: true,
+                    message: "Profile updated success",
+                    data: updatedData
+                });
+
+            }else{
+                const updatedData = await NewUser.findByIdAndUpdate(user?._id, {
+                    ...data
+                }, { new: true })
+                res.status(200).json({
+                    status: true,
+                    message: "Profile updated success",
+                    data: updatedData
+                }); 
+            }
+
+
+        } else {
+            res.status(404).json({
+                status: false,
+                message: "User not found !",
+            });
+        }
+
+
+    } catch (error) {
+        res.status(500).json({
+            error: error,
+            status: false
+        });
+    }
+}
+
+
+
 
 const getCompanyUser = async (req, res) => {
     try {
@@ -487,6 +626,8 @@ const loginUser = async (req, res, next) => {
                                                 email: user.email,
                                                 contactNumber: user.mobileNumber,
                                                 companyLogo: user.companyLogo || "",
+                                                bankDetails: user.bankDetails,
+                                                GSTIN: user.GSTIN
                                             }
                                         },
                                     });
@@ -569,6 +710,8 @@ const loginUser = async (req, res, next) => {
                                             email: companyDetails.email,
                                             contactNumber: companyDetails.mobileNumber,
                                             companyLogo: companyDetails.companyLogo || "",
+                                            bankDetails: companyDetails.bankDetails,
+                                            GSTIN: companyDetails.GSTIN
                                         },
                                     },
                                 });
@@ -697,7 +840,6 @@ const updateUser = async (req, res) => {
 
 // update user settings 
 const getSettings = async (req, res, next) => {
-    let { indiaMartKey, IndiaMartCrmUrl } = req.body
     let user = req.user
     try {
         const findUser = await NewUser.findById(user?._id);
@@ -846,11 +988,13 @@ const editSettings = async (req, res, next) => {
 }
 
 
+
 module.exports = {
     register,
     loginUser,
     assignLead,
     updateUser,
+    editProfile,
     createUserByAdmin,
     getCompanyUser,
     editSettings,
@@ -862,5 +1006,6 @@ module.exports = {
     updateCompanyStatus,
     verifyEmail,
     resendOtp,
-    changePassword
+    changePassword,
+    uploadProfileImage
 };
