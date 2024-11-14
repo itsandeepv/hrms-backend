@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
 const quotationProductSchema = new mongoose.Schema({
     name: {
@@ -17,7 +17,9 @@ const quotationProductSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: false,
+    },
+    image: {
+        type: String,
     }
 })
 
@@ -38,6 +40,11 @@ const QuotationSchema = new mongoose.Schema({
         required: true
     },
     products: [quotationProductSchema],
+    quotationFile: {
+        fileID: "",
+        url: "",
+        path:""
+    },
     discount: {
         type: Number,
         default: 0,
@@ -80,7 +87,9 @@ const QuotationSchema = new mongoose.Schema({
         address: String,
         contactNumber: String,
         referredBy: String,
-        GSTIN: String
+        companyLogo:Object,
+        GSTIN: String,
+        bankDetails: Object
     },
     clientDetails: {
         name: {type: String},
@@ -89,6 +98,12 @@ const QuotationSchema = new mongoose.Schema({
         companyName: String,
         contactNumber: String,
         GSTIN: String
+    },
+    paymentTerms: {
+        type: String,
+    },
+    quotationId: {
+        type: String
     }
 }, {timestamps: true})
 

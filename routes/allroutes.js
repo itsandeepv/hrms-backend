@@ -1,10 +1,12 @@
 const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus, getChartDetails, bulkLeadInset, getJustdialLead, getIndiamartLead } = require("../controllars/leadscontrollar");
 const { createleadsUpdate, getLeadhistory, updateLeadStatus, getLeadStatus, addNewleadStatus, getAllStatus, deleteStatus, updateStatusType, createNotification } = require("../controllars/leadsUpdatescontrollar");
 const { addProduct, getProduct, getProductDetail, deleteProduct, editProduct, searchProduct } = require("../controllars/product.controller");
-const { deleteNotification, getNotification, deleteNotificationAll, saveNotification } = require("../controllars/notificationcontrollar");
+const { deleteNotification, getNotification, deleteNotificationAll, saveNotification, readNotification } = require("../controllars/notificationcontrollar");
 const { ValidateUser } = require("../middlewares/authMiddleware");
 const { createQuotation, getQuotation, deleteQuotation, getQuotationDetails, editQuotation } = require("../controllars/quotation.controller");
 const { createInvoice, getInvoice, getInvoiceDetails, editInvoice, deleteInvoice } = require("../controllars/invoice.controller");
+const uploadImage = require("../middlewares/uploadImage");
+const { addLabel, getLabel, deleteLabel, editLabel } = require("../controllars/label.controller");
 
 const leadsrouter = require("express").Router()
 
@@ -24,6 +26,7 @@ leadsrouter.delete("/clear-all" ,ValidateUser,deleteNotificationAll)
 leadsrouter.post("/save-notification" ,saveNotification)
 leadsrouter.post("/new-notification" ,createNotification)
 leadsrouter.get("/get-notefication" ,ValidateUser,getNotification)
+leadsrouter.put("/read-notification" ,ValidateUser, readNotification)
 
 // leads updates
 leadsrouter.post("/create-leads-update/:leadId" ,ValidateUser,createleadsUpdate)
@@ -48,11 +51,11 @@ leadsrouter.get("/home-leads/:status" ,ValidateUser,getLeadsByStatus)
 leadsrouter.get("/chart" ,ValidateUser,getChartDetails)
 
 //product 
-leadsrouter.post("/add-product", ValidateUser, addProduct)
+leadsrouter.post("/add-product", ValidateUser,uploadImage.single("image"), addProduct)
 leadsrouter.get("/get-product", ValidateUser, getProduct)
 leadsrouter.get("/get-product-detail/:id", ValidateUser, getProductDetail)
 leadsrouter.get("/delete-product/:id", ValidateUser, deleteProduct)
-leadsrouter.post("/edit-product/:id", ValidateUser, editProduct)
+leadsrouter.post("/edit-product/:id", ValidateUser,uploadImage.single("image"), editProduct)
 leadsrouter.get("/search-product", ValidateUser, searchProduct)
 
 leadsrouter.post("/create-quotation", ValidateUser, createQuotation)
@@ -67,7 +70,17 @@ leadsrouter.get("/get-invoice-details/:id", ValidateUser, getInvoiceDetails)
 leadsrouter.put("/edit-invoice/:id", ValidateUser, editInvoice)
 leadsrouter.delete("/delete-invoice/:id", ValidateUser, deleteInvoice)
 
+
 leadsrouter.post("/justdial/:id", getJustdialLead)
 leadsrouter.post("/indiamart/:id", getIndiamartLead)
+
+
+// label api's
+leadsrouter.post("/add-label",ValidateUser, addLabel)
+leadsrouter.get("/get-label",ValidateUser, getLabel)
+leadsrouter.delete("/delete-label/:id",ValidateUser, deleteLabel)
+leadsrouter.put("/edit-label/:id",ValidateUser, editLabel)
+
+
 
 module.exports = {leadsrouter};

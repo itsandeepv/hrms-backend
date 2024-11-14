@@ -6,7 +6,10 @@ const UserSchema = new mongoose.Schema({
     parent_id: {type: String},
     indiaMartKey: { type: String },
     tradeIndaiKey: { type: String },
-    email: { type: String },
+    email: { 
+        type: String,
+        set: (email) => email.trim().toLowerCase(),
+    },
     password: { type: String },
     mobileNumber: { type: Number },
     companyId: { type: String },

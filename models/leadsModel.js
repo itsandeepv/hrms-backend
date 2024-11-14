@@ -10,7 +10,7 @@ const LeadsSchema = new mongoose.Schema({
     indiaMartKey:{type:String},
     tradeIndaiKey:{type:String},
     leadAddedBy:{type:String,trim:true},
-    leadAssignTo:{type:String,trim:true},
+    leadAssignTo:{type:String, default: ""},
     leadAssignAt:{
         type:String,
         trim:true,
@@ -52,6 +52,7 @@ const LeadsSchema = new mongoose.Schema({
     nextFollowUpDate:{type:String},
     nextFollowUpTime:{type:String},
     productId:{type:String},
+    labelValue:{type:String},
     leadSource:{type:String},
     statusBar:{type:Array,},
     followupDates:[],
@@ -59,7 +60,15 @@ const LeadsSchema = new mongoose.Schema({
     createdAt:{type:Date ,default:Date.now()},
     leadStatus:[],
     dealStatus:{type:String},
-    leadsUpdates:{type:Schema.Types.ObjectId ,ref:"LeadsUpdates"}
+    leadsUpdates:{type:Schema.Types.ObjectId ,ref:"LeadsUpdates"},
+    quotationIds: {
+        type: Array,
+        default: []
+    },
+    invoiceIds: {
+        type: Array,
+        default: []
+    }
 
 }, { timestamps: true })
 

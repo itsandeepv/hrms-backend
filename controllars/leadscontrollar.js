@@ -1,16 +1,22 @@
 const moment = require("moment");
+const mongoose = require('mongoose');
 const NewLeads = require("../models/leadsModel");
 const { isToday, isBeforeToday } = require("../utils/createNotefication");
 const OtherUser = require("../models/otherUser");
 const { publicUrl } = require("../utils/createNotefication");
 const NewUser = require("../models/newUser");
+const ObjectId = mongoose.Types.ObjectId;
 
 
 const createNewLead = async (req, res, next) => {
     let reqData = req.body
 
     try {
-        const checkLeadisExist = await NewLeads.findOne({senderMobileNumber:reqData.senderMobileNumber})
+        const obj = {
+            senderMobileNumber:reqData.senderMobileNumber,
+            companyId: req.user.role==="admin" ? req.user._id.toString() : req.user.companyId
+        }
+        const checkLeadisExist = await NewLeads.findOne(obj)
         if(checkLeadisExist){
             res.status(500).json({
                 status: false,
@@ -130,17 +136,22 @@ const editLead = async (req, res, next) => {
 const getAllLead = async (req, res, next) => {
     try {
         // Get page and limit from query parameters
-        let { leadSource, leadAddedBy } = req.query
+        let { leadSource, leadAddedBy  } = req.query
         let page = parseInt(req.query?.page, 10) || 1;
         let limit = parseInt(req.query?.limit, 10) || 10;
         let startfromdate = req.query.startfromdate
         let endfromdate = req.query.endfromdate
         let leadStatus = req.query.leadStatus
+        let labelValue = req.query.labelValue
         const isPositiveLead = req.query.isPositive; // Convert to boolean if needed
         const followUpOf = req.query.followUpOf; // Convert to boolean if needed
 
         const skip = ((page) - 1) * (limit);
         const query = {};
+        if (leadSource) {
+            const leadSourceArray = Array.isArray(leadSource) ? leadSource : [leadSource];
+            query.leadSource = { $in: leadSourceArray };
+        }
         if (leadSource) {
             const leadSourceArray = Array.isArray(leadSource) ? leadSource : [leadSource];
             query.leadSource = { $in: leadSourceArray };
@@ -163,6 +174,11 @@ const getAllLead = async (req, res, next) => {
             // Convert leadStatus to an array if it's a string
             const leadStatusArray = Array.isArray(leadStatus) ? leadStatus : [leadStatus];
             query['leadStatus.statusName'] = { $in: leadStatusArray };
+        }
+        if (labelValue) {
+            // Convert leadStatus to an array if it's a string
+            const labelValueArray = Array.isArray(labelValue) ? labelValue : [labelValue];
+            query.labelValue = { $in: labelValueArray };
         }
 
         let todayDate = new Date()
@@ -778,9 +794,9 @@ const getChartDetails = async (req, res) => {
 const getJustdialLead = async(req, res) => {
     const leadData = req.body;
     
-    console.log("Lead received:", leadData);
-    const user = await NewUser.findById(req.params.id)
-    
+    // console.log("Lead received:", leadData);
+    const user = await NewUser.findOne({indiaMartKey: req.params.id})
+    // console.log("user", user)
     if(user){
         const data = await NewLeads.create({
             "userId": user?._id,
@@ -794,8 +810,11 @@ const getJustdialLead = async(req, res) => {
             "senderCompany": leadData?.company,
             "leadSource": "justdial",
             "queryTime": `${leadData?.date} ${leadData?.time}`,
-            "queryProductName": leadData?.category
+            "queryProductName": leadData?.category,
+            "queryMessage": leadData?.category,
         })
+
+        // console.log("data", data)
 
         res.send('RECEIVED');
     }else{
@@ -807,7 +826,7 @@ const getJustdialLead = async(req, res) => {
 const getIndiamartLead = async(req, res) => {
     const leadData = req.body;
     
-    console.log("Lead received:", leadData);
+    // console.log("Lead received:", leadData);
     const user = await NewUser.findById(req.params.id)
     
     if(user){
@@ -819,10 +838,10 @@ const getIndiamartLead = async(req, res) => {
             // "senderEmail": leadData?.email,
             // "senderMobileNumber": leadData?.mobile,
             // "senderCity": leadData?.city,
-            // "senderAddress": `${leadData?.area} ${leadData?.city}`,
+            // "senderAddress": ${leadData?.area} ${leadData?.city},
             // "senderCompany": leadData?.company,
-            // "leadSource": "justdial",
-            // "queryTime": `${leadData?.date} ${leadData?.time}`,
+            "leadSource": "indiamart",
+            // "queryTime": ${leadData?.date} ${leadData?.time},
             // "queryProductName": leadData?.category
         })
 
@@ -834,7 +853,7 @@ const getIndiamartLead = async(req, res) => {
 }
 
 module.exports = {
-    createNewLead, getAllLead,
+    createNewLead, getAllLead,getIndiamartLead,
     getSingleLead,
     deleteLead,
     dashboardleadCount,
