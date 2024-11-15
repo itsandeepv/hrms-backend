@@ -5,6 +5,7 @@ const { deleteNotification, getNotification, deleteNotificationAll, saveNotifica
 const { ValidateUser } = require("../middlewares/authMiddleware");
 const { createQuotation, getQuotation, deleteQuotation, getQuotationDetails, editQuotation } = require("../controllars/quotation.controller");
 const { createInvoice, getInvoice, getInvoiceDetails, editInvoice, deleteInvoice } = require("../controllars/invoice.controller");
+const {addRole, addModule, getModule, editModule, deleteModule, editModuleAccessibility} = require("../controllars/moduleAccess.controller")
 const uploadImage = require("../middlewares/uploadImage");
 const { addLabel, getLabel, deleteLabel, editLabel } = require("../controllars/label.controller");
 
@@ -73,6 +74,16 @@ leadsrouter.delete("/delete-invoice/:id", ValidateUser, deleteInvoice)
 
 leadsrouter.post("/justdial/:id", getJustdialLead)
 leadsrouter.post("/indiamart/:id", getIndiamartLead)
+
+//Role
+leadsrouter.post("/add-role", ValidateUser, addRole)
+
+// ModuleAccess
+leadsrouter.post("/add-module", ValidateUser, addModule)
+leadsrouter.get("/get-module", ValidateUser, getModule)
+leadsrouter.delete("/delete-module/:id", ValidateUser, deleteModule)
+leadsrouter.put("/edit-module/:id", ValidateUser, editModule)
+leadsrouter.put("/edit-module-accessibility/:id", ValidateUser, editModuleAccessibility)
 
 
 // label api's

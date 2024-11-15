@@ -37,7 +37,7 @@ const NewUserSchema = new mongoose.Schema({
         default: "user",
         enum: ["company", "admin", "superadmin", "employee", "hr", "manager"]
     },
-    moduleAccuss: [],
+    moduleAccess: [],
     GSTIN: {
         type: String
     },
