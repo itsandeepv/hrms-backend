@@ -89,10 +89,13 @@ const QuotationSchema = new mongoose.Schema({
         referredBy: String,
         companyLogo:Object,
         GSTIN: String,
-        bankDetails: Object
+        bankDetails: Object,
+        alternateEmail: String,
+        alternateNumber: String,
+        website: String,
     },
     clientDetails: {
-        name: {type: String},
+        name: String,
         email: String,
         address: String,
         companyName: String,

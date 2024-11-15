@@ -627,9 +627,12 @@ const loginUser = async (req, res, next) => {
                                                 address: user.address || "",
                                                 email: user.email,
                                                 contactNumber: user.mobileNumber,
-                                                companyLogo: user.companyLogo || "",
+                                                companyLogo: user.companyLogo || {},
                                                 bankDetails: user.bankDetails,
-                                                GSTIN: user.GSTIN
+                                                GSTIN: user.GSTIN,
+                                                alternateEmail: user.alternateEmail || "",
+                                                alternateNumber: user.alternateNumber || "",
+                                                website: user.website || "",
                                             }
                                         },
                                     });
@@ -713,7 +716,10 @@ const loginUser = async (req, res, next) => {
                                             contactNumber: companyDetails.mobileNumber,
                                             companyLogo: companyDetails.companyLogo || "",
                                             bankDetails: companyDetails.bankDetails,
-                                            GSTIN: companyDetails.GSTIN
+                                            GSTIN: companyDetails.GSTIN,
+                                            alternateEmail: companyDetails.alternateEmail || "",
+                                            alternateNumber: companyDetails.alternateNumber || "",
+                                            website: companyDetails.website || "",
                                         },
                                     },
                                 });
