@@ -23,6 +23,12 @@ const UserSchema = new mongoose.Schema({
         lowercase: true,
         default: "sub-user"
     },
+    alternateEmail: { 
+        type: String,
+        set: (email) => email.trim().toLowerCase(),
+    },
+    alternateNumber: { type: Number },
+    website: { type: String },
     leadsAssign:[],
     isActive:{type:Boolean,default:false},
     role: {

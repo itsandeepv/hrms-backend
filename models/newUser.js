@@ -9,6 +9,12 @@ const NewUserSchema = new mongoose.Schema({
         type: String,
         set: (email) => email.trim().toLowerCase(),
     },
+    alternateEmail: { 
+        type: String,
+        set: (email) => email.trim().toLowerCase(),
+    },
+    alternateNumber: { type: Number },
+    website: { type: String },
     password: { type: String },
     mobileNumber: { type: Number },
     profilePic: { type: String },
