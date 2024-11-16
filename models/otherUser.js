@@ -13,7 +13,11 @@ const UserSchema = new mongoose.Schema({
     password: { type: String },
     mobileNumber: { type: Number },
     companyId: { type: String },
-    profilePic: { type: String },
+    profilePic: {
+        fileID: "",
+        url: "",
+        path: ""
+    },
     address: { type: String },
     companyName:{type: String},
     companyLogo:{type: String},

@@ -6,14 +6,13 @@ const OtherUser = require("../models/otherUser");
 //   return res.send("api hitted")
 // }
 const addRole = async (req, res) => {
-  console.log("rolee")
   try {
     // Create a new role document in the Role collection
     const role = await Role.create({
       label: req.body.label,
       level: req.body.level,
     });
-    console.log("role created", role)
+    // console.log("role created", role)
     // Check if role was successfully created
     if (role) {
           await ModuleAccess.updateMany(
