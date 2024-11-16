@@ -210,58 +210,114 @@ const uploadProfileImage = async (req, res, next) => {
         const user = req.user
         let file = req.file
 
-        // console.log(user, file);
-        if (!file) {
-            return res.status(400).json({ status: false, message: 'No file uploaded' });
-        }
-        const img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
-        // if (type == "quotation") {
-        const findUser = await NewUser.findById(user?._id)
-        if (findUser) {
-
-            if (findUser?.companyLogo?.url) {
-                const filePath = findUser?.companyLogo?.path;
-                fs.unlink(filePath, (err) => {
-                    if (err) {
-                        return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
-                    }
-                });
-                let updateData = await NewUser.findByIdAndUpdate(user?._id, {
-                    companyLogo: {
-                        fileID: 1,
-                        url: img_url,
-                        path: file?.path
-                    }
-                }, { new: true })
-                res.status(200).json({
-                    status: true,
-                    message: "image file saved",
-                    data: updateData?.companyLogo
-
-                })
-
+        const allowUser = ["company", "admin", "superadmin"]
+        if (allowUser.includes(req.user?.role)) {
+            if (!file) {
+                return res.status(400).json({ status: false, message: 'No file uploaded' });
+            }
+            const img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
+            // if (type == "quotation") {
+            const findUser = await NewUser.findById(user?._id)
+            if (findUser) {
+    
+                if (findUser?.companyLogo?.url) {
+                    const filePath = findUser?.companyLogo?.path;
+                    fs.unlink(filePath, (err) => {
+                        if (err) {
+                            return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
+                        }
+                    });
+                    let updateData = await NewUser.findByIdAndUpdate(user?._id, {
+                        companyLogo: {
+                            fileID: 1,
+                            url: img_url,
+                            path: file?.path
+                        }
+                    }, { new: true })
+                    res.status(200).json({
+                        status: true,
+                        message: "image file saved",
+                        data: updateData?.companyLogo
+    
+                    })
+    
+                } else {
+                    const updateq = await NewUser.findByIdAndUpdate(user?._id, {
+                        companyLogo: {
+                            fileID: 1,
+                            url: img_url,
+                            path: file?.path
+                        }
+                    }, { new: true })
+                    res.status(200).json({
+                        status: true,
+                        message: "Image  file saved",
+                        data: updateq?.companyLogo
+                    })
+    
+                }
+    
             } else {
-                const updateq = await NewUser.findByIdAndUpdate(user?._id, {
-                    companyLogo: {
-                        fileID: 1,
-                        url: img_url,
-                        path: file?.path
-                    }
-                }, { new: true })
                 res.status(200).json({
-                    status: true,
-                    message: "Image  file saved",
-                    data: updateq?.companyLogo
+                    status: false,
+                    message: "Data Not found"
                 })
-
             }
 
-        } else {
-            res.status(200).json({
-                status: false,
-                message: "Data Not found"
-            })
+        }else{
+            if (!file) {
+                return res.status(400).json({ status: false, message: 'No file uploaded' });
+            }
+            const img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
+            // if (type == "quotation") {
+            const findUser = await OtherUser.findById(user?._id)
+            if (findUser) {
+    
+                if (findUser?.profilePic?.url) {
+                    const filePath = findUser?.profilePic?.path;
+                    fs.unlink(filePath, (err) => {
+                        if (err) {
+                            return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
+                        }
+                    });
+                    let updateData = await OtherUser.findByIdAndUpdate(user?._id, {
+                        profilePic: {
+                            fileID: 1,
+                            url: img_url,
+                            path: file?.path
+                        }
+                    }, { new: true })
+                    res.status(200).json({
+                        status: true,
+                        message: "image file saved",
+                        data: updateData?.profilePic
+    
+                    })
+    
+                } else {
+                    const updateq = await OtherUser.findByIdAndUpdate(user?._id, {
+                        profilePic: {
+                            fileID: 1,
+                            url: img_url,
+                            path: file?.path
+                        }
+                    }, { new: true })
+                    res.status(200).json({
+                        status: true,
+                        message: "Image  file saved",
+                        data: updateq?.profilePic
+                    })
+    
+                }
+    
+            } else {
+                res.status(200).json({
+                    status: false,
+                    message: "Data Not found"
+                })
+            } 
         }
+        
 
     } catch (error) {
         res.status(500).json({
@@ -278,41 +334,63 @@ const editProfile = async (req, res, next) => {
     let user = req.user
     let file = req.file
     // console.log(user, file);
-    let img_url = ""
-    if (file) {
-        img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
-    }
+    const allowUser = ["company", "admin", "superadmin"]
+    
     try {
-        const findUser = await NewUser.findById(user?._id);
-        if (findUser) {
-
+        if (allowUser.includes(req.user?.role)) {
+            let img_url = ""
             if (file) {
-                const filePath = findUser?.companyLogo?.path;
-                if (filePath) {
-                    fs.unlink(filePath, (err) => {
-                        if (err) {
-                            return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
-                        }
-                    });
-                }
-
-                const updatedData = await NewUser.findByIdAndUpdate(user?._id, {
-                    ...data,
-                    companyLogo: {
-                        fileID: 1,
-                        url: img_url,
-                        path: file?.path
+                img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
+            }
+            const findUser = await NewUser.findById(user?._id);
+            if (findUser) {
+                if (file) {
+                    const filePath = findUser?.companyLogo?.path;
+                    if (filePath) {
+                        fs.unlink(filePath, (err) => {
+                            if (err) {
+                                return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
+                            }
+                        });
                     }
-
-                }, { new: true })
-                res.status(200).json({
-                    status: true,
-                    message: "Profile updated success",
-                    data: updatedData
+                    const updatedData = await NewUser.findByIdAndUpdate(user?._id, {
+                        ...data,
+                        companyLogo: {
+                            fileID: 1,
+                            url: img_url,
+                            path: file?.path
+                        }
+    
+                    }, { new: true })
+                    res.status(200).json({
+                        status: true,
+                        message: "Profile updated success",
+                        data: updatedData
+                    });
+    
+                }else{
+                    const updatedData = await NewUser.findByIdAndUpdate(user?._id, {
+                        ...data
+                    }, { new: true })
+                    res.status(200).json({
+                        status: true,
+                        message: "Profile updated success",
+                        data: updatedData
+                    }); 
+                }
+    
+    
+            } else {
+                res.status(404).json({
+                    status: false,
+                    message: "User not found !",
                 });
-
-            }else{
-                const updatedData = await NewUser.findByIdAndUpdate(user?._id, {
+            }
+    
+        }else{
+            const findUser = await OtherUser.findById(user?._id);
+            if (findUser) {
+                const updatedData = await OtherUser.findByIdAndUpdate(user?._id, {
                     ...data
                 }, { new: true })
                 res.status(200).json({
@@ -320,14 +398,14 @@ const editProfile = async (req, res, next) => {
                     message: "Profile updated success",
                     data: updatedData
                 }); 
+    
+    
+            } else {
+                res.status(404).json({
+                    status: false,
+                    message: "User not found !",
+                });
             }
-
-
-        } else {
-            res.status(404).json({
-                status: false,
-                message: "User not found !",
-            });
         }
 
 

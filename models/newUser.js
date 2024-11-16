@@ -17,7 +17,11 @@ const NewUserSchema = new mongoose.Schema({
     website: { type: String },
     password: { type: String },
     mobileNumber: { type: Number },
-    profilePic: { type: String },
+    profilePic: {
+        fileID: "",
+        url: "",
+        path: ""
+    },
     address: { type: String },
     IndiaMartCrmUrl: { type: String, default: "https://crmhai.com/api/indiamart" },
     otherUser: [],
