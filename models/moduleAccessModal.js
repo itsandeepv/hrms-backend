@@ -19,6 +19,10 @@ const moduleAccessSchema = new mongoose.Schema({
         unique: true,
         required: true,
     },
+    modulePath: {
+        type: String,
+        unique: true,
+    },
     isEnabled: {
         type: Boolean,
         default: false,
