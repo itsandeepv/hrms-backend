@@ -36,8 +36,14 @@ const UserSchema = new mongoose.Schema({
     },
     moduleAccess:[],
     leadFields: [{
-        label: {type: String},
-        fieldType: {type: String},
+        label: {
+            type: String,
+            set: (email) => email.trim(),
+        },
+        fieldType: {
+            type: String,
+            set: (email) => email.trim().toLowerCase(),
+        },
         defaultValue: { type: [mongoose.Schema.Types.Mixed], default: [""] },
         // value: { type: [String, Boolean], default: "" }
     }]

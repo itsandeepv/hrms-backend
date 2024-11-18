@@ -931,14 +931,49 @@ const getSettings = async (req, res, next) => {
         const findUser = await NewUser.findById(user?._id);
         const userdata = await OtherUser.findById(user?._id);
         // console.log(findUser);
-        if (findUser || userdata) {
+        if (findUser) {
             res.status(200).json({
                 status: true,
                 message: "User Details !",
-                data: findUser || user
+                data: {
+                    ...findUser, 
+                    companyDetails: {
+                        name: findUser.companyName,
+                        address: findUser.address || "",
+                        email: findUser.email,
+                        contactNumber: findUser.mobileNumber,
+                        companyLogo: findUser.companyLogo || {},
+                        bankDetails: findUser.bankDetails,
+                        GSTIN: findUser.GSTIN,
+                        alternateEmail: findUser.alternateEmail || "",
+                        alternateNumber: findUser.alternateNumber || "",
+                        website: findUser.website || ""
+                    }
+                }
             });
 
-        } else {
+        }else if(userdata){ 
+            const companyData = await NewUser.findById(userdata?.companyId);
+            res.status(200).json({
+                status: true,
+                message: "User Details !",
+                data: {
+                    ...userdata, 
+                    companyDetails: {
+                        name: companyData.companyName,
+                        address: companyData.address || "",
+                        email: companyData.email,
+                        contactNumber: companyData.mobileNumber,
+                        companyLogo: companyData.companyLogo || {},
+                        bankDetails: companyData.bankDetails,
+                        GSTIN: companyData.GSTIN,
+                        alternateEmail: companyData.alternateEmail || "",
+                        alternateNumber: companyData.alternateNumber || "",
+                        website: companyData.website || "",
+                    }
+                }
+            });
+        }else {
             res.status(404).json({
                 status: false,
                 message: "User not found !",
@@ -1083,7 +1118,7 @@ const addLeadFields = async(req, res) => {
             res.status(200).json({
                 status: true,
                 message: "New field added successfully.",
-                data: user.leadFields
+                data: user.leadFields[user.leadFields.length - 1]
             })
         }else{
             res.status(404).json({
@@ -1151,6 +1186,44 @@ const deleteLeadFields = async(req, res) => {
     }
 }
 
+const editLeadFields = async(req, res) => {
+    try {
+        const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        if(user){
+            const leadField = user.leadFields.find((item) => item?._id.toString() === req.params.id)
+
+            if (leadField) {
+                // Update fields in leadField with data from req.body
+                Object.assign(leadField, req.body);
+
+                await user.save();
+
+                res.status(200).json({
+                    status: true,
+                    message: "Lead field updated successfully.",
+                    data: leadField
+                });
+            } else {
+                res.status(404).json({
+                    status: false,
+                    message: "Lead field not found."
+                });
+            }
+        }else{
+            res.status(404).json({
+                status: false,
+                message: "User not found, please try again.",
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: error.message,
+            error: error,
+          })
+    }
+}
+
 
 
 module.exports = {
@@ -1174,5 +1247,6 @@ module.exports = {
     uploadProfileImage,
     addLeadFields,
     getLeadFields,
-    deleteLeadFields
+    deleteLeadFields,
+    editLeadFields
 };
