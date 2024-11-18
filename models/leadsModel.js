@@ -70,8 +70,14 @@ const LeadsSchema = new mongoose.Schema({
         default: []
     },
     leadFields: [{
-        label: {type: String},
-        fieldType: {type: String},
+        label: {
+            type: String,
+            set: (text) => text.trim(),
+        },
+        fieldType: {
+            type: String,
+            set: (text) => text.trim().toLowerCase(),
+        },
         defaultValue: { type: [mongoose.Schema.Types.Mixed], default: [""] },
         value: { type: mongoose.Schema.Types.Mixed, default: "" }
     }]
