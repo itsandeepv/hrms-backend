@@ -928,28 +928,31 @@ const updateUser = async (req, res) => {
 const getSettings = async (req, res, next) => {
     let user = req.user
     try {
-        const findUser = await NewUser.findById(user?._id);
-        const userdata = await OtherUser.findById(user?._id);
-        // console.log(findUser);
+        const findUser = await NewUser.findById(user?._id).lean();
+        const userdata = await OtherUser.findById(user?._id).lean();
         if (findUser) {
+            
+            // console.log(findUser);
+            const formatedData = {
+                ...findUser, 
+                companyDetails: {
+                    name: findUser.companyName,
+                    address: findUser.address || "",
+                    email: findUser.email,
+                    contactNumber: findUser.mobileNumber,
+                    companyLogo: findUser.companyLogo || {},
+                    bankDetails: findUser.bankDetails,
+                    GSTIN: findUser.GSTIN,
+                    alternateEmail: findUser.alternateEmail || "",
+                    alternateNumber: findUser.alternateNumber || "",
+                    website: findUser.website || ""
+                }
+            }
+
             res.status(200).json({
                 status: true,
                 message: "User Details !",
-                data: {
-                    ...findUser, 
-                    companyDetails: {
-                        name: findUser.companyName,
-                        address: findUser.address || "",
-                        email: findUser.email,
-                        contactNumber: findUser.mobileNumber,
-                        companyLogo: findUser.companyLogo || {},
-                        bankDetails: findUser.bankDetails,
-                        GSTIN: findUser.GSTIN,
-                        alternateEmail: findUser.alternateEmail || "",
-                        alternateNumber: findUser.alternateNumber || "",
-                        website: findUser.website || ""
-                    }
-                }
+                data: formatedData
             });
 
         }else if(userdata){ 
