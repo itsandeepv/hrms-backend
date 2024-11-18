@@ -1083,7 +1083,7 @@ const addLeadFields = async(req, res) => {
             res.status(200).json({
                 status: true,
                 message: "New field added successfully.",
-                data: user.leadFields
+                data: user.leadFields[user.leadFields.length - 1]
             })
         }else{
             res.status(404).json({
