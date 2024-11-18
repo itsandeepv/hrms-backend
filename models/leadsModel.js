@@ -68,8 +68,13 @@ const LeadsSchema = new mongoose.Schema({
     invoiceIds: {
         type: Array,
         default: []
-    }
-
+    },
+    leadFields: [{
+        label: {type: String},
+        fieldType: {type: String},
+        defaultValue: { type: [mongoose.Schema.Types.Mixed], default: [""] },
+        value: { type: mongoose.Schema.Types.Mixed, default: "" }
+    }]
 }, { timestamps: true })
 
 

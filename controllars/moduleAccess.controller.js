@@ -140,7 +140,7 @@ const getModule = async (req, res, next) => {
         } else {
             res.status(404).json({
                 status: false,
-                message: "User modules found."
+                message: "User modules not found."
             });
         }
     }

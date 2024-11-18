@@ -65,8 +65,13 @@ const NewUserSchema = new mongoose.Schema({
     totalInvoice: {
         type: Number,
         default: 0
-    }
-
+    },
+    leadFields: [{
+        label: {type: String},
+        fieldType: {type: String},
+        defaultValue: { type: [mongoose.Schema.Types.Mixed], default: [""] },
+        // value: { type: [String, Boolean], default: "" }
+    }]
 }, { timestamps: true })
 
 

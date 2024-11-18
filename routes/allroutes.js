@@ -8,6 +8,7 @@ const { createInvoice, getInvoice, getInvoiceDetails, editInvoice, deleteInvoice
 const {addRole, addModule, getModule, editModule, deleteModule, editModuleAccessibility} = require("../controllars/moduleAccess.controller")
 const uploadImage = require("../middlewares/uploadImage");
 const { addLabel, getLabel, deleteLabel, editLabel } = require("../controllars/label.controller");
+const { addLeadFields, getLeadFields, deleteLeadFields } = require("../controllars/authcontrollar");
 
 const leadsrouter = require("express").Router()
 
@@ -91,6 +92,9 @@ leadsrouter.post("/add-label",ValidateUser, addLabel)
 leadsrouter.get("/get-label",ValidateUser, getLabel)
 leadsrouter.delete("/delete-label/:id",ValidateUser, deleteLabel)
 leadsrouter.put("/edit-label/:id",ValidateUser, editLabel)
+leadsrouter.post("/add-lead-field",ValidateUser, addLeadFields)
+leadsrouter.get("/get-lead-field",ValidateUser, getLeadFields)
+leadsrouter.delete("/delete-lead-field/:id",ValidateUser, deleteLeadFields)
 
 
 

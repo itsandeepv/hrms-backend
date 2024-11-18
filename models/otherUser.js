@@ -27,12 +27,6 @@ const UserSchema = new mongoose.Schema({
         lowercase: true,
         default: "sub-user"
     },
-    // alternateEmail: { 
-    //     type: String,
-    //     set: (email) => email.trim().toLowerCase(),
-    // },
-    // alternateNumber: { type: Number },
-    // website: { type: String },
     leadsAssign:[],
     isActive:{type:Boolean,default:false},
     role: {
@@ -40,8 +34,13 @@ const UserSchema = new mongoose.Schema({
         lowercase: true,
         default: "employee"
     },
-    moduleAccess:[]
-
+    moduleAccess:[],
+    leadFields: [{
+        label: {type: String},
+        fieldType: {type: String},
+        defaultValue: { type: [mongoose.Schema.Types.Mixed], default: [""] },
+        // value: { type: [String, Boolean], default: "" }
+    }]
 }, { timestamps: true })
 
 

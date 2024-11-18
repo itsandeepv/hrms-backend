@@ -1073,6 +1073,84 @@ const editSettings = async (req, res, next) => {
     }
 }
 
+const addLeadFields = async(req, res) => {
+    try {
+        const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        if(user){
+            user.leadFields.push(req.body)
+            await user.save()
+
+            res.status(200).json({
+                status: true,
+                message: "New field added successfully.",
+                data: user.leadFields
+            })
+        }else{
+            res.status(404).json({
+                status: false,
+                message: "User not found, please try again.",
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: error.message,
+            error: error,
+          })
+    }
+}
+
+const getLeadFields = async(req, res) => {
+    try {
+        const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        if(user){
+            res.status(200).json({
+                status: true,
+                message: "Lead fields fetched successfully.",
+                data: user.leadFields
+            })
+        }else{
+            res.status(404).json({
+                status: false,
+                message: "User not found, please try again.",
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: error.message,
+            error: error,
+          })
+    }
+}
+
+const deleteLeadFields = async(req, res) => {
+    try {
+        const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        if(user){
+            user.leadFields = user.leadFields.filter((item) => item?._id.toString() !== req.params.id)
+            await user.save()
+
+            res.status(200).json({
+                status: true,
+                message: "Lead fields deleted successfully.",
+                data: user.leadFields
+            })
+        }else{
+            res.status(404).json({
+                status: false,
+                message: "User not found, please try again.",
+            })
+        }
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: error.message,
+            error: error,
+          })
+    }
+}
+
 
 
 module.exports = {
@@ -1093,5 +1171,8 @@ module.exports = {
     verifyEmail,
     resendOtp,
     changePassword,
-    uploadProfileImage
+    uploadProfileImage,
+    addLeadFields,
+    getLeadFields,
+    deleteLeadFields
 };
