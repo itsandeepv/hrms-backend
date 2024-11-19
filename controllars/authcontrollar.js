@@ -1115,14 +1115,23 @@ const addLeadFields = async(req, res) => {
     try {
         const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
         if(user){
-            user.leadFields.push(req.body)
-            await user.save()
-
-            res.status(200).json({
-                status: true,
-                message: "New field added successfully.",
-                data: user.leadFields[user.leadFields.length - 1]
-            })
+            const index = user.leadFields?.findIndex((item) => item?.label?.toLocaleLowerCase() === req.body.label?.trim()?.toLocaleLowerCase())
+            // console.log("index", index)
+            if(index === -1){
+                user.leadFields.push(req.body)
+                await user.save()
+    
+                res.status(200).json({
+                    status: true,
+                    message: "New field added successfully.",
+                    data: user.leadFields[user.leadFields.length - 1]
+                })
+            }else{
+                res.status(200).json({
+                    status: false,
+                    message: "This label already exist.",
+                })
+            }
         }else{
             res.status(404).json({
                 status: false,
@@ -1164,11 +1173,20 @@ const getLeadFields = async(req, res) => {
 
 const deleteLeadFields = async(req, res) => {
     try {
+        // console.log("req.params.id", req.params.id)
         const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
         if(user){
+            const isFieldExist = user.leadFields.some((item) => item?._id.toString() === req.params.id)
+            if(!isFieldExist){
+                res.status(200).json({
+                    status: false,
+                    message: "This field not available",
+                })
+            }
+
             user.leadFields = user.leadFields.filter((item) => item?._id.toString() !== req.params.id)
             await user.save()
-
+            // console.log("leadFields", user.leadFields)
             res.status(200).json({
                 status: true,
                 message: "Lead fields deleted successfully.",
@@ -1196,9 +1214,18 @@ const editLeadFields = async(req, res) => {
             const leadField = user.leadFields.find((item) => item?._id.toString() === req.params.id)
 
             if (leadField) {
-                // Update fields in leadField with data from req.body
-                Object.assign(leadField, req.body);
+                const isLabelDuplicate = user.leadFields.some(
+                    (item) => item._id.toString() !== req.params.id && item.label === req.body.label
+                );
+        
+                if (isLabelDuplicate) {
+                    return res.status(400).json({
+                        status: false,
+                        message: "This label already exist."
+                    });
+                }
 
+                Object.assign(leadField, req.body);
                 await user.save();
 
                 res.status(200).json({
