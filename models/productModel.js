@@ -20,6 +20,9 @@ const productSchema = new mongoose.Schema({
   image: {
     path: "",
     url:""
+  },
+  companyId: {
+    type: String
   }
 }, {timestamps: true});
 

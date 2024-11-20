@@ -2,14 +2,35 @@ const Invoice = require("../models/invoiceModel");
 const Quotation = require("../models/quotationModel");
 const fs = require("fs")
 
+const getInvoiceId = (companyName, number) => {
+    const companyPrefix = companyName.trim().split(" ")
+        .map(word => word[0].toUpperCase())
+        .join("")
+        .slice(0, 3); // Get the first 3 letters if there are more
+
+    const paddedNumber = String(number).padStart(6, '0'); // Pad the number to 6 digits
+
+    return `I-${companyPrefix}-${paddedNumber}`;
+}
+
 const createInvoice = async (req, res, next) => {
     try {
         const user = req.user
+
+        let userData = await NewUser.findById(user.role === "admin" ? user._id : user.companyId)
         const data = await Invoice.create({
             ...req.body,
             companyId: user.role === "admin" ? user._id : user.companyId,
             createdBy: user._id,
+            invoiceId: getQuotationId(userData?.companyName, userData.totalInvoice + 1)
         })
+
+        userData.totalInvoice = userData.totalInvoice + 1
+        await userData.save();
+
+        let leadData = await NewLeads.findById(req.body.leadId)
+        leadData.invoiceIds.push(data._id)
+        await leadData.save();
 
         if (data) {
             res.status(200).json({
@@ -39,9 +60,9 @@ const getInvoice = async (req, res, next) => {
         let data
         const user = req.user
         if (user.role === "employee") {
-            data = await Invoice.find({ createdBy: user?._id })
+            data = await Invoice.find({ createdBy: user?._id }).sort({ createdAt: -1 })
         } else if (user.role === "admin") {
-            data = await Invoice.find({ companyId: user?._id })
+            data = await Invoice.find({ companyId: user?._id }).sort({ createdAt: -1 })
         }
 
         if (data) {
@@ -65,7 +86,7 @@ const getInvoice = async (req, res, next) => {
     }
 }
 
-const getInvoiceDetails = async (req, res, next) => {
+const getInvoiceDetails = async (req, res) => {
     try {
         const { id } = req.params
         const data = await Invoice.findById(id)
@@ -90,8 +111,7 @@ const getInvoiceDetails = async (req, res, next) => {
     }
 }
 
-const editInvoice = async (req, res, next) => {
-    // console.log("body==>", req.params.id, req.body)
+const editInvoice = async (req, res) => {
     try {
         const data = await Invoice.findByIdAndUpdate(req.params.id, {
             ...req.body
@@ -110,7 +130,6 @@ const editInvoice = async (req, res, next) => {
             })
         }
     } catch (error) {
-        console.log('in catch', error)
         res.status(500).json({
             status: false,
             message: error.message
@@ -122,7 +141,12 @@ const deleteInvoice = async (req, res, next) => {
     try {
         const { id } = req.params
         const data = await Invoice.findById(id)
+        
         if (data) {
+            let leadData = await NewLeads.findById(data.leadId)
+            leadData.invoiceIds = leadData.invoiceIds.filter(id => id.toString() !== data._id.toString());
+            await leadData.save();
+            
             await Invoice.findByIdAndDelete(id)
             res.status(200).json({
                 status: true,
@@ -142,7 +166,5 @@ const deleteInvoice = async (req, res, next) => {
         })
     }
 }
-
-
 
 module.exports = { createInvoice, getInvoice, getInvoiceDetails, editInvoice, deleteInvoice }

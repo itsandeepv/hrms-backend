@@ -147,11 +147,11 @@ const deleteQuotation = async (req, res, next) => {
         const { id } = req.params
         const data = await Quotation.findById(id)
 
-        let leadData = await NewLeads.findById(data.leadId)
-        leadData.quotationIds = leadData.quotationIds.filter(id => id.toString() !== data._id.toString());
-        await leadData.save();
-
         if (data) {
+            let leadData = await NewLeads.findById(data.leadId)
+            leadData.quotationIds = leadData.quotationIds.filter(id => id.toString() !== data._id.toString());
+            await leadData.save();
+            
             await Quotation.findByIdAndDelete(id)
             res.status(200).json({
                 status: true,

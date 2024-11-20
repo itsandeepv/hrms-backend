@@ -4,24 +4,29 @@ const NewLabel = require("../models/labelModel");
 const escapeRegExp = (string) => {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape special regex characters
 };
-const addLabel = async (req, res, next) => {
+const addLabel = async (req, res) => {
+    const {_id, companyId, role} = req.user
     const data = req.body    
     try {
        
-        const checkExist = await NewLabel.findOne({ name: new RegExp(`^${escapeRegExp(data?.name)}$`, 'i')  ,addedBy:req.user?._id ,color:data.color})
+        const checkExist = await NewLabel.findOne({ name: new RegExp(`^${escapeRegExp(data?.name)}$`, 'i'), companyId: role==="admin" ? _id : companyId, color: data.color})
         // console.log("checkExist" ,checkExist);
         if (checkExist) {
             res.status(500).json({
                 status: false,
-                message: 'Label already exist .',
+                message: 'Label already exist.',
             })
         } else {
-            const Label =  NewLabel({...data ,addedBy:req.user?._id})
-            await Label.save()
+            const label = await NewLabel.create({
+                ...data, 
+                addedBy: _id, 
+                companyId: role==="admin" ? _id : companyId
+            })
+            // await Label.save()
             res.status(201).json({
                 status: true,
                 message: 'Label added successfully.',
-                data: Label
+                data: label
             })
 
         }
@@ -46,13 +51,13 @@ const editLabel = async (req, res, next) => {
             },{new:true})
             res.status(200).json({
                 status: true,
-                message: "Label edit succussfully.",
+                message: "Label updated succussfully.",
                 data:findLabel
             })
         } else {
             res.status(404).json({
                 status: false,
-                message: "Label not found"
+                message: "Label not found."
             })
         }
     } catch (error) {
@@ -72,10 +77,10 @@ const getLabel = async (req, res, next) => {
         const user = req.user
         
         if (user.role === "employee") {
-            data = await NewLabel.find({ addedBy: user?.companyId }).sort({createdAt:-1})
+            data = await NewLabel.find({ companyId: user?.companyId }).sort({createdAt:-1})
         } else if (user.role === "admin") {
             // console.log(user);
-            data = await NewLabel.find({ addedBy: user?._id?.toString() }).sort({createdAt:-1})
+            data = await NewLabel.find({ companyId: user?._id?.toString() }).sort({createdAt:-1})
         }
         if (data) {
             res.status(200).json({
@@ -106,12 +111,12 @@ const deleteLabel = async (req, res, next) => {
             res.status(200).json({
                 status: true,
                 message: "Label deleted succussfully.",
-                data:findLabel
+                data: findLabel
             })
         } else {
             res.status(404).json({
                 status: false,
-                message: "Label not found"
+                message: "Label not found."
             })
         }
     } catch (error) {
