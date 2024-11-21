@@ -17,7 +17,9 @@ const invoiceProductSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: false,
+    },
+    image: {
+        type: String,
     }
 })
 
@@ -86,7 +88,12 @@ const InvoiceSchema = new mongoose.Schema({
         address: String,
         contactNumber: String,
         referredBy: String,
-        GSTIN: String
+        companyLogo:Object,
+        GSTIN: String,
+        bankDetails: Object,
+        alternateEmail: String,
+        alternateNumber: String,
+        website: String,
     },
     clientDetails: {
         name: { type: String },
@@ -98,6 +105,9 @@ const InvoiceSchema = new mongoose.Schema({
     },
     paymentTerms: {
         type: String,
+    },
+    invoiceId: {
+        type: String
     }
 }, { timestamps: true })
 

@@ -3,9 +3,21 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const LeadStatus = new Schema({
-  leadType: { type: String, required: true },
-  leadStatusName: { type: String,unique: false},
-  userId:{type:Schema.Types.ObjectId ,ref:"User"}
+  leadType: { 
+    type: String, 
+    required: true 
+  },
+  leadStatusName: { 
+    type: String,
+    unique: false
+  },
+  userId:{
+    type: Schema.Types.ObjectId, 
+    ref:"User"
+  },
+  companyId: {
+    type: String,
+  }
 }, { timestamps: true });
 
 const NewLeadStatus = mongoose.model('LeadStatus', LeadStatus);

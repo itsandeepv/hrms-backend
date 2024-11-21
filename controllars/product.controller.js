@@ -6,6 +6,7 @@ const escapeRegExp = (string) => {
 };
 const addProduct = async (req, res, next) => {
     const { name, price, description } = req.body
+    const {_id, companyId, role} = req.user
     try {
         const file = req.file
         // console.log('name', req.user)
@@ -14,7 +15,7 @@ const addProduct = async (req, res, next) => {
             img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
         }
 
-        const checkExist = await Product.findOne({ name: new RegExp(`^${escapeRegExp(name)}$`, 'i')  ,addedBy:req.user?._id})
+        const checkExist = await Product.findOne({ name: new RegExp(`^${escapeRegExp(name)}$`, 'i'), companyId: role==="admin" ? _id : companyId})
         // console.log("checkExist" ,checkExist);
         if (checkExist) {
             res.status(500).json({
@@ -26,7 +27,8 @@ const addProduct = async (req, res, next) => {
                 name,
                 price,
                 description,
-                addedBy: req.user?._id,
+                addedBy: _id,
+                companyId: role==="admin" ? _id : companyId,
                 image: {
                     url: img_url,
                     path: file?.path || ""
@@ -54,7 +56,7 @@ const editProduct = async (req, res, next) => {
         // const {name, price, id} = req.body
         const data = await Product.findById(req.params.id)
         const file = req.file
-        console.log('name', file)
+        // console.log('name', file)
         let img_url = ""
         if (file) {
             img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
@@ -63,7 +65,7 @@ const editProduct = async (req, res, next) => {
         if (data) {
             if (file) {
                 const filePath = data?.image?.path;
-                console.log("filePath" ,filePath);
+                // console.log("filePath" ,filePath);
                 if (filePath) {
                     fs.unlink(filePath, (err) => {
                         if (err) {
@@ -115,9 +117,11 @@ const getProduct = async (req, res, next) => {
         let data
         const user = req.user
         if (user.role === "employee") {
-            data = await Product.find({ addedBy: user?.companyId })
+            data = await Product.find({ companyId: user?.companyId })
+            // .populate('addedBy', 'fullName')
         } else if (user.role === "admin") {
-            data = await Product.find({ addedBy: user?._id })
+            data = await Product.find({ companyId: user?._id })
+            // .populate('addedBy', 'fullName')
         }
         if (data) {
             res.status(200).json({

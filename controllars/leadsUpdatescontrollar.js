@@ -145,20 +145,24 @@ const getLeadStatus = async (req, res, next) => {
 const addNewleadStatus = async (req, res, next) => {
     try {
         let reqData = await req.body
-        if (req.user.role == "admin") {
-            let isExist = await NewLeadStatus.findOne({
-                userId: req.user?._id,
-                leadType: reqData.leadType
-                , leadStatusName: reqData.leadStatusName
+        const {_id, role, companyId } = req.user
+        // if (req.user.role == "admin") {
+            const isExist = await NewLeadStatus.findOne({
+                companyId: role==="admin" ? _id?.toString() : companyId ,
+                leadType: reqData.leadType,
+                leadStatusName: reqData.leadStatusName
             })
             if (isExist) {
                 res.status(400).json({
                     status: false,
-                    message: "Status already exist",
-                    savedData
+                    message: "Status already exist"
                 })
             } else {
-                let details = new NewLeadStatus({ ...reqData, userId: req.user?._id })
+                let details = new NewLeadStatus({ 
+                    ...reqData,
+                    userId: _id,
+                    companyId: role==="admin" ? _id.toString() : companyId
+                })
                 let savedData = await details.save()
                 res.status(200).json({
                     status: true,
@@ -166,12 +170,12 @@ const addNewleadStatus = async (req, res, next) => {
                     savedData
                 })
             }
-        } else {
-            res.status(500).json({
-                status: false,
-                message: "Only admin/company can create new status"
-            })
-        }
+        // } else {
+        //     res.status(500).json({
+        //         status: false,
+        //         message: "Only admin/company can create new status"
+        //     })
+        // }
     } catch (error) {
         res.status(500).json({
             status: false,
@@ -182,44 +186,55 @@ const addNewleadStatus = async (req, res, next) => {
 }
 
 const updateStatusType = async (req, res, next) => {
-    let findDetails = await NewLeadStatus.findById(req.params.id)
-    if (findDetails) {
+    let reqData = await req.body
+    const {_id, role, companyId } = req.user
+    const isExist = await NewLeadStatus.findOne({
+        companyId: role==="admin" ? _id?.toString() : companyId,
+        leadType: reqData.leadType,
+        leadStatusName: reqData.leadStatusName
+    })
+    const findDetails = await NewLeadStatus.findById(req.params.id)
+    if(isExist){
+        res.status(200).json({
+            status: false,
+            message: "Status already exist with this name.",
+        })
+    }else if (findDetails) {
         await NewLeadStatus.findByIdAndUpdate(req.params.id, {
             ...req.body
         }, { new: true })
         res.status(200).json({
             status: true,
-            message: " Status type updated success",
+            message: "Status updated successfully",
         })
     } else {
         res.status(404).json({
             status: false,
-            message: "id not found",
+            message: "Status not found",
         })
     }
 
 }
 const getAllStatus = async (req, res, next) => {
-    let reqUser = req.user
+    const {_id, role, companyId } = req.user
     // console.log(reqUser );
-    if (["employee", "hr", "manager"].includes(reqUser?.role)) {
-        let data = await NewLeadStatus.find({ userId: reqUser?.companyId })
-        // if(req.user?.role == "admin"){}
+    // if (["employee", "hr", "manager"].includes(reqUser?.role)) {
+        const data = await NewLeadStatus.find({ companyId: role==="admin" ? _id.toString() : companyId })
         res.status(200).json({
             status: true,
             message: "All Status types",
             data
         })
 
-    } else {
-        let data = await NewLeadStatus.find({ userId: reqUser?._id })
-        // if(req.user?.role == "admin"){}
-        res.status(200).json({
-            status: true,
-            message: "All Status types",
-            data
-        })
-    }
+    // } else {
+    //     let data = await NewLeadStatus.find({ userId: reqUser?._id })
+    //     // if(req.user?.role == "admin"){}
+    //     res.status(200).json({
+    //         status: true,
+    //         message: "All Status types",
+    //         data
+    //     })
+    // }
 
 }
 
