@@ -1,4 +1,6 @@
 const Invoice = require("../models/invoiceModel");
+const NewLeads = require("../models/leadsModel");
+const NewUser = require("../models/newUser");
 const Quotation = require("../models/quotationModel");
 const fs = require("fs")
 
@@ -22,7 +24,7 @@ const createInvoice = async (req, res, next) => {
             ...req.body,
             companyId: user.role === "admin" ? user._id : user.companyId,
             createdBy: user._id,
-            invoiceId: getQuotationId(userData?.companyName, userData.totalInvoice + 1)
+            invoiceId: getInvoiceId(userData?.companyName, userData.totalInvoice + 1)
         })
 
         userData.totalInvoice = userData.totalInvoice + 1
