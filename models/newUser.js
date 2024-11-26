@@ -77,6 +77,27 @@ const NewUserSchema = new mongoose.Schema({
         },
         defaultValue: { type: [mongoose.Schema.Types.Mixed], default: [""] },
         // value: { type: [String, Boolean], default: "" }
+    }],
+    sources: [{
+        label: {
+            type: String
+        },
+        keyId: {
+            type: String
+        },
+        isIntegrated: {
+            type: Boolean,
+            default: false
+        },
+        enableAutoAssign: {
+            type: Boolean,
+            default: false
+        },
+        autoAssignTo: [String],
+        lastAssignTo: {
+            type: String,
+            default: ""
+        }
     }]
 }, { timestamps: true })
 
