@@ -180,12 +180,15 @@ const editSourceAccessibility = async(req, res, next) => {
       const adminData = await NewUser.findById(req?.user?.role === "superadmin" ? req?.params?.id : req?.user?._id)
       // console.log("adminData", adminData)
       if(adminData){
-        adminData.sources = req.body.sources
-        const updatedAdminData = await adminData.save()
+        const updateData = await NewUser.findByIdAndUpdate(adminData?._id, {
+          sources: req.body.sources
+        }, {new: true})
+        // adminData.sources = req.body.sources
+        // const updatedAdminData = await adminData.save()
         res.status(200).json({
           status: true,
           message: 'Sources editted successfully.',
-          data: updatedAdminData
+          data: updateData
         })
       }else{
         res.status(404).json({

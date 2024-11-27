@@ -79,7 +79,7 @@ const NewUserSchema = new mongoose.Schema({
         // value: { type: [String, Boolean], default: "" }
     }],
     sources: [{
-        label: {
+        name: {
             type: String
         },
         keyId: {

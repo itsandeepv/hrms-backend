@@ -7,7 +7,7 @@ let isMessSave = true
 
 const sendNotification = (fullDocument, io, changedata) => {
 
-  autoLeadAssign(fullDocument)
+  autoLeadAssign(fullDocument, io)
   // console.log("fullDocument" ,fullDocument);
   
   let notificationDetails = {
