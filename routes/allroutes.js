@@ -9,6 +9,7 @@ const {addRole, addModule, getModule, editModule, deleteModule, editModuleAccess
 const uploadImage = require("../middlewares/uploadImage");
 const { addLabel, getLabel, deleteLabel, editLabel } = require("../controllars/label.controller");
 const { addLeadFields, getLeadFields, deleteLeadFields, editLeadFields } = require("../controllars/authcontrollar");
+const { addSource, getSource, deleteSource, editSource, editSourceAccessibility } = require("../controllars/source.controller");
 
 const leadsrouter = require("express").Router()
 
@@ -99,6 +100,11 @@ leadsrouter.get("/get-lead-field",ValidateUser, getLeadFields)
 leadsrouter.delete("/delete-lead-field/:id",ValidateUser, deleteLeadFields)
 leadsrouter.put("/edit-lead-field/:id",ValidateUser, editLeadFields)
 
-
+// Source
+leadsrouter.post("/add-source", ValidateUser, addSource)
+leadsrouter.get("/get-source", ValidateUser, getSource)
+leadsrouter.delete("/delete-source/:id", ValidateUser, deleteSource)
+leadsrouter.put("/edit-source/:id", ValidateUser, editSource)
+leadsrouter.put("/edit-source-accessibility/:id", ValidateUser, editSourceAccessibility)
 
 module.exports = {leadsrouter};
