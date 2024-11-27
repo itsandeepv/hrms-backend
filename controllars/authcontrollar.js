@@ -1113,7 +1113,8 @@ const editSettings = async (req, res, next) => {
 
 const addLeadFields = async(req, res) => {
     try {
-        const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        // const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        const user = await NewUser.findById(req.user.role === "admin" ? req.user._id : req.user.companyId)
         if(user){
             const index = user.leadFields?.findIndex((item) => item?.label?.toLocaleLowerCase() === req.body.label?.trim()?.toLocaleLowerCase())
             // console.log("index", index)
@@ -1149,7 +1150,8 @@ const addLeadFields = async(req, res) => {
 
 const getLeadFields = async(req, res) => {
     try {
-        const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        // const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        const user = await NewUser.findById(req.user.role === "admin" ? req.user._id : req.user.companyId)
         if(user){
             res.status(200).json({
                 status: true,
@@ -1174,7 +1176,8 @@ const getLeadFields = async(req, res) => {
 const deleteLeadFields = async(req, res) => {
     try {
         // console.log("req.params.id", req.params.id)
-        const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        // const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        const user = await NewUser.findById(req.user.role === "admin" ? req.user._id : req.user.companyId)
         if(user){
             const isFieldExist = user.leadFields.some((item) => item?._id.toString() === req.params.id)
             if(!isFieldExist){
@@ -1209,7 +1212,8 @@ const deleteLeadFields = async(req, res) => {
 
 const editLeadFields = async(req, res) => {
     try {
-        const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        // const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        const user = await NewUser.findById(req.user.role === "admin" ? req.user._id : req.user.companyId)
         if(user){
             const leadField = user.leadFields.find((item) => item?._id.toString() === req.params.id)
 
