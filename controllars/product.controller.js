@@ -1,21 +1,18 @@
+const s3uploads = require('../middlewares/s3ulpoads');
 const Product = require('../models/productModel');
 const fs = require("fs")
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 
 const escapeRegExp = (string) => {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape special regex characters
 };
 const addProduct = async (req, res, next) => {
     const { name, price, description } = req.body
-    const {_id, companyId, role} = req.user
+    const { _id, companyId, role } = req.user
     try {
-        const file = req.file
-        // console.log('name', req.user)
-        let img_url = ""
-        if (file) {
-            img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
-        }
-
-        const checkExist = await Product.findOne({ name: new RegExp(`^${escapeRegExp(name)}$`, 'i'), companyId: role==="admin" ? _id : companyId})
+        let img_url = {}
+        const checkExist = await Product.findOne({ name: new RegExp(`^${escapeRegExp(name)}$`, 'i'), companyId: role === "admin" ? _id : companyId })
         // console.log("checkExist" ,checkExist);
         if (checkExist) {
             res.status(500).json({
@@ -23,23 +20,41 @@ const addProduct = async (req, res, next) => {
                 message: 'Product already exist .',
             })
         } else {
+            if (req.files && req.files.image) {
+                const file = req.files.image;
+                // Generate unique file name
+                const fileExtension = path.extname(file.name);
+                const fileName = `${uuidv4()}${fileExtension}`;
+
+                // Upload to S3
+                const params = {
+                    Bucket: process.env.AWS_BUCKET_NAME,
+                    Key: `products/${fileName}`,
+                    Body: fs.createReadStream(file.tempFilePath), // Read from temporary location
+                    ContentType: file.mimetype,
+                    //   ACL: 'public-read',
+                };
+
+                const uploadResponse = await s3uploads.upload(params).promise();
+                img_url.url = uploadResponse.Location;
+                img_url.path = uploadResponse?.key;
+                console.log("uploadResponse", img_url);
+                // Delete temporary file
+                fs.unlinkSync(file.tempFilePath);
+            }
             const product = await Product.create({
                 name,
                 price,
                 description,
                 addedBy: _id,
-                companyId: role==="admin" ? _id : companyId,
-                image: {
-                    url: img_url,
-                    path: file?.path || ""
-                }
+                companyId: role === "admin" ? _id : companyId,
+                image: img_url
             })
             res.status(201).json({
                 status: true,
                 message: 'Product added successfully.',
                 data: product
             })
-
         }
 
 
@@ -55,30 +70,51 @@ const editProduct = async (req, res, next) => {
     try {
         // const {name, price, id} = req.body
         const data = await Product.findById(req.params.id)
-        const file = req.file
+        const file = req.files
         // console.log('name', file)
-        let img_url = ""
-        if (file) {
-            img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
-        }
+        let img_url = {}
 
         if (data) {
             if (file) {
                 const filePath = data?.image?.path;
-                // console.log("filePath" ,filePath);
                 if (filePath) {
-                    fs.unlink(filePath, (err) => {
-                        if (err) {
-                            return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
-                        }
-                    });
+                    const deleteParams = {
+                        Bucket: process.env.AWS_BUCKET_NAME,
+                        Key: filePath,
+                    };
+                    await s3uploads.deleteObject(deleteParams).promise();
                 }
+
+                const newfile = req.files.image;
+                // Generate a unique file name for the new image
+                const fileExtension = path.extname(newfile.name);
+                const fileName = `${uuidv4()}${fileExtension}`;
+
+                // Upload the new image to S3
+                const params = {
+                    Bucket: process.env.AWS_BUCKET_NAME,
+                    Key: `products/${fileName}`,
+                    Body: fs.createReadStream(newfile.tempFilePath),
+                    ContentType: newfile.mimetype,
+                };
+
+                const uploadResponse = await s3uploads.upload(params).promise();
+
+                // Save the new image URL and path
+                img_url = {
+                    url: uploadResponse.Location,
+                    path: uploadResponse.Key,
+                };
+
+                // Delete temporary file after uploading to S3
+                fs.unlinkSync(newfile.tempFilePath);
+
+
+
+
                 const newData = await Product.findByIdAndUpdate(req.params.id, {
                     ...req.body,
-                    image: {
-                        url: img_url,
-                        path: file?.path || ""
-                    }
+                    image: img_url
                 }, { new: true })
                 res.status(200).json({
                     status: true,
@@ -175,14 +211,20 @@ const deleteProduct = async (req, res, next) => {
         if (data) {
             const findProduct = await Product.findByIdAndDelete(id)
             const filePath = findProduct?.image?.path;
-            // console.log("filePath" ,filePath);
 
+            // if (filePath) {
+            //     fs.unlink(filePath, (err) => {
+            //         if (err) {
+            //             return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
+            //         }
+            //     });
+            // }
             if (filePath) {
-                fs.unlink(filePath, (err) => {
-                    if (err) {
-                        return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
-                    }
-                });
+                const deleteParams = {
+                    Bucket: process.env.AWS_BUCKET_NAME,
+                    Key: filePath,
+                };
+                await s3uploads.deleteObject(deleteParams).promise();
             }
             res.status(200).json({
                 status: true,

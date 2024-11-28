@@ -10,6 +10,8 @@ const { leadsrouter } = require("./routes/allroutes");
 const { isToday } = require("./utils/createNotefication");
 const NewLeads = require("./models/leadsModel");
 const { sendNotification } = require("./utils/sendNotification");
+const fileUpload = require('express-fileupload');
+
 
 const app = express();
 const server = http.createServer(app);
@@ -18,6 +20,10 @@ mongoose.set('autoIndex', false);
 // mongoose.set('bufferCommands', false)
 mongoose.set('strictQuery', false);
 app.set('io', io); // Store io instance in the app context
+app.use(fileUpload({
+  useTempFiles: true, // Store files temporarily
+  tempFileDir: '/tmp/', // Directory for temporary files
+}));
 
 // Middlewares
 app.use(bodyParser.json());
@@ -37,8 +43,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
 
 const mongooseUrl = process.env.DATABASE_URL || "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
-// "mongodb://hrmsDBs:98sdis90d@167.71.236.39:27017/hrms?authSource=admin"
-// "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
+// "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase"
 
 // Auth route start here
 app.use("/api", authrouter);
