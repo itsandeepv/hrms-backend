@@ -12,7 +12,6 @@ const NewLeads = require("./models/leadsModel");
 const { sendNotification } = require("./utils/sendNotification");
 const fileUpload = require('express-fileupload');
 
-
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
