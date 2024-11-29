@@ -852,6 +852,14 @@ const getIndiamartLead = async(req, res) => {
     
 }
 
+const getMetaLeads = async(req, res) => {
+    console.log("user", req?.user)
+    console.log("params", req?.params)
+    console.log("body", req?.body)
+    
+    res.status(200).send(req.query['hub.challenge']);
+}
+
 module.exports = {
     createNewLead, getAllLead,getIndiamartLead,
     getSingleLead,
@@ -863,4 +871,5 @@ module.exports = {
     bulkLeadInset,
     getJustdialLead,
     getIndiamartLead,
+    getMetaLeads
 }

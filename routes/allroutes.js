@@ -1,4 +1,4 @@
-const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus, getChartDetails, bulkLeadInset, getJustdialLead, getIndiamartLead } = require("../controllars/leadscontrollar");
+const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus, getChartDetails, bulkLeadInset, getJustdialLead, getIndiamartLead, getMetaLeads } = require("../controllars/leadscontrollar");
 const { createleadsUpdate, getLeadhistory, updateLeadStatus, getLeadStatus, addNewleadStatus, getAllStatus, deleteStatus, updateStatusType, createNotification } = require("../controllars/leadsUpdatescontrollar");
 const { addProduct, getProduct, getProductDetail, deleteProduct, editProduct, searchProduct } = require("../controllars/product.controller");
 const { deleteNotification, getNotification, deleteNotificationAll, saveNotification, readNotification } = require("../controllars/notificationcontrollar");
@@ -76,6 +76,7 @@ leadsrouter.delete("/delete-invoice/:id", ValidateUser, deleteInvoice)
 
 leadsrouter.post("/justdial/:id", getJustdialLead)
 leadsrouter.post("/indiamart/:id", getIndiamartLead)
+leadsrouter.get("/webhooks", getMetaLeads)
 
 //Role
 leadsrouter.post("/add-role", ValidateUser, addRole)
