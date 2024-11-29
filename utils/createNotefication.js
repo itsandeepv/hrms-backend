@@ -10,14 +10,27 @@ const publicUrl = "https://api.crmhai.com/api"
 // const publicUrl = "http://localhost:5001/api"
 
 
-const isToday = (date) => {
-  if(date){
+// const isToday = (date) => {
+//   if(date){
+//     const today = new Date();
+//     date = new Date(date);
+//     // console.log(date.getDate() , today.getDate());
+//     return date.getDate() == today.getDate() &&
+//       date.getMonth() === today.getMonth() &&
+//       date.getFullYear() === today.getFullYear();
+//   }else{
+//     return false
+//   }
+// };
+
+const isToday = (inputDate) => {
+  if(inputDate){
     const today = new Date();
-    date = new Date(date);
-    // console.log(date.getDate() , today.getDate());
-    return date.getDate() == today.getDate() &&
+    const date = new Date(inputDate);
+    // console.log(${date.getDate()}-${date.getMonth()}-${date.getFullYear()}===${today.getDate()}-${today.getMonth()}-${today.getFullYear()});
+    return (date.getDate() == today.getDate() &&
       date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear();
+      date.getFullYear() === today.getFullYear())
   }else{
     return false
   }
