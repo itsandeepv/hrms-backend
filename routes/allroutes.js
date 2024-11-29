@@ -6,7 +6,6 @@ const { ValidateUser } = require("../middlewares/authMiddleware");
 const { createQuotation, getQuotation, deleteQuotation, getQuotationDetails, editQuotation } = require("../controllars/quotation.controller");
 const { createInvoice, getInvoice, getInvoiceDetails, editInvoice, deleteInvoice } = require("../controllars/invoice.controller");
 const {addRole, addModule, getModule, editModule, deleteModule, editModuleAccessibility} = require("../controllars/moduleAccess.controller")
-const uploadImage = require("../middlewares/uploadImage");
 const { addLabel, getLabel, deleteLabel, editLabel } = require("../controllars/label.controller");
 const { addLeadFields, getLeadFields, deleteLeadFields, editLeadFields } = require("../controllars/authcontrollar");
 const { addSource, getSource, deleteSource, editSource, editSourceAccessibility } = require("../controllars/source.controller");
@@ -54,11 +53,12 @@ leadsrouter.get("/home-leads/:status" ,ValidateUser,getLeadsByStatus)
 leadsrouter.get("/chart" ,ValidateUser,getChartDetails)
 
 //product 
-leadsrouter.post("/add-product", ValidateUser,uploadImage.single("image"), addProduct)
+// leadsrouter.post("/add-product", ValidateUser,uploadImage.single("image"), addProduct)
+leadsrouter.post("/add-product", ValidateUser, addProduct)
 leadsrouter.get("/get-product", ValidateUser, getProduct)
 leadsrouter.get("/get-product-detail/:id", ValidateUser, getProductDetail)
 leadsrouter.get("/delete-product/:id", ValidateUser, deleteProduct)
-leadsrouter.post("/edit-product/:id", ValidateUser,uploadImage.single("image"), editProduct)
+leadsrouter.post("/edit-product/:id", ValidateUser, editProduct)
 leadsrouter.get("/search-product", ValidateUser, searchProduct)
 
 leadsrouter.post("/create-quotation", ValidateUser, createQuotation)

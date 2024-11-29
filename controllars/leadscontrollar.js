@@ -5,6 +5,7 @@ const { isToday, isBeforeToday } = require("../utils/createNotefication");
 const OtherUser = require("../models/otherUser");
 const { publicUrl } = require("../utils/createNotefication");
 const NewUser = require("../models/newUser");
+const Meta = require("../models/metaModel");
 const ObjectId = mongoose.Types.ObjectId;
 
 
@@ -853,9 +854,10 @@ const getIndiamartLead = async(req, res) => {
 }
 
 const getMetaLeads = async(req, res) => {
-    console.log("user", req?.user)
-    console.log("params", req?.params)
-    console.log("body", req?.body)
+    await new Meta.create({
+        data: JSON.stringify(req.body),
+        query: JSON.stringify(req.query)
+    })
     
     res.status(200).send(req.query['hub.challenge']);
 }
