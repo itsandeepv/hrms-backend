@@ -11,7 +11,7 @@ const { isToday } = require("./utils/createNotefication");
 const NewLeads = require("./models/leadsModel");
 const { sendNotification } = require("./utils/sendNotification");
 const fileUpload = require('express-fileupload');
-
+const { getImages } = require("./helpers/getImagesControllar");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
@@ -56,6 +56,9 @@ app.get("/test", (req, res) => {
   res.sendFile(__dirname + "/public/sockettest.html")
 })
 
+
+// Example route to fetch and serve an image from S3
+app.get('/image/:folder/:imageKey',getImages );
 
 
 // Connect to MongoDB

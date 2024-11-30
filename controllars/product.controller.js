@@ -38,7 +38,8 @@ const addProduct = async (req, res, next) => {
                 const uploadResponse = await s3uploads.upload(params).promise();
                 img_url.url = uploadResponse.Location;
                 img_url.path = uploadResponse?.key;
-                console.log("uploadResponse", img_url);
+
+                // console.log("uploadResponse", uploadResponse);
                 // Delete temporary file
                 fs.unlinkSync(file.tempFilePath);
             }
