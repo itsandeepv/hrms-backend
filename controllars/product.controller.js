@@ -110,9 +110,6 @@ const editProduct = async (req, res, next) => {
                 // Delete temporary file after uploading to S3
                 fs.unlinkSync(newfile.tempFilePath);
 
-
-
-
                 const newData = await Product.findByIdAndUpdate(req.params.id, {
                     ...req.body,
                     image: img_url
@@ -212,14 +209,6 @@ const deleteProduct = async (req, res, next) => {
         if (data) {
             const findProduct = await Product.findByIdAndDelete(id)
             const filePath = findProduct?.image?.path;
-
-            // if (filePath) {
-            //     fs.unlink(filePath, (err) => {
-            //         if (err) {
-            //             return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
-            //         }
-            //     });
-            // }
             if (filePath) {
                 const deleteParams = {
                     Bucket: process.env.AWS_BUCKET_NAME,
