@@ -5,13 +5,10 @@ const NewLeads = require("../models/leadsModel");
 const { isToday, isBeforeToday } = require("../utils/createNotefication");
 const { publicUrl } = require("../utils/createNotefication");
 const NewUser = require("../models/newUser");
-const Meta = require("../models/metaModel");
-const ObjectId = mongoose.Types.ObjectId;
 
 
 const createNewLead = async (req, res, next) => {
     let reqData = req.body
-
     try {
         const obj = {
             senderMobileNumber: reqData.senderMobileNumber,
