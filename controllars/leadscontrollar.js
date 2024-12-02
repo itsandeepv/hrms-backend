@@ -1,8 +1,8 @@
 const moment = require("moment");
 const mongoose = require('mongoose');
+const Meta = require("../models/metaModel");
 const NewLeads = require("../models/leadsModel");
 const { isToday, isBeforeToday } = require("../utils/createNotefication");
-const OtherUser = require("../models/otherUser");
 const { publicUrl } = require("../utils/createNotefication");
 const NewUser = require("../models/newUser");
 const Meta = require("../models/metaModel");
@@ -14,16 +14,16 @@ const createNewLead = async (req, res, next) => {
 
     try {
         const obj = {
-            senderMobileNumber:reqData.senderMobileNumber,
-            companyId: req.user.role==="admin" ? req.user._id.toString() : req.user.companyId
+            senderMobileNumber: reqData.senderMobileNumber,
+            companyId: req.user.role === "admin" ? req.user._id.toString() : req.user.companyId
         }
         const checkLeadisExist = await NewLeads.findOne(obj)
-        if(checkLeadisExist){
+        if (checkLeadisExist) {
             res.status(500).json({
                 status: false,
                 message: "Lead already exist with same number please try again",
             })
-        }else{
+        } else {
             let newLead = new NewLeads({
                 ...reqData, userId: req.user?._id,
                 // , indiaMartKey: req.user?.indiaMartKey,
@@ -32,10 +32,10 @@ const createNewLead = async (req, res, next) => {
             })
             // console.log("newLead", reqData, newLead);
             let createdLead = await newLead.save()
-    
+
             if (reqData?.leadAssignTo) {
-                let notificationDetails = { 
-                    userId:reqData?.leadAssignTo,
+                let notificationDetails = {
+                    userId: reqData?.leadAssignTo,
                     leadId: createdLead?._id
                 }
                 const requestOptions = {
@@ -46,14 +46,14 @@ const createNewLead = async (req, res, next) => {
                     body: JSON.stringify(notificationDetails)
                 };
                 await fetch(`${publicUrl}/save-notification`, requestOptions
-                    ).then((res) => res.json()).then((data) => {
+                ).then((res) => res.json()).then((data) => {
                     // console.log(data);
                     // io.emit('leadAssigned', notificationDetails);
                 }).catch((er) => {
                     console.log(er);
                 })
             }
-    
+
             res.status(200).json({
                 status: true,
                 message: "Lead created succuss",
@@ -137,7 +137,7 @@ const editLead = async (req, res, next) => {
 const getAllLead = async (req, res, next) => {
     try {
         // Get page and limit from query parameters
-        let { leadSource, leadAddedBy  } = req.query
+        let { leadSource, leadAddedBy } = req.query
         let page = parseInt(req.query?.page, 10) || 1;
         let limit = parseInt(req.query?.limit, 10) || 10;
         let startfromdate = req.query.startfromdate
@@ -199,7 +199,7 @@ const getAllLead = async (req, res, next) => {
             ];
         }
 
-        
+
         query.$and = query.$and || [];
         // console.log("leadAddedBy" , leadAddedBy);
 
@@ -449,10 +449,10 @@ const getLeadsByStatus = async (req, res) => {
     }
 
     if (["employee", "hr", "manager"].includes(req.user?.role)) {
-            // Filter leads by 'leadAssignTo' field, matching with the current user's ID
-            query.$and.push({
-                leadAssignTo: req.user?._id.toString()
-            });
+        // Filter leads by 'leadAssignTo' field, matching with the current user's ID
+        query.$and.push({
+            leadAssignTo: req.user?._id.toString()
+        });
 
     } else {
         query.$and.push({
@@ -792,16 +792,16 @@ const getChartDetails = async (req, res) => {
     }
 };
 
-const getJustdialLead = async(req, res) => {
+const getJustdialLead = async (req, res) => {
     const leadData = req.body;
-    
+
     // console.log("Lead received:", leadData);
-    const user = await NewUser.findOne({indiaMartKey: req.params.id})
+    const user = await NewUser.findOne({ indiaMartKey: req.params.id })
     // console.log("user", user)
-    if(user){
+    if (user) {
         const data = await NewLeads.create({
             "userId": user?._id,
-            "companyId": user?.role==="admin" ? user?._id : user?.companyId,
+            "companyId": user?.role === "admin" ? user?._id : user?.companyId,
             "uniqeQueryId": leadData?.leadid,
             "senderName": leadData?.name,
             "senderEmail": leadData?.email,
@@ -818,19 +818,19 @@ const getJustdialLead = async(req, res) => {
         // console.log("data", data)
 
         res.send('RECEIVED');
-    }else{
+    } else {
         res.send("FAILED")
     }
-    
+
 }
 
-const getIndiamartLead = async(req, res) => {
+const getIndiamartLead = async (req, res) => {
     const leadData = req.body;
-    
+
     // console.log("Lead received:", leadData);
     const user = await NewUser.findById(req.params.id)
-    
-    if(user){
+
+    if (user) {
         const data = await NewLeads.create({
             "userId": user?._id,
             // "companyId": user?.role==="admin" ? user?._id : user?.companyId,
@@ -847,23 +847,25 @@ const getIndiamartLead = async(req, res) => {
         })
 
         res.send('RECEIVED');
-    }else{
+    } else {
         res.send("FAILED")
     }
-    
+
 }
 
-const getMetaLeads = async(req, res) => {
-    await new Meta.create({
+const getMetaLeads = async (req, res) => {
+    await Meta.create({
         data: JSON.stringify(req.body),
         query: JSON.stringify(req.query)
     })
-    
+
     res.status(200).send(req.query['hub.challenge']);
 }
 
+
+
 module.exports = {
-    createNewLead, getAllLead,getIndiamartLead,
+    createNewLead, getAllLead, getIndiamartLead,
     getSingleLead,
     deleteLead,
     dashboardleadCount,

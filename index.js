@@ -11,7 +11,7 @@ const { isToday } = require("./utils/createNotefication");
 const NewLeads = require("./models/leadsModel");
 const { sendNotification } = require("./utils/sendNotification");
 const fileUpload = require('express-fileupload');
-
+const { getImages } = require("./helpers/getImagesControllar");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
@@ -55,6 +55,11 @@ app.use("/api", leadsrouter);
 app.get("/test", (req, res) => {
   res.sendFile(__dirname + "/public/sockettest.html")
 })
+
+
+// Example route to fetch and serve an image from S3
+app.get('/image/:folder/:imageKey',getImages );
+
 
 // Connect to MongoDB
 mongoose.connect(mongooseUrl, {
@@ -119,30 +124,6 @@ io.on("connection", (socket) => {
   });
 });
 
-// io.on("connection", (socket) => {
-//   console.log("A user connected", socket.id);
-//   socket.on("userDetails", async (data) => {
-//     try {
-//       // Fetch leads based on user details and follow-up date
-//       const leads = data?.role === "admin" ? await NewLeads.find({userId: data?._id}) : await NewLeads.find({leadAssignTo: data?._id})
-//       const filteredLeads = data?.role === "admin" ? leads.filter(lead => isToday(lead.nextFollowUpDate) && (lead?.leadAssignTo===undefined || lead?.leadAssignTo==="")) : leads.filter(lead => isToday(lead.nextFollowUpDate))
-     
-//       // Emit notifications for the filtered leads
-//       const newData = filteredLeads.map(lead => {return {
-//         message: 'This is a reminder for your follow-up scheduled for today with ' + lead.senderName,
-//         lead
-//       }});
-//       socket.emit('followUpNotification', newData);
-//     } catch (err) {
-//       console.error('Error fetching leads: ', err);
-//     }
-//   });
-
-//   io.emit('triggerUserDetails');
-//   socket.on("disconnect", () => {
-//     console.log("User disconnected");
-//   });
-// });
 
 // Start the server and listen for incoming requests
 const port = process.env.PORT || 5001;

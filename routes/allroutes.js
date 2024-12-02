@@ -77,6 +77,7 @@ leadsrouter.delete("/delete-invoice/:id", ValidateUser, deleteInvoice)
 leadsrouter.post("/justdial/:id", getJustdialLead)
 leadsrouter.post("/indiamart/:id", getIndiamartLead)
 leadsrouter.get("/webhooks", getMetaLeads)
+leadsrouter.post("/webhooks", getMetaLeads)
 
 //Role
 leadsrouter.post("/add-role", ValidateUser, addRole)
