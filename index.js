@@ -41,7 +41,7 @@ app.use(cors({
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
 
-const mongooseUrl =  process.env.DATABASE_URL || "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
+const mongooseUrl = process.env.DATABASE_URL || "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
 // "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase"
 
 // Auth route start here
@@ -58,7 +58,7 @@ app.get("/test", (req, res) => {
 
 
 // Example route to fetch and serve an image from S3
-app.get('/image/:folder/:imageKey',getImages );
+app.get('/image/:folder/:imageKey', getImages);
 
 
 // Connect to MongoDB
@@ -78,6 +78,7 @@ mongoose.connect(mongooseUrl, {
 // Listen for MongoDB changes using Change Streams
 const db = mongoose.connection;
 
+let onlineUsers = []
 
 db.once("open", () => {
   console.log("MongoDB database connection established successfully");
@@ -85,7 +86,7 @@ db.once("open", () => {
   const changeStream = collection.watch();
   // console.log(collection);
   changeStream.on("change", (changedata) => {
-    // console.log("Change detected:", changedata);
+    console.log("Change detected:", onlineUsers);
     let { fullDocument } = changedata
     if (changedata.operationType == "insert") {
       sendNotification(fullDocument, io, changedata)
@@ -95,33 +96,52 @@ db.once("open", () => {
 
 
 // WebSocket connection
-
 io.on("connection", (socket) => {
   console.log("A user connected", socket.id);
+
+  socket.on("userConnected", (userId) => {
+    if (!onlineUsers.some((user) => user.userId === userId)) {
+      onlineUsers.push({ userId, socketId: socket.id });
+    }
+    io.emit("getonlineUsers", onlineUsers);
+    // console.log("onlineUsers" ,userId ,onlineUsers);
+  });
+
   socket.on("userDetails", async (data) => {
     try {
       // Fetch leads based on user details and follow-up date
-      const leads = data?.role === "admin" ? await NewLeads.find({
-        $or: [
-          { companyId: data?._id },
-          { userId: data?._id }
-        ]
-      }) : await NewLeads.find({leadAssignTo: data?._id})
-      const filteredLeads = data?.role === "admin" ? leads.filter(lead => isToday(lead.nextFollowUpDate) && (lead?.leadAssignTo===undefined || lead?.leadAssignTo==="")) : leads.filter(lead => isToday(lead.nextFollowUpDate))
-      // Emit notifications for the filtered leads
-      const newData = filteredLeads.map(lead => {return {
-        message: 'This is a reminder for your follow-up scheduled for today with ' + lead.senderName,
-        lead
-      }});
-      socket.emit('followUpNotification', newData);
+      const finduser = onlineUsers?.find((user)=> user.userId == data?._id )
+
+      console.log("finduser" ,finduser ,data?._id);
+      if(finduser){
+        const leads = data?.role === "admin" ? await NewLeads.find({
+          $or: [
+            { companyId: data?._id },
+            { userId: data?._id }
+          ]
+        }) : await NewLeads.find({ leadAssignTo: data?._id })
+        const filteredLeads = data?.role === "admin" ? leads.filter(lead => isToday(lead.nextFollowUpDate) && (lead?.leadAssignTo === undefined || lead?.leadAssignTo === "")) : leads.filter(lead => isToday(lead.nextFollowUpDate))
+        // Emit notifications for the filtered leads
+        const newData = filteredLeads.map(lead => {
+          return {
+            message: 'This is a reminder for your follow-up scheduled for today with ' + lead.senderName,
+            lead
+          }
+        });
+        io.to(finduser.socketId).emit('followUpNotification', newData)
+      }
+
     } catch (err) {
       console.error('Error fetching leads: ', err);
     }
   });
 
   io.emit('triggerUserDetails');
+
   socket.on("disconnect", () => {
-    console.log("User disconnected");
+    console.log("User disconnected" + socket.id);
+    onlineUsers = onlineUsers?.filter((user) => user?.socketId !== socket.id)
+    io.emit("getonlineUsers", onlineUsers)
   });
 });
 
