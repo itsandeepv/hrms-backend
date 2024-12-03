@@ -8,6 +8,9 @@ const NewLeads = require("../models/leadsModel");
 const moment = require("moment");
 const fs = require("fs");
 const { getIndiaMartKey } = require("../utils");
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const s3uploads = require("../middlewares/s3ulpoads");
 
 
 const register = async (req, res, next) => {
@@ -208,55 +211,60 @@ const createUserByAdmin = async (req, res, next) => {
 const uploadProfileImage = async (req, res, next) => {
     try {
         const user = req.user
-        let file = req.file
-
+        let file = req.files
+        let img_url = {}
         const allowUser = ["company", "admin", "superadmin"]
         if (allowUser.includes(req.user?.role)) {
             if (!file) {
                 return res.status(400).json({ status: false, message: 'No file uploaded' });
             }
-            const img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
-            // if (type == "quotation") {
+
             const findUser = await NewUser.findById(user?._id)
             if (findUser) {
-    
+                if (req.files && req.files.image) {
+                    const file = req.files.image;
+                    // Generate unique file name
+                    const fileExtension = path.extname(file.name);
+                    const fileName = `${uuidv4()}${fileExtension}`;
+
+                    // Upload to S3
+                    const params = {
+                        Bucket: process.env.AWS_BUCKET_NAME,
+                        Key: `profile/${fileName}`,
+                        Body: fs.createReadStream(file.tempFilePath), // Read from temporary location
+                        ContentType: file.mimetype,
+                          ACL: 'public-read',
+                    };
+
+                    const uploadResponse = await s3uploads.upload(params).promise();
+                    img_url.url = uploadResponse.Location;
+                    img_url.path = uploadResponse?.key;
+                    // console.log("uploadResponse", img_url);
+                    // Delete temporary file
+                    fs.unlinkSync(file.tempFilePath);
+                }
                 if (findUser?.companyLogo?.url) {
                     const filePath = findUser?.companyLogo?.path;
-                    fs.unlink(filePath, (err) => {
-                        if (err) {
-                            return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
-                        }
-                    });
-                    let updateData = await NewUser.findByIdAndUpdate(user?._id, {
-                        companyLogo: {
-                            fileID: 1,
-                            url: img_url,
-                            path: file?.path
-                        }
-                    }, { new: true })
-                    res.status(200).json({
-                        status: true,
-                        message: "image file saved",
-                        data: updateData?.companyLogo
-    
-                    })
-    
-                } else {
-                    const updateq = await NewUser.findByIdAndUpdate(user?._id, {
-                        companyLogo: {
-                            fileID: 1,
-                            url: img_url,
-                            path: file?.path
-                        }
-                    }, { new: true })
-                    res.status(200).json({
-                        status: true,
-                        message: "Image  file saved",
-                        data: updateq?.companyLogo
-                    })
-    
+                    if (filePath) {
+                        const deleteParams = {
+                            Bucket: process.env.AWS_BUCKET_NAME,
+                            Key: filePath,
+                        };
+                        await s3uploads.deleteObject(deleteParams).promise();
+                    }
+
                 }
-    
+
+                const updateq = await NewUser.findByIdAndUpdate(user?._id, {
+                    companyLogo: img_url
+                }, { new: true })
+                res.status(200).json({
+                    status: true,
+                    message: "Image  file saved",
+                    data: updateq?.companyLogo
+                })
+
+
             } else {
                 res.status(200).json({
                     status: false,
@@ -264,60 +272,76 @@ const uploadProfileImage = async (req, res, next) => {
                 })
             }
 
-        }else{
+        } else {
             if (!file) {
                 return res.status(400).json({ status: false, message: 'No file uploaded' });
             }
-            const img_url = `${req.protocol}://${req.get('host')}/${file.destination}${file.filename}`
+
+            if (req.files && req.files.image) {
+                const file = req.files.image;
+                // Generate unique file name
+                const fileExtension = path.extname(file.name);
+                const fileName = `${uuidv4()}${fileExtension}`;
+
+                // Upload to S3
+                const params = {
+                    Bucket: process.env.AWS_BUCKET_NAME,
+                    Key: `profile/${fileName}`,
+                    Body: fs.createReadStream(file.tempFilePath), // Read from temporary location
+                    ContentType: file.mimetype,
+                    //   ACL: 'public-read',
+                };
+
+                const uploadResponse = await s3uploads.upload(params).promise();
+                img_url.url = uploadResponse.Location;
+                img_url.path = uploadResponse?.key;
+                // console.log("uploadResponse", img_url);
+                // Delete temporary file
+                fs.unlinkSync(file.tempFilePath);
+            }
+
             // if (type == "quotation") {
             const findUser = await OtherUser.findById(user?._id)
             if (findUser) {
-    
                 if (findUser?.profilePic?.url) {
                     const filePath = findUser?.profilePic?.path;
-                    fs.unlink(filePath, (err) => {
-                        if (err) {
-                            return res.status(500).json({ status: false, message: 'Error deleting file from server!', error: err });
-                        }
-                    });
+                    if (filePath) {
+                        const deleteParams = {
+                            Bucket: process.env.AWS_BUCKET_NAME,
+                            Key: filePath,
+                        };
+                        await s3uploads.deleteObject(deleteParams).promise();
+                    }
                     let updateData = await OtherUser.findByIdAndUpdate(user?._id, {
-                        profilePic: {
-                            fileID: 1,
-                            url: img_url,
-                            path: file?.path
-                        }
+                        profilePic: img_url
                     }, { new: true })
                     res.status(200).json({
                         status: true,
                         message: "image file saved",
                         data: updateData?.profilePic
-    
+
                     })
-    
+
                 } else {
                     const updateq = await OtherUser.findByIdAndUpdate(user?._id, {
-                        profilePic: {
-                            fileID: 1,
-                            url: img_url,
-                            path: file?.path
-                        }
+                        profilePic: img_url
                     }, { new: true })
                     res.status(200).json({
                         status: true,
                         message: "Image  file saved",
                         data: updateq?.profilePic
                     })
-    
+
                 }
-    
+
             } else {
                 res.status(200).json({
                     status: false,
                     message: "Data Not found"
                 })
-            } 
+            }
         }
-        
+
 
     } catch (error) {
         res.status(500).json({
@@ -335,7 +359,7 @@ const editProfile = async (req, res, next) => {
     let file = req.file
     // console.log(user, file);
     const allowUser = ["company", "admin", "superadmin"]
-    
+
     try {
         if (allowUser.includes(req.user?.role)) {
             let img_url = ""
@@ -355,20 +379,16 @@ const editProfile = async (req, res, next) => {
                     }
                     const updatedData = await NewUser.findByIdAndUpdate(user?._id, {
                         ...data,
-                        companyLogo: {
-                            fileID: 1,
-                            url: img_url,
-                            path: file?.path
-                        }
-    
+                        companyLogo: img_url
+
                     }, { new: true })
                     res.status(200).json({
                         status: true,
                         message: "Profile updated success",
                         data: updatedData
                     });
-    
-                }else{
+
+                } else {
                     const updatedData = await NewUser.findByIdAndUpdate(user?._id, {
                         ...data
                     }, { new: true })
@@ -376,18 +396,18 @@ const editProfile = async (req, res, next) => {
                         status: true,
                         message: "Profile updated success",
                         data: updatedData
-                    }); 
+                    });
                 }
-    
-    
+
+
             } else {
                 res.status(404).json({
                     status: false,
                     message: "User not found !",
                 });
             }
-    
-        }else{
+
+        } else {
             const findUser = await OtherUser.findById(user?._id);
             if (findUser) {
                 const updatedData = await OtherUser.findByIdAndUpdate(user?._id, {
@@ -397,9 +417,9 @@ const editProfile = async (req, res, next) => {
                     status: true,
                     message: "Profile updated success",
                     data: updatedData
-                }); 
-    
-    
+                });
+
+
             } else {
                 res.status(404).json({
                     status: false,
@@ -931,10 +951,10 @@ const getSettings = async (req, res, next) => {
         const findUser = await NewUser.findById(user?._id).lean();
         const userdata = await OtherUser.findById(user?._id).lean();
         if (findUser) {
-            
+
             // console.log(findUser);
             const formatedData = {
-                ...findUser, 
+                ...findUser,
                 companyDetails: {
                     name: findUser.companyName,
                     address: findUser.address || "",
@@ -955,13 +975,13 @@ const getSettings = async (req, res, next) => {
                 data: formatedData
             });
 
-        }else if(userdata){ 
+        } else if (userdata) {
             const companyData = await NewUser.findById(userdata?.companyId);
             res.status(200).json({
                 status: true,
                 message: "User Details !",
                 data: {
-                    ...userdata, 
+                    ...userdata,
                     companyDetails: {
                         name: companyData.companyName,
                         address: companyData.address || "",
@@ -976,7 +996,7 @@ const getSettings = async (req, res, next) => {
                     }
                 }
             });
-        }else {
+        } else {
             res.status(404).json({
                 status: false,
                 message: "User not found !",
@@ -1111,28 +1131,29 @@ const editSettings = async (req, res, next) => {
     }
 }
 
-const addLeadFields = async(req, res) => {
+const addLeadFields = async (req, res) => {
     try {
-        const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
-        if(user){
+        // const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        const user = await NewUser.findById(req.user.role === "admin" ? req.user._id : req.user.companyId)
+        if (user) {
             const index = user.leadFields?.findIndex((item) => item?.label?.toLocaleLowerCase() === req.body.label?.trim()?.toLocaleLowerCase())
             // console.log("index", index)
-            if(index === -1){
+            if (index === -1) {
                 user.leadFields.push(req.body)
                 await user.save()
-    
+
                 res.status(200).json({
                     status: true,
                     message: "New field added successfully.",
                     data: user.leadFields[user.leadFields.length - 1]
                 })
-            }else{
+            } else {
                 res.status(200).json({
                     status: false,
                     message: "This label already exist.",
                 })
             }
-        }else{
+        } else {
             res.status(404).json({
                 status: false,
                 message: "User not found, please try again.",
@@ -1143,20 +1164,21 @@ const addLeadFields = async(req, res) => {
             status: false,
             message: error.message,
             error: error,
-          })
+        })
     }
 }
 
-const getLeadFields = async(req, res) => {
+const getLeadFields = async (req, res) => {
     try {
-        const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
-        if(user){
+        // const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        const user = await NewUser.findById(req.user.role === "admin" ? req.user._id : req.user.companyId)
+        if (user) {
             res.status(200).json({
                 status: true,
                 message: "Lead fields fetched successfully.",
                 data: user.leadFields
             })
-        }else{
+        } else {
             res.status(404).json({
                 status: false,
                 message: "User not found, please try again.",
@@ -1167,17 +1189,18 @@ const getLeadFields = async(req, res) => {
             status: false,
             message: error.message,
             error: error,
-          })
+        })
     }
 }
 
-const deleteLeadFields = async(req, res) => {
+const deleteLeadFields = async (req, res) => {
     try {
         // console.log("req.params.id", req.params.id)
-        const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
-        if(user){
+        // const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        const user = await NewUser.findById(req.user.role === "admin" ? req.user._id : req.user.companyId)
+        if (user) {
             const isFieldExist = user.leadFields.some((item) => item?._id.toString() === req.params.id)
-            if(!isFieldExist){
+            if (!isFieldExist) {
                 res.status(200).json({
                     status: false,
                     message: "This field not available",
@@ -1192,7 +1215,7 @@ const deleteLeadFields = async(req, res) => {
                 message: "Lead fields deleted successfully.",
                 data: user.leadFields
             })
-        }else{
+        } else {
             res.status(404).json({
                 status: false,
                 message: "User not found, please try again.",
@@ -1203,21 +1226,22 @@ const deleteLeadFields = async(req, res) => {
             status: false,
             message: error.message,
             error: error,
-          })
+        })
     }
 }
 
-const editLeadFields = async(req, res) => {
+const editLeadFields = async (req, res) => {
     try {
-        const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
-        if(user){
+        // const user = req.user.role === "admin" ? await NewUser.findById(req.user._id) : await OtherUser.findById(req.user._id)
+        const user = await NewUser.findById(req.user.role === "admin" ? req.user._id : req.user.companyId)
+        if (user) {
             const leadField = user.leadFields.find((item) => item?._id.toString() === req.params.id)
 
             if (leadField) {
                 const isLabelDuplicate = user.leadFields.some(
                     (item) => item._id.toString() !== req.params.id && item.label === req.body.label
                 );
-        
+
                 if (isLabelDuplicate) {
                     return res.status(400).json({
                         status: false,
@@ -1239,7 +1263,7 @@ const editLeadFields = async(req, res) => {
                     message: "Lead field not found."
                 });
             }
-        }else{
+        } else {
             res.status(404).json({
                 status: false,
                 message: "User not found, please try again.",
@@ -1250,7 +1274,7 @@ const editLeadFields = async(req, res) => {
             status: false,
             message: error.message,
             error: error,
-          })
+        })
     }
 }
 

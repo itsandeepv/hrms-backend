@@ -8,20 +8,6 @@ const createNote = async (data) => {
 const publicUrl = "https://api.crmhai.com/api"
 // const publicUrl = "http://localhost:5001/api"
 
-
-// const isToday = (date) => {
-//   if(date){
-//     const today = new Date();
-//     date = new Date(date);
-//     // console.log(date.getDate() , today.getDate());
-//     return date.getDate() == today.getDate() &&
-//       date.getMonth() === today.getMonth() &&
-//       date.getFullYear() === today.getFullYear();
-//   }else{
-//     return false
-//   }
-// };
-
 const isToday = (inputDate) => {
   if(inputDate){
     const today = new Date();
@@ -34,7 +20,6 @@ const isToday = (inputDate) => {
     return false
   }
 };
-
 
 const isBeforeToday = (dateString) => {
   // Get today's date in UTC

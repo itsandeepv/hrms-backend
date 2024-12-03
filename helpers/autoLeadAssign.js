@@ -6,114 +6,47 @@
 
 
 
+
 // const autoLeadAssign = async (newLeadData) => {
 //     try {
 //         let userId = newLeadData?.userId;
 //         const findUser = await NewUser.findById(userId);
-//         let sourceArray = findUser?.sources?.find((item) => item?.name?.toLowerCase() === newLeadData?.leadSource && item?.isIntegrated)
-//         if(sourceArray){
-//             const index = sourceArray?.autoAssignTo?.findIndex((item)=> item === sourceArray?.lastAssignTo)
-//             if(index===-1 || sourceArray?.autoAssignTo?.length - 1 === index){
-//                 await NewLeads.findByIdAndUpdate(newLeadData?._id, {
-//                     leadAssignTo: sourceArray?.autoAssignTo[0] || "",
+//         const selectedEmployee = findUser?.selectedEmployee || [];
+//         if (selectedEmployee.length > 0 && findUser.autoAssigning) {
+//             const getSecondLastLead = await NewLeads.find({ leadSource: "indiamart" })
+//                 .sort({ queryTime: -1 })
+//                 .skip(1)
+//                 .limit(1);
+
+//             if (getSecondLastLead.length > 0) {
+//                 let employeeIndex = selectedEmployee.findIndex((item) => {
+//                     return item == getSecondLastLead[0]?.leadAssignTo;
+//                 });
+
+//                 const newIndex = employeeIndex != -1 && selectedEmployee?.length > employeeIndex + 1 ? employeeIndex + 1 : 0
+//                 // console.log("checkIsAssign", checkIsAssign);
+//                 const updatedLead = await NewLeads.findByIdAndUpdate(newLeadData?._id, {
+//                     leadAssignTo: selectedEmployee[newIndex] || "",
 //                     leadAssignAt: moment().format('YYYY-MM-DD HH:mm:ss')
 //                 }, { new: true });
 
-//                 sourceArray.lastAssignTo = sourceArray?.autoAssignTo[0] ?? ""
-
-//                 await NewUser.findByIdAndUpdate(userId, {
-//                     sources: sourceArray
+//                 // Update user's assigned leads
+//                 const userdata = await OtherUser.findById(selectedEmployee[newIndex]);
+//                 userdata.leadsAssign.push(newLeadData?._id);
+//                 await userdata.save();
+//                 // console.log(updatedLead, "<<<< Lead Assigned Successfully");
+//                 const raw = JSON.stringify({
+//                     "leadId": newLeadData?._id,
+//                     "employeeId": userdata?._id
 //                 });
-
-//                 const notificationDetails = {
-//                     title: "A new lead has been assigned to you!",
-//                     isRead: false,
-//                     userId: sourceArray?.autoAssignTo[0],
-//                     leadId: newLeadData?._id,
-//                 }
-//                 const requestOptions = {
-//                     method: "POST",
-//                     headers: {
-//                         "Content-Type": "application/json"
-//                     },
-//                     body: JSON.stringify(notificationDetails)
-//                 };
-    
-//                 await fetch(`${publicUrl}/save-notification`, requestOptions).then((res) => res.json()).then((data) => {
-//                     io.emit('leadAssigned', notificationDetails);
-//                 }).catch((er) => {
-//                     console.log(er);
-//                 })
-//             }else{
-//                 await NewLeads.findByIdAndUpdate(newLeadData?._id, {
-//                     leadAssignTo: sourceArray?.autoAssignTo[index+1] || "",
-//                     leadAssignAt: moment().format('YYYY-MM-DD HH:mm:ss')
-//                 }, { new: true });
-
-//                 sourceArray.lastAssignTo = sourceArray?.autoAssignTo[index+1] ?? ""
-
-//                 await NewUser.findByIdAndUpdate(userId, {
-//                     sources: sourceArray
-//                 });
-
-//                 const notificationDetails = {
-//                     title: "A new lead has been assigned to you!",
-//                     isRead: false,
-//                     userId: sourceArray?.autoAssignTo[0],
-//                     leadId: newLeadData?._id,
-//                 }
-//                 const requestOptions = {
-//                     method: "POST",
-//                     headers: {
-//                         "Content-Type": "application/json"
-//                     },
-//                     body: JSON.stringify(notificationDetails)
-//                 };
-    
-//                 await fetch(`${publicUrl}/save-notification`, requestOptions).then((res) => res.json()).then((data) => {
-//                     io.emit('leadAssigned', notificationDetails);
+//                 fetch(`${publicUrl}/auto-assign-lead`, raw).then((res) => res.json()).then((data) => {
 //                 }).catch((er) => {
 //                     console.log(er);
 //                 })
 //             }
+//         } else {
+//             console.log("No selected employees found.");
 //         }
-        
-//         // const selectedEmployee = findUser?.selectedEmployee || [];
-//         // if (selectedEmployee.length > 0 && findUser.autoAssigning) {
-//         //     const getSecondLastLead = await NewLeads.find({ leadSource: "indiamart" })
-//         //         .sort({ queryTime: -1 })
-//         //         .skip(1)
-//         //         .limit(1);
-
-//         //     if (getSecondLastLead.length > 0) {
-//         //         let employeeIndex = selectedEmployee.findIndex((item) => {
-//         //             return item == getSecondLastLead[0]?.leadAssignTo;
-//         //         });
-
-//         //         const newIndex = employeeIndex != -1 && selectedEmployee?.length > employeeIndex + 1 ? employeeIndex + 1 : 0
-//         //         // console.log("checkIsAssign", checkIsAssign);
-//         //         const updatedLead = await NewLeads.findByIdAndUpdate(newLeadData?._id, {
-//         //             leadAssignTo: selectedEmployee[newIndex] || "",
-//         //             leadAssignAt: moment().format('YYYY-MM-DD HH:mm:ss')
-//         //         }, { new: true });
-
-//         //         // Update user's assigned leads
-//         //         const userdata = await OtherUser.findById(selectedEmployee[newIndex]);
-//         //         userdata.leadsAssign.push(newLeadData?._id);
-//         //         await userdata.save();
-//         //         // console.log(updatedLead, "<<<< Lead Assigned Successfully");
-//         //         const raw = JSON.stringify({
-//         //             "leadId": newLeadData?._id,
-//         //             "employeeId": userdata?._id
-//         //         });
-//         //         fetch(`${publicUrl}/auto-assign-lead`, raw).then((res) => res.json()).then((data) => {
-//         //         }).catch((er) => {
-//         //             console.log(er);
-//         //         })
-//         //     }
-//         // } else {
-//         //     console.log("No selected employees found.");
-//         // }
 //     } catch (error) {
 //         console.error("Error in autoLeadAssign:", error);
 //     }

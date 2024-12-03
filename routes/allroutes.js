@@ -1,4 +1,4 @@
-const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus, getChartDetails, bulkLeadInset, getJustdialLead, getIndiamartLead } = require("../controllars/leadscontrollar");
+const { createNewLead, getAllLead, getSingleLead, deleteLead, dashboardleadCount, editLead, searchQuary, getLeadsByStatus, getChartDetails, bulkLeadInset, getJustdialLead, getIndiamartLead, getMetaLeads } = require("../controllars/leadscontrollar");
 const { createleadsUpdate, getLeadhistory, updateLeadStatus, getLeadStatus, addNewleadStatus, getAllStatus, deleteStatus, updateStatusType, createNotification } = require("../controllars/leadsUpdatescontrollar");
 const { addProduct, getProduct, getProductDetail, deleteProduct, editProduct, searchProduct } = require("../controllars/product.controller");
 const { deleteNotification, getNotification, deleteNotificationAll, saveNotification, readNotification } = require("../controllars/notificationcontrollar");
@@ -6,7 +6,6 @@ const { ValidateUser } = require("../middlewares/authMiddleware");
 const { createQuotation, getQuotation, deleteQuotation, getQuotationDetails, editQuotation } = require("../controllars/quotation.controller");
 const { createInvoice, getInvoice, getInvoiceDetails, editInvoice, deleteInvoice } = require("../controllars/invoice.controller");
 const {addRole, addModule, getModule, editModule, deleteModule, editModuleAccessibility} = require("../controllars/moduleAccess.controller")
-const uploadImage = require("../middlewares/uploadImage");
 const { addLabel, getLabel, deleteLabel, editLabel } = require("../controllars/label.controller");
 const { addLeadFields, getLeadFields, deleteLeadFields, editLeadFields } = require("../controllars/authcontrollar");
 const { addSource, getSource, deleteSource, editSource, editSourceAccessibility } = require("../controllars/source.controller");
@@ -54,11 +53,12 @@ leadsrouter.get("/home-leads/:status" ,ValidateUser,getLeadsByStatus)
 leadsrouter.get("/chart" ,ValidateUser,getChartDetails)
 
 //product 
-leadsrouter.post("/add-product", ValidateUser,uploadImage.single("image"), addProduct)
+// leadsrouter.post("/add-product", ValidateUser,uploadImage.single("image"), addProduct)
+leadsrouter.post("/add-product", ValidateUser, addProduct)
 leadsrouter.get("/get-product", ValidateUser, getProduct)
 leadsrouter.get("/get-product-detail/:id", ValidateUser, getProductDetail)
 leadsrouter.get("/delete-product/:id", ValidateUser, deleteProduct)
-leadsrouter.post("/edit-product/:id", ValidateUser,uploadImage.single("image"), editProduct)
+leadsrouter.post("/edit-product/:id", ValidateUser, editProduct)
 leadsrouter.get("/search-product", ValidateUser, searchProduct)
 
 leadsrouter.post("/create-quotation", ValidateUser, createQuotation)
@@ -76,6 +76,8 @@ leadsrouter.delete("/delete-invoice/:id", ValidateUser, deleteInvoice)
 
 leadsrouter.post("/justdial/:id", getJustdialLead)
 leadsrouter.post("/indiamart/:id", getIndiamartLead)
+leadsrouter.get("/webhooks", getMetaLeads)
+leadsrouter.post("/webhooks", getMetaLeads)
 
 //Role
 leadsrouter.post("/add-role", ValidateUser, addRole)
