@@ -5,8 +5,8 @@ const createNote = async (data) => {
     let createdata = await createNote.save()
 }
 
-const publicUrl = "https://api.crmhai.com/api"
-// const publicUrl = "http://localhost:5001/api"
+// const publicUrl = "https://api.crmhai.com/api"
+const publicUrl = "http://localhost:5001/api"
 
 const isToday = (inputDate) => {
   if(inputDate){
