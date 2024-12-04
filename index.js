@@ -111,8 +111,7 @@ io.on("connection", (socket) => {
     try {
       // Fetch leads based on user details and follow-up date
       const finduser = onlineUsers?.find((user)=> user.userId == data?._id )
-
-      console.log("finduser" ,finduser ,data?._id);
+      // console.log("finduser" ,finduser ,data?._id);
       if(finduser){
         const leads = data?.role === "admin" ? await NewLeads.find({
           $or: [
