@@ -233,7 +233,7 @@ const uploadProfileImage = async (req, res, next) => {
                         Key: `profile/${fileName}`,
                         Body: fs.createReadStream(file.tempFilePath), // Read from temporary location
                         ContentType: file.mimetype,
-                          ACL: 'public-read',
+                        //   ACL: 'public-read',
                     };
 
                     const uploadResponse = await s3uploads.upload(params).promise();
