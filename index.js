@@ -104,7 +104,7 @@ io.on("connection", (socket) => {
       onlineUsers.push({ userId, socketId: socket.id });
     }
     io.emit("getonlineUsers", onlineUsers);
-    // console.log("onlineUsers" ,userId ,onlineUsers);
+    console.log("onlineUsers" ,userId ,onlineUsers);
   });
 
   socket.on("userDetails", async (data) => {

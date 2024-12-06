@@ -141,6 +141,7 @@ const getAllLead = async (req, res, next) => {
         let endfromdate = req.query.endfromdate
         let leadStatus = req.query.leadStatus
         let labelValue = req.query.labelValue
+        let noWorked = req.query.noWorked
         const isPositiveLead = req.query.isPositive; // Convert to boolean if needed
         const followUpOf = req.query.followUpOf; // Convert to boolean if needed
 
@@ -154,7 +155,10 @@ const getAllLead = async (req, res, next) => {
             const leadSourceArray = Array.isArray(leadSource) ? leadSource : [leadSource];
             query.leadSource = { $in: leadSourceArray };
         }
-        if (isPositiveLead) { query.isPositiveLead = isPositiveLead; }
+        if (isPositiveLead == "false") { query.isPositiveLead = ""; }
+        console.log("noWorked" ,noWorked);
+        
+        // if (noWorked) { query.isPositiveLead = isPositiveLead; }
         // if (leadAssignTo) { query.leadAssignTo = leadAssignTo; }
 
         if (startfromdate && endfromdate) {
