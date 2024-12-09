@@ -5,6 +5,7 @@ const createNote = async (data) => {
     let createdata = await createNote.save()
 }
 
+// const publicUrl = "https://api.cutedgetechnology.com"
 const publicUrl = "https://api.crmhai.com/api"
 // const publicUrl = "http://localhost:5001/api"
 

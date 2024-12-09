@@ -233,7 +233,7 @@ const uploadProfileImage = async (req, res, next) => {
                         Key: `profile/${fileName}`,
                         Body: fs.createReadStream(file.tempFilePath), // Read from temporary location
                         ContentType: file.mimetype,
-                          ACL: 'public-read',
+                        //   ACL: 'public-read',
                     };
 
                     const uploadResponse = await s3uploads.upload(params).promise();
@@ -1021,21 +1021,17 @@ const assignLead = async (req, res, next) => {
     try {
         // Find the user and check if the leadId already exists in the leadsAssign array
         const userdata = await OtherUser.findById(employeeId);
-        if (!userdata) {
-            return res.status(404).json({
-                status: false,
-                message: "User not found!",
-            });
-        } else {
+        const admindata = await NewUser.findById(employeeId);
+        if (admindata) {
             await NewLeads.findByIdAndUpdate(leadId, {
-                leadAssignTo: userdata?._id || "",
+                leadAssignTo: admindata?._id || "",
                 leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss')
             }, { new: true })
 
             let notificationDetails = {
                 title: "A new lead has been assigned to you!",
                 isRead: false,
-                userId: userdata?._id.toString(),
+                userId: admindata?._id.toString(),
                 leadId: leadId,
             }
             const requestOptions = {
@@ -1056,8 +1052,47 @@ const assignLead = async (req, res, next) => {
             return res.status(200).json({
                 status: true,
                 message: "Lead assigned successfully!",
-                data: userdata
+                data: admindata
             });
+        } else {
+            if (!userdata) {
+                return res.status(404).json({
+                    status: false,
+                    message: "User not found!",
+                });
+            } else {
+                await NewLeads.findByIdAndUpdate(leadId, {
+                    leadAssignTo: userdata?._id || "",
+                    leadAssignAt: moment(new Date).format('YYYY-MM-DD HH:mm:ss')
+                }, { new: true })
+
+                let notificationDetails = {
+                    title: "A new lead has been assigned to you!",
+                    isRead: false,
+                    userId: userdata?._id.toString(),
+                    leadId: leadId,
+                }
+                const requestOptions = {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(notificationDetails)
+                };
+
+                // leadAssignEmail(notificationDetails)
+
+                await fetch(`${publicUrl}/save-notification`, requestOptions).then((res) => res.json()).then((data) => {
+                    io.emit('leadAssigned', notificationDetails);
+                }).catch((er) => {
+                    console.log(er);
+                })
+                return res.status(200).json({
+                    status: true,
+                    message: "Lead assigned successfully!",
+                    data: userdata
+                });
+            }
         }
 
 

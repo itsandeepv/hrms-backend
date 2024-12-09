@@ -96,6 +96,7 @@ db.once("open", () => {
 
 
 // WebSocket connection
+
 io.on("connection", (socket) => {
   console.log("A user connected", socket.id);
 
