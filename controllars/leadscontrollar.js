@@ -155,10 +155,10 @@ const getAllLead = async (req, res, next) => {
             const leadSourceArray = Array.isArray(leadSource) ? leadSource : [leadSource];
             query.leadSource = { $in: leadSourceArray };
         }
-        if (isPositiveLead == "false") { query.isPositiveLead = ""; }
-        console.log("noWorked" ,noWorked);
-        
-        // if (noWorked) { query.isPositiveLead = isPositiveLead; }
+        if (isPositiveLead) { query.isPositiveLead = isPositiveLead; }
+        if (noWorked == "false") { 
+            // console.log("noWorked" ,noWorked);
+            query.isPositiveLead = ""; }
         // if (leadAssignTo) { query.leadAssignTo = leadAssignTo; }
 
         if (startfromdate && endfromdate) {
