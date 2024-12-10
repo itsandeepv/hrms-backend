@@ -66,10 +66,16 @@ const NewUserSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    isEmailEnable: {
-        type: Boolean,
-        default: true
-    },
+    isEmailEnable:[{
+        role: {
+            type:String,
+            default:"admin"
+        },
+        isEnable: {
+            type:Boolean,
+            default:true
+        }
+    }],
     leadFields: [{
         label: {
             type: String,

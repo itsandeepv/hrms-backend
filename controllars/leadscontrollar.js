@@ -158,7 +158,7 @@ const getAllLead = async (req, res, next) => {
         if (isPositiveLead) { query.isPositiveLead = isPositiveLead; }
         if (noWorked == "false") { 
             // console.log("noWorked" ,noWorked);
-            query.isPositiveLead = ""; }
+            query.isPositiveLead = "new"; }
         // if (leadAssignTo) { query.leadAssignTo = leadAssignTo; }
 
         if (startfromdate && endfromdate) {

@@ -1042,8 +1042,6 @@ const assignLead = async (req, res, next) => {
                 body: JSON.stringify(notificationDetails)
             };
 
-            // leadAssignEmail(notificationDetails)
-
             await fetch(`${publicUrl}/save-notification`, requestOptions).then((res) => res.json()).then((data) => {
                 io.emit('leadAssigned', notificationDetails);
             }).catch((er) => {
@@ -1105,6 +1103,112 @@ const assignLead = async (req, res, next) => {
     }
 }
 
+
+const assignMultipleLead = async (req, res, next) => {
+    // let user = req.user;
+    let { leadId, employeeId } = req.body;
+    const io = req.app.get('io');  // Retrieve the io instance from app context
+    // console.log(leadId, io);
+    try {
+        // Find the user and check if the leadId already exists in the leadsAssign array
+        const userdata = await OtherUser.findById(employeeId);
+        const admindata = await NewUser.findById(employeeId);
+        if (admindata) {
+
+            // Update all leads in the `leadId` array
+            const result = await NewLeads.updateMany(
+                { _id: { $in: leadId } }, // Match documents with IDs in the leadId array
+                {
+                    $set: {
+                        leadAssignTo: admindata._id || "",
+                        leadAssignAt: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                    },
+                }
+            );
+            // console.log("result" ,result?.modifiedCount);
+            let notificationDetails = {
+                title: `You have assign ${result?.modifiedCount} new leads !`,
+                isRead: false,
+                userId: admindata?._id.toString(),
+                leadId: leadId,
+            }
+            const requestOptions = {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(notificationDetails)
+            };
+
+            // leadAssignEmail(notificationDetails)
+
+            await fetch(`${publicUrl}/save-notification`, requestOptions).then((res) => res.json()).then((data) => {
+                io.emit('leadAssigned', notificationDetails);
+            }).catch((er) => {
+                console.log(er);
+            })
+            return res.status(200).json({
+                status: true,
+                message: "Lead assigned successfully!",
+                data: admindata
+            });
+        } else {
+            if (!userdata) {
+                return res.status(404).json({
+                    status: false,
+                    message: "User not found!",
+                });
+            } else {
+
+                const result = await NewLeads.updateMany(
+                    { _id: { $in: leadId } }, // Match documents with IDs in the leadId array
+                    {
+                        $set: {
+                            leadAssignTo: userdata._id || "",
+                            leadAssignAt: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                        },
+                    }
+                );
+                
+                // console.log("result" ,result);
+                let notificationDetails = {
+                    title: `You have assign ${result?.modifiedCount} new leads !`,
+                    isRead: false,
+                    userId: userdata?._id.toString(),
+                    leadId: leadId,
+                }
+                const requestOptions = {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(notificationDetails)
+                };
+
+                // leadAssignEmail(notificationDetails)
+
+                await fetch(`${publicUrl}/save-notification`, requestOptions).then((res) => res.json()).then((data) => {
+                    io.emit('leadAssigned', notificationDetails);
+                }).catch((er) => {
+                    console.log(er);
+                })
+                return res.status(200).json({
+                    status: true,
+                    message: "Lead assigned successfully!",
+                    data: userdata
+                });
+            }
+        }
+
+
+
+    } catch (error) {
+        return res.status(500).json({
+            error: error.message || error,
+            status: false
+        });
+    }
+}
 
 
 const editSettings = async (req, res, next) => {
@@ -1337,5 +1441,6 @@ module.exports = {
     addLeadFields,
     getLeadFields,
     deleteLeadFields,
-    editLeadFields
+    editLeadFields,
+    assignMultipleLead
 };
