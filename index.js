@@ -86,7 +86,7 @@ db.once("open", () => {
   const changeStream = collection.watch();
   // console.log(collection);
   changeStream.on("change", (changedata) => {
-    console.log("Change detected:", onlineUsers);
+    // console.log("Change detected:", onlineUsers);
     let { fullDocument } = changedata
     if (changedata.operationType == "insert") {
       sendNotification(fullDocument, io, changedata)

@@ -15,29 +15,10 @@ function generateOTP(length) {
     return otp;
 }
 
-// Configure your email transport
-// const transporter = nodemailer.createTransport({
-//     service: 'gmail', // Use your email provider, e.g., 'gmail',
-//     port: 465,
-//     secure: true,
-//     //   logger:true,
-//     debug: true,
-//     secureConnection: false,
-//     auth: {
-//         user: process.env.EMAIL_USER,
-//         pass: process.env.EMAIL_PASS,// Replace with your email password or an app password
-//     },
-//     tls: {
-//         rejectUnauthorized: true
-//     }
-// });
-
 
 const smptTransporter = nodemailer.createTransport({
     host: 'cutedgetechnology.com', // Replace with your SMTP server
     port: 465, // Replace with your SMTP port (465 for SSL, 587 for TLS)
-    // secure: true,
-    //   logger:true,
     debug: true,
     secureConnection: false,
     secure: true, // Set to true if using port 465, false for other ports
@@ -57,7 +38,6 @@ const sendVerifyEmail = async (email, name, code) => {
     const mailOptions = {
         to: email, // List of recipients
         subject: 'Verification Code ✔', // Subject line
-        // text: `Your verification code is:3456 `, // Plain text body
         html: `<div class="container">
     <div class="content">
         <p>Hi ${name},</p>
@@ -94,7 +74,7 @@ const sendVerifyEmail = async (email, name, code) => {
 const leadRecivedEmail = async (leadDetails) => {
     let findUser = await NewUser.findById(leadDetails?.userId)
     const mailOptions = {
-        to: findUser?.email||"", // Admin email to receive the notification
+        to: findUser?.email || "", // Admin email to receive the notification
         subject: 'New Lead Received', // Subject line
         html: `
         <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
@@ -144,16 +124,18 @@ const leadRecivedEmail = async (leadDetails) => {
     };
 
 
-    try {
-        let response = await smptTransporter.sendMail({
-            from: `"Crmhai.com" <sandeep@cutedgetechnology.com>`, // Your email
-            ...mailOptions,
-        });
-        console.log('Email sent successfully');
-        return response
-    } catch (error) {
-        console.error('Error sending email:', error);
-        return error
+    if (findUser && findUser?.isEmailEnable) {
+        try {
+            let response = await smptTransporter.sendMail({
+                from: `"Crmhai.com" <sandeep@cutedgetechnology.com>`, // Your email
+                ...mailOptions,
+            });
+            console.log('Email sent successfully');
+            return response
+        } catch (error) {
+            console.error('Error sending email:', error);
+            return error
+        }
     }
 };
 
@@ -162,7 +144,7 @@ const leadAssignEmail = async (details) => {
     let findUser = await OtherUser.findById(details?.userId)
     // console.log(findUser ,leadDetails);
     const mailOptions = {
-        to: findUser?.email||"", // Admin email to receive the notification
+        to: findUser?.email || "", // Admin email to receive the notification
         subject: 'New Lead Assign', // Subject line
         html: `
         <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
@@ -229,4 +211,4 @@ const leadAssignEmail = async (details) => {
 
 
 
-module.exports = { sendVerifyEmail,leadAssignEmail, generateOTP, leadRecivedEmail };
+module.exports = { sendVerifyEmail, leadAssignEmail, generateOTP, leadRecivedEmail };
