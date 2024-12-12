@@ -124,7 +124,7 @@ const leadRecivedEmail = async (leadDetails) => {
     };
 
 
-    if (findUser && findUser?.isEmailEnable) {
+    if (findUser && findUser?.isEmailEnable.some((vlu)=> vlu.role == "admin" && vlu.isEnable)) {
         try {
             let response = await smptTransporter.sendMail({
                 from: `"Crmhai.com" <sandeep@cutedgetechnology.com>`, // Your email
@@ -142,6 +142,7 @@ const leadRecivedEmail = async (leadDetails) => {
 const leadAssignEmail = async (details) => {
     let leadDetails = await NewLeads.findById(details?.leadId)
     let findUser = await OtherUser.findById(details?.userId)
+    let admin = await NewUser.findById(findUser?.companyId)
     // console.log(findUser ,leadDetails);
     const mailOptions = {
         to: findUser?.email || "", // Admin email to receive the notification
@@ -194,16 +195,19 @@ const leadAssignEmail = async (details) => {
     };
 
 
-    try {
-        let response = await smptTransporter.sendMail({
-            from: `"Crmhai.com" <sandeep@cutedgetechnology.com>`, // Your email
-            ...mailOptions,
-        });
-        console.log('Email sent successfully');
-        return response
-    } catch (error) {
-        console.error('Error sending email:', error);
-        return error
+    if (findUser && admin?.isEmailEnable.some((vlu)=> vlu.role == "employee" && vlu.isEnable)) {
+        try {
+            let response = await smptTransporter.sendMail({
+                from: `"Crmhai.com" <sandeep@cutedgetechnology.com>`, // Your email
+                ...mailOptions,
+            });
+            console.log('Email sent successfully');
+            return response
+        } catch (error) {
+            console.error('Error sending email:', error);
+            return error
+        }
+
     }
 };
 

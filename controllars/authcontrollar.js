@@ -1114,7 +1114,6 @@ const assignMultipleLead = async (req, res, next) => {
         const userdata = await OtherUser.findById(employeeId);
         const admindata = await NewUser.findById(employeeId);
         if (admindata) {
-
             // Update all leads in the `leadId` array
             const result = await NewLeads.updateMany(
                 { _id: { $in: leadId } }, // Match documents with IDs in the leadId array
