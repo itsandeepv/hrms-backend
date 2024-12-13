@@ -41,8 +41,8 @@ app.use(cors({
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
 
-const mongooseUrl = process.env.DATABASE_URL || "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
-// "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase"
+// const mongooseUrl = process.env.DATABASE_URL || "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
+const mongooseUrl = "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase"
 
 // Auth route start here
 app.use("/api", authrouter);
@@ -105,15 +105,15 @@ io.on("connection", (socket) => {
       onlineUsers.push({ userId, socketId: socket.id });
     }
     io.emit("getonlineUsers", onlineUsers);
-    console.log("onlineUsers" ,userId ,onlineUsers);
+    console.log("onlineUsers", userId, onlineUsers);
   });
 
   socket.on("userDetails", async (data) => {
     try {
       // Fetch leads based on user details and follow-up date
-      const finduser = onlineUsers?.find((user)=> user.userId == data?._id )
+      const finduser = onlineUsers?.find((user) => user.userId == data?._id)
       // console.log("finduser" ,finduser ,data?._id);
-      if(finduser){
+      if (finduser) {
         const leads = data?.role === "admin" ? await NewLeads.find({
           $or: [
             { companyId: data?._id },
