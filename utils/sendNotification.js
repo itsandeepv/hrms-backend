@@ -3,11 +3,8 @@ const { publicUrl } = require("./createNotefication");
 const { leadRecivedEmail } = require("./sendEmail");
 
 
-let isMessSave = true
 
 const sendNotification = (fullDocument, io, changedata) => {
-
-  autoLeadAssign(fullDocument, io)
   // console.log("fullDocument" ,fullDocument);
   
   let notificationDetails = {
@@ -21,6 +18,7 @@ const sendNotification = (fullDocument, io, changedata) => {
     leadSource: fullDocument.leadSource || "",
   }
   if(fullDocument.leadSource != "direct"){
+    autoLeadAssign(fullDocument, io)
     leadRecivedEmail(fullDocument)
     const requestOptions = {
       method: "POST",
@@ -29,14 +27,13 @@ const sendNotification = (fullDocument, io, changedata) => {
       },
       body: JSON.stringify(notificationDetails)
     };
-    if (isMessSave) {
+    
       fetch(`${publicUrl}/new-notification`, requestOptions).then((res) => res.json()).then((data) => {
-        console.log(data, notificationDetails);
-        isMessSave = false
+        // console.log(data, notificationDetails);
       }).catch((er) => {
         console.log(er);
       })
-    }
+    
     io.emit("dbUpdate", changedata);
   }
   //  createNote(noteficationDetails)

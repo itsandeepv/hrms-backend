@@ -418,7 +418,12 @@ const dashboardleadCount = async (req, res, next) => {
     let pendingFollowUp = userAllLeads.filter(lead => {
         return isBeforeToday(lead.nextFollowUpDate) == true
     });
-
+    const todayLeads = userAllLeads.filter(lead => {
+        return isToday(lead.createdAt) == true
+    });
+    const unTouchLeads = userAllLeads.filter(lead => {
+        return lead.isPositiveLead==="new"
+    });
 
     res.status(200).json({
         status: true,
@@ -429,6 +434,8 @@ const dashboardleadCount = async (req, res, next) => {
             nagetiveLead: nagetiveLead.length,
             todayFollowUp: todayFollowUp.length,
             pendingFollowUp: pendingFollowUp.length,
+            todayLeads: todayLeads.length,
+            unTouchLeads: unTouchLeads?.length
         }
     })
 }
@@ -511,6 +518,30 @@ const getLeadsByStatus = async (req, res) => {
             res.status(200).json({
                 status: true,
                 message: "Today followup Leads",
+                data: formatRes
+            })
+        }
+        if (status == "todaylead") {
+            const data = userLeads.filter((ld) => isToday(ld.createdAt) == true)
+            const formatRes = data.map((item) => {
+                const { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
+                return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
+            })
+            res.status(200).json({
+                status: true,
+                message: "Today's Leads",
+                data: formatRes
+            })
+        }
+        if (status == "untouch") {
+            const data = userLeads.filter((ld) => ld.isPositiveLead === "new")
+            const formatRes = data.map((item) => {
+                const { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
+                return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
+            })
+            res.status(200).json({
+                status: true,
+                message: "Untouch Leads",
                 data: formatRes
             })
         }
