@@ -486,8 +486,7 @@ const getLeadsByStatus = async (req, res) => {
     const query = {};
     query.$and = query.$and || [];
     if (employeeName && ["admin", "company"].includes(req.user?.role)) {
-        // { leadAddedBy: employeeName },
-        // { leadAssignTo: employeeName },
+        
         query.$and.push({
             $or: [
                 { leadAssignTo: employeeName },
