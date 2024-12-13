@@ -181,6 +181,7 @@ const editSourceAccessibility = async(req, res, next) => {
       // console.log("adminData", adminData)
       if(adminData){
         const updateData = await NewUser.findByIdAndUpdate(adminData?._id, {
+          ...req.body,
           sources: req.body.sources
         }, {new: true})
         // adminData.sources = req.body.sources

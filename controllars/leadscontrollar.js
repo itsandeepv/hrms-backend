@@ -138,12 +138,14 @@ const getAllLead = async (req, res, next) => {
         let page = parseInt(req.query?.page, 10) || 1;
         let limit = parseInt(req.query?.limit, 10) || 10;
         let startfromdate = req.query.startfromdate
+        let adminfollowed = req.query.adminfollowed
         let endfromdate = req.query.endfromdate
         let leadStatus = req.query.leadStatus
         let labelValue = req.query.labelValue
+        let noWorked = req.query.noWorked
+        let searchValue = req.query.searchValue
         const isPositiveLead = req.query.isPositive; // Convert to boolean if needed
         const followUpOf = req.query.followUpOf; // Convert to boolean if needed
-        let noWorked = req.query.noWorked
 
         const skip = ((page) - 1) * (limit);
         const query = {};
@@ -156,9 +158,10 @@ const getAllLead = async (req, res, next) => {
             query.leadSource = { $in: leadSourceArray };
         }
         if (isPositiveLead) { query.isPositiveLead = isPositiveLead; }
-        if (noWorked == "false") { 
+        if (noWorked == "false") {
             // console.log("noWorked" ,noWorked);
-            query.isPositiveLead = ""; }
+            query.isPositiveLead = "new";
+        }
         // if (leadAssignTo) { query.leadAssignTo = leadAssignTo; }
 
         if (startfromdate && endfromdate) {
@@ -200,9 +203,33 @@ const getAllLead = async (req, res, next) => {
             ];
         }
 
-
         query.$and = query.$and || [];
-        // console.log("leadAddedBy" , leadAddedBy);
+        if(searchValue){
+            query.$and.push({
+                $or: [
+                    { senderCompany: { $regex: searchValue, $options: "i" } },
+                    { leadSource: { $regex: searchValue, $options: "i" } },
+                    { senderState: { $regex: searchValue, $options: "i" } },
+                    { senderName: { $regex: searchValue, $options: "i" } },
+                    { senderEmail: { $regex: searchValue, $options: "i" } },
+                    { uniqeQueryId: { $regex: searchValue, $options: "i" } },
+                    { queryProductName: { $regex: searchValue, $options: "i" } },
+                    { senderMobileNumber: { $regex: searchValue } },
+                ]
+            });
+        }
+        
+        if(adminfollowed){
+            console.log("adminfollowed" , adminfollowed);
+            query.$and.push({
+                followupDates: {
+                    $elemMatch: {
+                        userId: adminfollowed
+                    }
+                }
+            });
+        }
+        
 
         if (["employee", "hr", "manager"].includes(req.user?.role)) {
             // console.log("User ID:", req.user?._id.toString());
@@ -245,7 +272,6 @@ const getAllLead = async (req, res, next) => {
 
         let leads = await NewLeads.find(query).sort(sortCondition).skip(skip).limit(limit);
 
-
         const totalLeads = await NewLeads.countDocuments(query);
 
         res.status(200).json({
@@ -285,24 +311,37 @@ const searchQuary = async (req, res) => {
             ]
         });
     }
-    let userLeads = await NewLeads.find(query);
     let { searchValue } = req.query
+    query.$and.push({
+        $or: [
+            { senderCompany: { $regex: searchValue, $options: "i" } },
+            { leadSource: { $regex: searchValue, $options: "i" } },
+            { senderState: { $regex: searchValue, $options: "i" } },
+            { senderName: { $regex: searchValue, $options: "i" } },
+            { senderEmail: { $regex: searchValue, $options: "i" } },
+            { uniqeQueryId: { $regex: searchValue, $options: "i" } },
+            { queryProductName: { $regex: searchValue, $options: "i" } },
+            { senderMobileNumber: { $regex: searchValue } },
+        ]
 
-    let filteredLead = userLeads.filter((ld) => {
-        return ld.senderCompany?.toLowerCase().includes(searchValue.toLowerCase())
-            || ld?.leadSource?.toLowerCase().includes(searchValue.toLowerCase())
-            || ld?.senderState?.toLowerCase().includes(searchValue.toLowerCase())
-            || ld?.senderName?.toLowerCase().includes(searchValue.toLowerCase())
-            || ld?.senderEmail?.toLowerCase().includes(searchValue.toLowerCase())
-            || ld?.uniqeQueryId?.toLowerCase().includes(searchValue.toLowerCase())
-            || ld?.queryProductName?.toLowerCase().includes(searchValue.toLowerCase())
-            || (ld?.senderMobileNumber && ld.senderMobileNumber.toString().includes(searchValue))
-    })
+    });
+    let userLeads = await NewLeads.find(query);
+
+    // let filteredLead = userLeads.filter((ld) => {
+    //     return ld.senderCompany?.toLowerCase().includes(searchValue.toLowerCase())
+    //         || ld?.leadSource?.toLowerCase().includes(searchValue.toLowerCase())
+    //         || ld?.senderState?.toLowerCase().includes(searchValue.toLowerCase())
+    //         || ld?.senderName?.toLowerCase().includes(searchValue.toLowerCase())
+    //         || ld?.senderEmail?.toLowerCase().includes(searchValue.toLowerCase())
+    //         || ld?.uniqeQueryId?.toLowerCase().includes(searchValue.toLowerCase())
+    //         || ld?.queryProductName?.toLowerCase().includes(searchValue.toLowerCase())
+    //         || (ld?.senderMobileNumber && ld.senderMobileNumber.toString().includes(searchValue))
+    // })
 
     res.status(200).json({
         status: true,
         message: "Query result",
-        data: filteredLead
+        data: userLeads
     })
 
 
