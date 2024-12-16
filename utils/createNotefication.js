@@ -1,3 +1,4 @@
+const moment = require("moment");
 const NewNotification = require("../models/notification");
 
 const createNote = async (data) => {
@@ -13,10 +14,13 @@ const isToday = (inputDate) => {
   if(inputDate){
     const today = new Date();
     const date = new Date(inputDate);
-    console.log(`${date.getDate()}-${date.getMonth()}-${date.getFullYear()}===${today.getDate()}-${today.getMonth()}-${today.getFullYear()}`);
-    return (date.getDate() == today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear())
+    // console.log(`${date.getDate()}-${date.getMonth()}-${date.getFullYear()}===${today.getDate()}-${today.getMonth()}-${today.getFullYear()}`);
+    return (
+      moment(inputDate).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")
+      // date.getDate() == today.getDate() &&
+      // date.getMonth() === today.getMonth() &&
+      // date.getFullYear() === today.getFullYear()
+    )
   }else{
     return false
   }
