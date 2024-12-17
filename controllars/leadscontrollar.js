@@ -514,7 +514,6 @@ const dashboardleadCount = async (req, res, next) => {
     })
 }
 
-
 const getLeadsByStatus = async (req, res) => {
     let { status } = req.params
     let employeeName = req.query?.employee
