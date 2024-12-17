@@ -248,7 +248,6 @@ const getAllLead = async (req, res, next) => {
         }
 
         if (adminfollowed) {
-            console.log("adminfollowed", adminfollowed);
             query.$and.push({
                 followupDates: {
                     $elemMatch: {
@@ -597,8 +596,7 @@ const getLeadsByStatus = async (req, res) => {
         }
         if (status == "todaylead") {
             const data = userLeads.filter((ld) => {
-                // console.log( moment(ld.createdAt).format("YYYY-MM-DD")  ,moment().format("YYYY-MM-DD"));
-                return moment(ld.createdAt).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")
+                return moment(ld.createdAt).format("YYYY-MM-DD") === req.query.date 
             })
             const formatRes = data.map((item) => {
                 const { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
@@ -624,8 +622,8 @@ const getLeadsByStatus = async (req, res) => {
         }
         if (status == "todaycalls") {
             const data = userLeads.filter((ld) => ld.followupDates.some((val) => {
-                // console.log(val.createdAt  ,new Date());
-                return moment(val.createdAt).format("YYYY-MM-DD") == moment().format("YYYY-MM-DD")
+                // console.log(moment(val.createdAt).format("YYYY-MM-DD")  == req.query.date , moment(val.createdAt).format("YYYY-MM-DD"));
+                return moment(val.createdAt).format("YYYY-MM-DD") == req.query.date
 
             }))
             const formatRes = data.map((item) => {
