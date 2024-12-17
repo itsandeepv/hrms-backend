@@ -10,6 +10,14 @@ const SourceSchema = new mongoose.Schema({
     keyId: {
         type: String,
         default: "",
+    },
+    haveState: {
+        type: Boolean,
+        default: false,
+    },
+    haveProduct: {
+        type: Boolean,
+        default: false,
     }
 }, {timestamps: true})
 
