@@ -203,8 +203,36 @@ const getAllLead = async (req, res, next) => {
             ];
         }
 
+        if (followUpOf === "todaylead") {
+            query.$and = [
+                {
+                    createdAt: {
+                        $gte: new Date(moment().startOf('day').toISOString()),
+                        $lt: new Date(moment().endOf('day').toISOString())
+                    }
+                }
+            ];
+        }
+        if (followUpOf == "todaycalls") {
+            query.$and = [
+                {
+                    followupDates: {
+                        $elemMatch: {
+                            createdAt: {
+                                $gte: new Date(moment().startOf('day').toISOString()),
+                                $lt: new Date(moment().endOf('day').toISOString())
+                            }
+                        }
+                    }
+                }
+            ];
+        }
+
+        // console.log("followUpOf", followUpOf, JSON.stringify(query));
+
+
         query.$and = query.$and || [];
-        if(searchValue){
+        if (searchValue) {
             query.$and.push({
                 $or: [
                     { senderCompany: { $regex: searchValue, $options: "i" } },
@@ -218,9 +246,9 @@ const getAllLead = async (req, res, next) => {
                 ]
             });
         }
-        
-        if(adminfollowed){
-            console.log("adminfollowed" , adminfollowed);
+
+        if (adminfollowed) {
+            console.log("adminfollowed", adminfollowed);
             query.$and.push({
                 followupDates: {
                     $elemMatch: {
@@ -229,7 +257,7 @@ const getAllLead = async (req, res, next) => {
                 }
             });
         }
-        
+
 
         if (["employee", "hr", "manager"].includes(req.user?.role)) {
             // console.log("User ID:", req.user?._id.toString());
@@ -458,11 +486,18 @@ const dashboardleadCount = async (req, res, next) => {
         return isBeforeToday(lead.nextFollowUpDate) == true
     });
     const todayLeads = userAllLeads.filter(lead => {
-        return isToday(lead.createdAt) == true
+        return moment(lead.createdAt).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")
+
     });
     const unTouchLeads = userAllLeads.filter(lead => {
-        return lead.isPositiveLead==="new"
+        return lead.isPositiveLead === "new"
     });
+    const todayCalls = userAllLeads.filter((ld) => ld.followupDates.some((val) => {
+        // console.log(val.createdAt  ,new Date());
+        return moment(val.createdAt).format("YYYY-MM-DD") == moment().format("YYYY-MM-DD")
+
+    }))
+
 
     res.status(200).json({
         status: true,
@@ -474,7 +509,8 @@ const dashboardleadCount = async (req, res, next) => {
             todayFollowUp: todayFollowUp.length,
             pendingFollowUp: pendingFollowUp.length,
             todayLeads: todayLeads.length,
-            unTouchLeads: unTouchLeads?.length
+            unTouchLeads: unTouchLeads?.length,
+            todayCalls: todayCalls?.length
         }
     })
 }
@@ -486,8 +522,7 @@ const getLeadsByStatus = async (req, res) => {
     const query = {};
     query.$and = query.$and || [];
     if (employeeName && ["admin", "company"].includes(req.user?.role)) {
-        // { leadAddedBy: employeeName },
-        // { leadAssignTo: employeeName },
+
         query.$and.push({
             $or: [
                 { leadAssignTo: employeeName },
@@ -549,7 +584,7 @@ const getLeadsByStatus = async (req, res) => {
             })
         }
         if (status == "todayfollow") {
-            let data = userLeads.filter((ld) => isToday(ld.nextFollowUpDate) == true)
+            let data = userLeads.filter((ld) => ld.nextFollowUpDate === req.query.date)
             let formatRes = data.map((item) => {
                 let { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
                 return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
@@ -561,7 +596,10 @@ const getLeadsByStatus = async (req, res) => {
             })
         }
         if (status == "todaylead") {
-            const data = userLeads.filter((ld) => isToday(ld.createdAt) == true)
+            const data = userLeads.filter((ld) => {
+                // console.log( moment(ld.createdAt).format("YYYY-MM-DD")  ,moment().format("YYYY-MM-DD"));
+                return moment(ld.createdAt).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")
+            })
             const formatRes = data.map((item) => {
                 const { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
                 return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
@@ -581,6 +619,22 @@ const getLeadsByStatus = async (req, res) => {
             res.status(200).json({
                 status: true,
                 message: "Untouch Leads",
+                data: formatRes
+            })
+        }
+        if (status == "todaycalls") {
+            const data = userLeads.filter((ld) => ld.followupDates.some((val) => {
+                // console.log(val.createdAt  ,new Date());
+                return moment(val.createdAt).format("YYYY-MM-DD") == moment().format("YYYY-MM-DD")
+
+            }))
+            const formatRes = data.map((item) => {
+                const { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
+                return { _id, senderName, senderEmail, senderMobileNumber, senderPhone, senderCompany }
+            })
+            res.status(200).json({
+                status: true,
+                message: "Today Calls",
                 data: formatRes
             })
         }
