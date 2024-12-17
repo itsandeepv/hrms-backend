@@ -4,6 +4,7 @@ const moment = require("moment");
 const { publicUrl } = require("../utils/createNotefication");
 
 const autoLeadAssign = async (newLeadData, io) => {
+    console.log("autoLeadAssign")
     try {
         const userId = newLeadData?.userId;
         const findUser = await NewUser.findById(userId);
@@ -25,23 +26,51 @@ const autoLeadAssign = async (newLeadData, io) => {
         }
 
         const autoAssignTo = sourceArray?.autoAssignTo || [];
-        const lastAssignIndex = autoAssignTo.findIndex((item) => item === sourceArray?.lastAssignTo);
-        const nextAssignIndex = (lastAssignIndex + 1) % autoAssignTo.length;
-
-        const assignedTo = autoAssignTo[nextAssignIndex] || "";
-
+        let lastAssignIndex = autoAssignTo.findIndex((item) => item?.empId === sourceArray?.lastAssignTo);
+        let assignedTo = ""
+        let nextAssignIndex = (lastAssignIndex + 1) % autoAssignTo.length;
+        if(sourceArray?.haveState && sourceArray?.haveProduct){
+            while(lastAssignIndex !== nextAssignIndex){
+                if(lastAssignIndex === -1){
+                    lastAssignIndex = 0
+                }
+                if(autoAssignTo[nextAssignIndex]?.states?.length > 0){
+                    const isStateAllocated = autoAssignTo[nextAssignIndex]?.states?.some((state) => state?.label === newLeadData?.senderState)
+                    if(isStateAllocated){
+                        assignedTo = autoAssignTo[nextAssignIndex] || "";
+                        break;
+                    }else{
+                        nextAssignIndex = (nextAssignIndex + 1) % autoAssignTo.length;
+                        continue;
+                    }
+                }else{
+                    nextAssignIndex = (nextAssignIndex + 1) % autoAssignTo.length;
+                    continue;
+                }
+            }
+            
+            if(assignedTo === ""){
+                nextAssignIndex = (lastAssignIndex + 1) % autoAssignTo.length;
+                assignedTo = autoAssignTo[nextAssignIndex] || "";
+            }
+            
+        }else{
+            assignedTo = autoAssignTo[nextAssignIndex] || "";
+        }
+        
+        // console.log("assignedTo", assignedTo, nextAssignIndex, lastAssignIndex)
         // Update the lead assignment
         await NewLeads.findByIdAndUpdate(
             newLeadData?._id,
             {
-                leadAssignTo: assignedTo,
+                leadAssignTo: assignedTo?.empId?.toString(),
                 leadAssignAt: moment().format("YYYY-MM-DD HH:mm:ss"),
             },
             { new: true }
         );
 
         // Update the user's source data
-        sourceArray.lastAssignTo = assignedTo;
+        sourceArray.lastAssignTo = assignedTo?.empId?.toString();
         await NewUser.findByIdAndUpdate(userId, {
             sources: findUser.sources,
         });

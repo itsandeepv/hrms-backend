@@ -95,6 +95,14 @@ const NewUserSchema = new mongoose.Schema({
         keyId: {
             type: String
         },
+        haveState: {
+            type: Boolean,
+            default: false,
+        },
+        haveProduct: {
+            type: Boolean,
+            default: false,
+        },
         isIntegrated: {
             type: Boolean,
             default: false
@@ -103,7 +111,12 @@ const NewUserSchema = new mongoose.Schema({
             type: Boolean,
             default: false
         },
-        autoAssignTo: [String],
+        autoAssignTo: [{
+            empId: String,
+            isActive: Boolean,
+            states: Array,
+            products: Array
+        }],
         lastAssignTo: {
             type: String,
             default: ""
