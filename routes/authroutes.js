@@ -1,5 +1,6 @@
 const authrouter = require("express").Router()
 const { register, loginUser,verifyEmail, createUserByAdmin, getCompanyUser, editSettings, deleteCompanyUser, editCompanyUser, updatePassword, getSettings, getAllCompany, updateCompanyStatus, assignLead, resendOtp, changePassword, uploadProfileImage, editProfile, assignMultipleLead } = require("../controllars/authcontrollar")
+const { getAllRoles } = require("../controllars/moduleAccess.controller")
 const { ValidateUser } = require("../middlewares/authMiddleware")
 // new  user register routes
 authrouter.post("/register" ,register)
@@ -20,6 +21,7 @@ authrouter.post("/auto-assign-lead" ,assignLead)
 authrouter.put("/verify-email" ,verifyEmail)
 authrouter.put("/resend-otp" ,resendOtp)
 authrouter.get("/all-company" , ValidateUser,getAllCompany)
+authrouter.get("/all-roles" , ValidateUser,getAllRoles)
 authrouter.post("/login" ,loginUser)
 
 

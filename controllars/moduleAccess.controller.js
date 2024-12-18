@@ -250,4 +250,19 @@ const editModuleAccessibility = async(req, res, next) => {
   }
 }
 
-module.exports = { addRole, addModule, getModule, deleteModule, editModule, editModuleAccessibility }
+const getAllRoles = async (req, res) => {
+  try {
+     const roles = await Role.find()     
+     res.status(200).json({
+      status: true,
+      message: 'All Roles.',
+      data: roles
+    })
+  } catch (error) {
+      res.status(500).json({
+          message: "Something went Wrong ?", error
+      });
+  }
+}
+
+module.exports = { addRole,getAllRoles, addModule, getModule, deleteModule, editModule, editModuleAccessibility }
