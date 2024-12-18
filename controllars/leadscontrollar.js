@@ -143,6 +143,7 @@ const getAllLead = async (req, res, next) => {
         let leadStatus = req.query.leadStatus
         let labelValue = req.query.labelValue
         let noWorked = req.query.noWorked
+        let date = req.query.date
         let searchValue = req.query.searchValue
         const isPositiveLead = req.query.isPositive; // Convert to boolean if needed
         const followUpOf = req.query.followUpOf; // Convert to boolean if needed
@@ -192,7 +193,7 @@ const getAllLead = async (req, res, next) => {
             query.$and = [
                 { nextFollowUpDate: { $exists: true } }, // Ensure `nextFollowUpDate` exists
                 { nextFollowUpDate: { $ne: "" } }, // Ensure `nextFollowUpDate` is not empty
-                { nextFollowUpDate: { $eq: moment(todayDate).format('YYYY-MM-DD') } } // Apply the `$lt` condition
+                { nextFollowUpDate: { $eq: moment(date||"").format('YYYY-MM-DD') } } // Apply the `$lt` condition
             ];
         }
         if (followUpOf == "pending") {
@@ -214,13 +215,16 @@ const getAllLead = async (req, res, next) => {
             ];
         }
         if (followUpOf == "todaycalls") {
+
+            console.log("date" ,date);
+            
             query.$and = [
                 {
                     followupDates: {
                         $elemMatch: {
                             createdAt: {
-                                $gte: new Date(moment().startOf('day').toISOString()),
-                                $lt: new Date(moment().endOf('day').toISOString())
+                                $gte: new Date(moment(date||"").startOf('day').toISOString()),
+                                $lt: new Date(moment(date||"").endOf('day').toISOString())
                             }
                         }
                     }
@@ -228,7 +232,7 @@ const getAllLead = async (req, res, next) => {
             ];
         }
 
-        // console.log("followUpOf", followUpOf, JSON.stringify(query));
+        console.log("followUpOf", followUpOf, JSON.stringify(query));
 
 
         query.$and = query.$and || [];
@@ -248,7 +252,6 @@ const getAllLead = async (req, res, next) => {
         }
 
         if (adminfollowed) {
-            console.log("adminfollowed", adminfollowed);
             query.$and.push({
                 followupDates: {
                     $elemMatch: {
@@ -515,7 +518,6 @@ const dashboardleadCount = async (req, res, next) => {
     })
 }
 
-
 const getLeadsByStatus = async (req, res) => {
     let { status } = req.params
     let employeeName = req.query?.employee
@@ -597,8 +599,7 @@ const getLeadsByStatus = async (req, res) => {
         }
         if (status == "todaylead") {
             const data = userLeads.filter((ld) => {
-                // console.log( moment(ld.createdAt).format("YYYY-MM-DD")  ,moment().format("YYYY-MM-DD"));
-                return moment(ld.createdAt).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")
+                return moment(ld.createdAt).format("YYYY-MM-DD") === req.query.date 
             })
             const formatRes = data.map((item) => {
                 const { _id, senderName, senderEmail, senderCompany, senderMobileNumber, senderPhone } = item
@@ -624,8 +625,8 @@ const getLeadsByStatus = async (req, res) => {
         }
         if (status == "todaycalls") {
             const data = userLeads.filter((ld) => ld.followupDates.some((val) => {
-                // console.log(val.createdAt  ,new Date());
-                return moment(val.createdAt).format("YYYY-MM-DD") == moment().format("YYYY-MM-DD")
+                // console.log(moment(val.createdAt).format("YYYY-MM-DD")  == req.query.date , moment(val.createdAt).format("YYYY-MM-DD"));
+                return moment(val.createdAt).format("YYYY-MM-DD") == req.query.date
 
             }))
             const formatRes = data.map((item) => {
