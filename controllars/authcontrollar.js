@@ -455,7 +455,6 @@ const editProfile = async (req, res, next) => {
                     data: updatedData
                 });
 
-
             } else {
                 res.status(404).json({
                     status: false,
