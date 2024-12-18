@@ -47,7 +47,18 @@ const NewUserSchema = new mongoose.Schema({
         default: "user",
         enum: ["company", "admin", "superadmin", "employee", "hr", "manager"]
     },
-    moduleAccess: [],
+    moduleAccess: [{
+        name: {
+            type: String
+        },
+        isEnabled: {
+            type: Boolean,
+        },
+        accessibleTo: [],
+        modulePath: {
+            type: String
+        }
+    }],
     GSTIN: {
         type: String
     },

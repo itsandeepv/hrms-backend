@@ -11,6 +11,8 @@ const { getIndiaMartKey } = require("../utils");
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const s3uploads = require("../middlewares/s3ulpoads");
+const { ModuleAccess } = require("../models/moduleAccessModal");
+const Source = require("../models/sourceModel");
 
 
 const register = async (req, res, next) => {
@@ -44,13 +46,45 @@ const register = async (req, res, next) => {
         } else {
             if (reqData?.password) {
 
-                bcrypt.hash(reqData.password, 10, function (error, hashPassword) {
+                bcrypt.hash(reqData.password, 10, async function (error, hashPassword) {
                     if (error) {
                         res.status(500).json({
                             status: false,
                             error
                         });
                     }
+
+                    const moduleAccess = await ModuleAccess.find()
+                    const sources = await Source.find()
+                    const adminRole = moduleAccess.flatMap(module => module.accessibleTo).find(role => role.roleLabel === "admin" && role.hasAccess);
+
+                    // Parse the admin role level if the admin role is found, otherwise set to null
+                    const adminRoleLevel = adminRole ? parseInt(adminRole.roleLevel) : null;
+
+                    // If adminRole exists and hasAccess is true, process the modules, else return an empty array
+                    const newModuleAccess = (adminRole && adminRole.hasAccess) ? 
+                        moduleAccess.map(module => {
+                            const isAccessible = module?.accessibleTo?.some((item)=> item?.roleLabel === "admin" && item?.hasAccess)
+                            if(isAccessible){
+                                const updatedAccessibleTo = module.accessibleTo.filter(role => parseInt(role.roleLevel) >= adminRoleLevel);
+                                return {
+                                    ...module,
+                                    isEnabled: true,
+                                    accessibleTo: updatedAccessibleTo
+                                };
+                            }
+                            return null
+                        }).filter(Boolean) : [];
+                        
+                    const newSources = sources?.map((item)=>{
+                        return {
+                            ...item,
+                            isIntegrated: true,
+                            enableAutoAssign: false,
+                            autoAssignTo: [],
+                            lastAssignTo: ""
+                        }
+                    })
 
                     let user = new NewUser({
                         ...reqData,
@@ -60,7 +94,9 @@ const register = async (req, res, next) => {
                         userType: reqData.userType,
                         verifyCode: otp,
                         isVerify: false,
-                        indiaMartKey: getIndiaMartKey()
+                        indiaMartKey: getIndiaMartKey(),
+                        moduleAccess: newModuleAccess,
+                        sources: newSources
                     });
 
                     // console.log(otpRes);
