@@ -26,12 +26,16 @@ const register = async (req, res, next) => {
         };
 
         const user = await NewUser.findOne(query);
-        // console.log(user?.length, "<<<<<<<adf");
-        let otp = generateOTP(6)
-        let otpRes = await sendVerifyEmail(reqData.email, reqData.fullName, otp);
+        if (user && user?.isVerify){
 
-        if (user) {
-            let otp = generateOTP(6)
+            return res.status(200).json({
+                status: true,
+                isVerify: true,
+                message: "User with given email/company already Exist! Please Try to login"
+            });
+        }else if(user && !user?.isVerify) {
+
+            const otp = generateOTP(6)
             await sendVerifyEmail(user.email, user.fullName, otp);
 
             await NewUser.findByIdAndUpdate(user?._id, {
@@ -39,9 +43,9 @@ const register = async (req, res, next) => {
             }, { new: true })
 
             return res.status(409).json({
-                status: false,
-                isVerify: user?.isVerify || false,
-                message: "User with given email/company already Exist! Please Try to login"
+                status: true,
+                isVerify: false,
+                message: "OTP send to your email, Please verify!"
             });
         } else {
             if (reqData?.password) {
@@ -53,6 +57,8 @@ const register = async (req, res, next) => {
                             error
                         });
                     }
+                    const otp = generateOTP(6)
+                    const otpRes = await sendVerifyEmail(reqData.email, reqData.fullName, otp);
 
                     const moduleAccess = await ModuleAccess.find()
                     const sources = await Source.find()
@@ -86,7 +92,7 @@ const register = async (req, res, next) => {
                         }
                     })
 
-                    let user = new NewUser({
+                    let newUser = new NewUser({
                         ...reqData,
                         fullName: reqData.fullName,
                         email: reqData.email,
@@ -99,11 +105,12 @@ const register = async (req, res, next) => {
                         sources: newSources
                     });
 
-                    // console.log(otpRes);
+                    
                     if (otpRes.accepted.length > 0) {
-                        user.save().then((result) => {
+                        newUser.save().then((result) => {
                             res.status(200).send({
                                 status: true,
+                                isVerify: false,
                                 message: "User Registered !",
                                 user: result,
                             });
@@ -112,7 +119,7 @@ const register = async (req, res, next) => {
                                 res.status(500).json({
                                     status: false,
                                     error: error,
-                                    message: "Above error aa ri hai",
+                                    message: "Something went wrong, try again!",
                                 });
                             });
                     } else {
@@ -133,7 +140,7 @@ const register = async (req, res, next) => {
     } catch (error) {
         res.status(500).json({
             status: false,
-            message: "Something went Wrong ?",
+            message: "Something went wrong, try again later.",
             error
         });
     }
