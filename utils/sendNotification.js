@@ -34,9 +34,8 @@ const sendNotification = (fullDocument, io, changedata) => {
         console.log(er);
       })
     
-    io.emit("dbUpdate", changedata);
+    io.to(fullDocument.userId).emit("dbUpdate", changedata);
   }
-  //  createNote(noteficationDetails)
 
 }
 
