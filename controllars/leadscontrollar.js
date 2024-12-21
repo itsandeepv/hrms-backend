@@ -232,8 +232,6 @@ const getAllLead = async (req, res, next) => {
             ];
         }
 
-        console.log("followUpOf", followUpOf, JSON.stringify(query));
-
 
         query.$and = query.$and || [];
         if (searchValue) {

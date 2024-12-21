@@ -85,10 +85,9 @@ db.once("open", () => {
   console.log("MongoDB database connection established successfully");
   const collection = db.collection("leads");
   const changeStream = collection.watch();
-  // console.log(collection);
+  
   changeStream.on("change", (changedata) => {
-    // console.log("Change detected:", onlineUsers);
-    let { fullDocument } = changedata
+    const { fullDocument } = changedata
     if (changedata.operationType == "insert") {
       sendNotification(fullDocument, io, changedata)
     }
@@ -100,21 +99,19 @@ db.once("open", () => {
 
 io.on("connection", (socket) => {
   console.log("A user connected", socket.id);
+  socket.emit("triggerUserDetails")
+
   socket.on("userDetails", async (data) => {
+    socket.join(data?._id);
     try {
-      // Fetch leads based on user details and follow-up date
-    //   const finduser = onlineUsers?.find((user)=> user.userId == data?._id )
+      const now = new Date();
 
-    //   console.log("finduser" ,finduser ,data?._id);
-    //   if(finduser){
-        const now = new Date();
-
-        // Convert to IST by adding 5 hours and 30 minutes
-        const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
-        const istDate = new Date(now.getTime() + istOffset);
-        
-        // Format to "YYYY-MM-DD"
-        const today = istDate.toISOString().split('T')[0];
+      // Convert to IST by adding 5 hours and 30 minutes
+      const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+      const istDate = new Date(now.getTime() + istOffset);
+      
+      // Format to "YYYY-MM-DD"
+      const today = istDate.toISOString().split('T')[0];
 
       // Fetch leads based on user details and follow-up date
       const leads = data?.role === "admin" ? await NewLeads.find({
@@ -128,30 +125,22 @@ io.on("connection", (socket) => {
           { leadAssignTo: { $exists: false } }
         ]
       }) : await NewLeads.find({leadAssignTo: data?._id, nextFollowUpDate: today})
-        // const filteredLeads = data?.role === "admin" ? leads.filter(lead => isToday(lead.nextFollowUpDate) && (lead?.leadAssignTo === undefined || lead?.leadAssignTo === "")) : leads.filter(lead => isToday(lead.nextFollowUpDate))
-        // Emit notifications for the filtered leads
-        // console.log("leads", leads)
         const newData = leads.map(lead => {
           return {
             message: 'This is a reminder for your follow-up scheduled for today with ' + lead.senderName,
             lead
           }
         });
-        // io.to(finduser.socketId)
+        
         socket.emit('followUpNotification', newData)
-    //   }
 
     } catch (err) {
       console.error('Error fetching leads: ', err);
     }
   });
 
-  io.emit('triggerUserDetails');
-
   socket.on("disconnect", () => {
     console.log("User disconnected" + socket.id);
-    onlineUsers = onlineUsers?.filter((user) => user?.socketId !== socket.id)
-    io.emit("getonlineUsers", onlineUsers)
   });
 });
 
