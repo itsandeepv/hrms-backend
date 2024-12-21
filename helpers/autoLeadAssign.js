@@ -34,9 +34,77 @@ const autoLeadAssign = async (newLeadData, io) => {
                 if(lastAssignIndex === -1){
                     lastAssignIndex = 0
                 }
+                if(autoAssignTo[nextAssignIndex]?.states?.length > 0 && autoAssignTo[nextAssignIndex]?.products?.length > 0){
+                    const isStateAllocated = autoAssignTo[nextAssignIndex]?.states?.some((state) => state?.label === newLeadData?.senderState)
+                    const isProductAllocated = autoAssignTo[nextAssignIndex]?.products?.some((product) => product?.label?.toLowerCase()?.trim() === newLeadData?.queryProductName?.toLowerCase()?.trim())
+                    if(isStateAllocated && isProductAllocated){
+                        assignedTo = autoAssignTo[nextAssignIndex] || "";
+                        break;
+                    }else{
+                        nextAssignIndex = (nextAssignIndex + 1) % autoAssignTo.length;
+                        continue;
+                    }
+                }else if(autoAssignTo[nextAssignIndex]?.states?.length > 0){
+                    const isStateAllocated = autoAssignTo[nextAssignIndex]?.states?.some((state) => state?.label === newLeadData?.senderState)
+                    if(isStateAllocated){
+                        assignedTo = autoAssignTo[nextAssignIndex] || "";
+                        break;
+                    }else{
+                        nextAssignIndex = (nextAssignIndex + 1) % autoAssignTo.length;
+                        continue;
+                    }
+                }else if(autoAssignTo[nextAssignIndex]?.products?.length > 0){
+                    const isProductAllocated = autoAssignTo[nextAssignIndex]?.products?.some((product) => product?.label?.toLowerCase()?.trim() === newLeadData?.queryProductName?.toLowerCase()?.trim())
+                    if(isProductAllocated){
+                        assignedTo = autoAssignTo[nextAssignIndex] || "";
+                        break;
+                    }else{
+                        nextAssignIndex = (nextAssignIndex + 1) % autoAssignTo.length;
+                        continue;
+                    }
+                }else{
+                    nextAssignIndex = (nextAssignIndex + 1) % autoAssignTo.length;
+                    continue;
+                }
+            }
+            
+            if(assignedTo === ""){
+                nextAssignIndex = (lastAssignIndex + 1) % autoAssignTo.length;
+                assignedTo = autoAssignTo[nextAssignIndex] || "";
+            }
+            
+        }else if(sourceArray?.haveState){
+            while(lastAssignIndex !== nextAssignIndex){
+                if(lastAssignIndex === -1){
+                    lastAssignIndex = 0
+                }
                 if(autoAssignTo[nextAssignIndex]?.states?.length > 0){
                     const isStateAllocated = autoAssignTo[nextAssignIndex]?.states?.some((state) => state?.label === newLeadData?.senderState)
                     if(isStateAllocated){
+                        assignedTo = autoAssignTo[nextAssignIndex] || "";
+                        break;
+                    }else{
+                        nextAssignIndex = (nextAssignIndex + 1) % autoAssignTo.length;
+                        continue;
+                    }
+                }else{
+                    nextAssignIndex = (nextAssignIndex + 1) % autoAssignTo.length;
+                    continue;
+                }
+            }
+            
+            if(assignedTo === ""){
+                nextAssignIndex = (lastAssignIndex + 1) % autoAssignTo.length;
+                assignedTo = autoAssignTo[nextAssignIndex] || "";
+            }
+        }else if(sourceArray?.haveProduct){
+            while(lastAssignIndex !== nextAssignIndex){
+                if(lastAssignIndex === -1){
+                    lastAssignIndex = 0
+                }
+                if(autoAssignTo[nextAssignIndex]?.products?.length > 0){
+                    const isProductAllocated = autoAssignTo[nextAssignIndex]?.products?.some((product) => product?.label?.toLowerCase()?.trim() === newLeadData?.queryProductName?.toLowerCase()?.trim())
+                    if(isProductAllocated){
                         assignedTo = autoAssignTo[nextAssignIndex] || "";
                         break;
                     }else{
