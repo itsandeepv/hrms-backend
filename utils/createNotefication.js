@@ -10,20 +10,18 @@ const createNote = async (data) => {
 const publicUrl = "https://api.crmhai.com/api"
 // const publicUrl = "http://localhost:5001/api"
 
+
+
 const isToday = (inputDate) => {
-  if(inputDate){
-    const today = new Date();
-    const date = new Date(inputDate);
-    // console.log(`${date.getDate()}-${date.getMonth()}-${date.getFullYear()}===${today.getDate()}-${today.getMonth()}-${today.getFullYear()}`);
-    return (
-      moment(inputDate).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD")
-      // date.getDate() == today.getDate() &&
-      // date.getMonth() === today.getMonth() &&
-      // date.getFullYear() === today.getFullYear()
-    )
-  }else{
-    return false
+  // Ensure the input date is checked for validity
+  const date = moment(inputDate, "YYYY-MM-DD", true); // Strict mode for exact format
+  if (!date.isValid()) {
+    console.error("Invalid date:", inputDate);
+    return false; // Return false if the date is invalid
   }
+
+  // Compare the formatted input date with today's date
+  return date.format("YYYY-MM-DD") === moment().format("YYYY-MM-DD");
 };
 
 const isBeforeToday = (dateString) => {
