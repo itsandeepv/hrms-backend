@@ -12,6 +12,7 @@ const NewLeads = require("./models/leadsModel");
 const { sendNotification } = require("./utils/sendNotification");
 const fileUpload = require('express-fileupload');
 const { getImages } = require("./helpers/getImagesControllar");
+const { messageRoutes } = require("./routes/whatsapApi/whatsapproutes");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
@@ -41,8 +42,8 @@ app.use(cors({
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
 
-const mongooseUrl =  process.env.DATABASE_URL || "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
-// const mongooseUrl = "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase"
+// const mongooseUrl =  process.env.DATABASE_URL || "mongodb+srv://crmhaicom:jpJ1TNDIXOXRTMym@cluster0.1zzq2.mongodb.net/crm"
+const mongooseUrl = "mongodb+srv://sandeepverma:hrms-database@cluster0.20yfs0b.mongodb.net/hrmsdatabase"
 // const mongooseUrl = "mongodb://localhost:27017/localCRM"
 
 // Auth route start here
@@ -51,6 +52,10 @@ app.use("/api", authrouter);
 app.use("/api", leadsrouter);
 
 // testing socket 
+
+// for what sapp messages
+app.post('/api', messageRoutes)
+
 
 
 app.get("/test", (req, res) => {
