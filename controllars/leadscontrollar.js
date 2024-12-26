@@ -481,7 +481,7 @@ const dashboardleadCount = async (req, res, next) => {
     let nagetiveLead = userAllLeads.filter((ld) => ld.isPositiveLead == "false")
 
     let todayFollowUp = userAllLeads.filter(lead => {
-        return isToday(lead.nextFollowUpDate) == true
+        return lead.nextFollowUpDate && isToday(lead.nextFollowUpDate) == true
     });
     let pendingFollowUp = userAllLeads.filter(lead => {
         return isBeforeToday(lead.nextFollowUpDate) == true

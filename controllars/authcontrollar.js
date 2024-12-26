@@ -903,7 +903,7 @@ const updatePassword = async (req, res) => {
         let checkUser = await NewUser.findById(user?._id)
         let checkOUser = await OtherUser.findById(user?._id)
         if (checkOUser) {
-            const isMatch = await bcrypt.compare(currentPassword, checkUser.password || checkOUser.password);
+            const isMatch = await bcrypt.compare(currentPassword, checkOUser.password);
             if (isMatch) {
                 const hashPassword = await bcrypt.hash(newPassword, 10);
                 await OtherUser.findByIdAndUpdate(user?._id, {
@@ -920,7 +920,7 @@ const updatePassword = async (req, res) => {
                 })
             }
         } else if (checkUser) {
-            const isMatch = await bcrypt.compare(currentPassword, checkUser.password || checkOUser.password);
+            const isMatch = await bcrypt.compare(currentPassword, checkUser.password);
             if (isMatch) {
                 const hashPassword = await bcrypt.hash(newPassword, 10);
                 // console.log(hashPassword ,currentPassword , "<<<<<<<Adf");
