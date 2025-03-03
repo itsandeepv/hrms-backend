@@ -5,6 +5,7 @@ const NewLeads = require("../models/leadsModel");
 const { isToday, isBeforeToday } = require("../utils/createNotefication");
 const { publicUrl } = require("../utils/createNotefication");
 const NewUser = require("../models/newUser");
+const { sendNotification } = require("../utils/sendNotification");
 
 
 const createNewLead = async (req, res, next) => {
@@ -959,33 +960,83 @@ const getJustdialLead = async (req, res) => {
 }
 
 const getIndiamartLead = async (req, res) => {
-    const leadData = req.body;
-
-    // console.log("Lead received:", leadData);
-    const user = await NewUser.findById(req.params.id)
+// this code was added
+    const user = await NewUser.find({ indiaMartKey: req.params.id })
+    const io = req.app.get('io');
 
     if (user) {
-        const data = await NewLeads.create({
-            "userId": user?._id,
-            // "companyId": user?.role==="admin" ? user?._id : user?.companyId,
-            // "uniqeQueryId": leadData?.leadid,
-            // "senderName": leadData?.name,
-            // "senderEmail": leadData?.email,
-            // "senderMobileNumber": leadData?.mobile,
-            // "senderCity": leadData?.city,
-            // "senderAddress": ${leadData?.area} ${leadData?.city},
-            // "senderCompany": leadData?.company,
-            "leadSource": "indiamart",
-            // "queryTime": ${leadData?.date} ${leadData?.time},
-            // "queryProductName": leadData?.category
-        })
+        if (req.body?.CODE === 200) {
+            const leadData = req.body.RESPONSE;
+            // console.log("user", user)
+            const data = await NewLeads.create({
+                "userId": user[0]._id,
+                "leadSource": "indiamart",
+                "leadCallDuration": leadData?.CALL_DURATION || "0",
+                "queryMcatName": leadData?.QUERY_MCAT_NAME || "",
+                "queryMessage": leadData?.QUERY_MESSAGE || "",
+                "queryProductName": leadData?.QUERY_PRODUCT_NAME || "",
+                "queryTime": leadData?.QUERY_TIME || "",
+                "queryType": leadData?.QUERY_TYPE || "",
+                "senderName": leadData?.SENDER_NAME || "",
+                "senderCompany": leadData?.SENDER_COMPANY || "",
+                "senderEmail": leadData?.SENDER_EMAIL || "",
+                "senderEmailAlt": leadData?.SENDER_EMAIL_ALT || "",
+                "senderMobileNumber": leadData?.SENDER_MOBILE || "",
+                "senderMobileNumberAlt": leadData?.SENDER_MOBILE_ALT || "",
+                "senderCity": leadData?.SENDER_CITY || "",
+                "senderState": leadData?.SENDER_STATE || "",
+                "senderPinCode": leadData?.SENDER_PINCODE || "",
+                "senderCountry": leadData?.SENDER_COUNTRY_ISO || "",
+                "senderAddress": leadData?.SENDER_ADDRESS || "",
+                "senderPhone": leadData?.SENDER_PHONE || "",
+                "senderPhoneAlt": leadData?.SENDER_PHONE_ALT || "",
+                "subject": leadData?.SUBJECT || "",
+                "receiverMobile": leadData?.RECEIVER_MOBILE || "",
+                "companyId": user[0]._id,
+                "uniqeQueryId": leadData?.UNIQUE_QUERY_ID || "",
+                "receiverUid": "",
+                "receiverName": "",
+                "receiverCompany": "",
+                "senderUid": "",
+                "inquiryType": "",
+                "sender": "",
+                "viewStatus": "",
+                "productId": ""
+            })
+            
+            // console.log("Lead received:", data);
+            sendNotification(data, io, data)
 
-        res.send('RECEIVED');
+
+            res.status(200).json({
+                success: true,
+                message: "Success"
+            });
+        } else if (req.body?.CODE === 400) {
+            res.status(400).json({
+                success: false,
+                message: "Missing parameters"
+            });
+        } else if (req.body?.CODE === 500) {
+            res.status(500).json({
+                success: false,
+                message: "Error in connecting to the URL"
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: "Unknown error"
+            });
+        }
     } else {
-        res.send("FAILED")
+        res.status(500).json({
+            success: false,
+            message: "Something went wrong, try again."
+        });
     }
 
 }
+
 
 const getMetaLeads = async (req, res) => {
     await Meta.create({

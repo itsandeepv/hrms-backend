@@ -86,18 +86,18 @@ const db = mongoose.connection;
 
 let onlineUsers = []
 
-db.once("open", () => {
-  console.log("MongoDB database connection established successfully");
-  const collection = db.collection("leads");
-  const changeStream = collection.watch();
+// db.once("open", () => {
+//   console.log("MongoDB database connection established successfully");
+//   const collection = db.collection("leads");
+//   const changeStream = collection.watch();
   
-  changeStream.on("change", (changedata) => {
-    const { fullDocument } = changedata
-    if (changedata.operationType == "insert") {
-      sendNotification(fullDocument, io, changedata)
-    }
-  });
-});
+//   changeStream.on("change", (changedata) => {
+//     const { fullDocument } = changedata
+//     if (changedata.operationType == "insert") {
+//       sendNotification(fullDocument, io, changedata)
+//     }
+//   });
+// });
 
 
 // WebSocket connection
