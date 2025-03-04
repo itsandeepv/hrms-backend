@@ -23,8 +23,8 @@ const smptTransporter = nodemailer.createTransport({
     secureConnection: false,
     secure: true, // Set to true if using port 465, false for other ports
     auth: {
-        user: 'sandeep@cutedgetechnology.com', // Your email address
-        pass: 'sandeepverma1998' // Your email password
+        user: 'crm@cutedgetechnology.com', // Your email address
+        pass: 'r=!.VbVLFYx&' // Your email password
     },
     tls: {
         rejectUnauthorized: true
@@ -58,7 +58,7 @@ const sendVerifyEmail = async (email, name, code) => {
 
     try {
         let response = await smptTransporter.sendMail({
-            from: `"Crmhai" <sandeep@cutedgetechnology.com>`, // Your email
+            from: `"Crmhai" <crm@cutedgetechnology.com>`, // Your email
             ...mailOptions,
         });
         console.log('Email sent successfully');
@@ -127,7 +127,7 @@ const leadRecivedEmail = async (leadDetails) => {
     if (findUser && findUser?.isEmailEnable.some((vlu)=> vlu.role == "admin" && vlu.isEnable)) {
         try {
             let response = await smptTransporter.sendMail({
-                from: `"Crmhai.com" <sandeep@cutedgetechnology.com>`, // Your email
+                from: `"Crmhai.com" <crm@cutedgetechnology.com>`, // Your email
                 ...mailOptions,
             });
             console.log('Email sent successfully');
@@ -198,7 +198,7 @@ const leadAssignEmail = async (details) => {
     if (findUser && admin?.isEmailEnable.some((vlu)=> vlu.role == "employee" && vlu.isEnable)) {
         try {
             let response = await smptTransporter.sendMail({
-                from: `"Crmhai.com" <sandeep@cutedgetechnology.com>`, // Your email
+                from: `"Crmhai.com" <crm@cutedgetechnology.com>`, // Your email
                 ...mailOptions,
             });
             console.log('Email sent successfully');
